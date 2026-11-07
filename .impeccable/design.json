@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-07T17:10:19-03:00",
+  "title": "Design System: Rayzen Marcenaria",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Graphite Ink",
+        "canonical": "#24292c",
+        "tonalRamp": ["#080c0e", "#212629", "#3d4346", "#5c6266", "#7d8387", "#a0a6aa", "#c4cace", "#e9f0f4"]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Bench Grey",
+        "canonical": "#e8e9e5",
+        "tonalRamp": ["#0b0b09", "#252522", "#42423f", "#61625e", "#82837f", "#a4a5a2", "#c9cac6", "#eeefeb"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Drawing Paper",
+        "canonical": "#f7f7f3",
+        "tonalRamp": ["#0b0b09", "#252522", "#42423f", "#61615e", "#82827f", "#a5a5a1", "#c9c9c5", "#efefeb"]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dedfd9",
+        "tonalRamp": ["#0b0c08", "#252621", "#42433e", "#61625d", "#82837d", "#a5a6a0", "#c9cac4", "#eeefe9"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Instrument Grey",
+        "canonical": "#59635f",
+        "tonalRamp": ["#060d0a", "#1f2724", "#3b4441", "#5a6460", "#7b8581", "#9da8a4", "#c1ccc8", "#e6f2ed"]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Workshop Coral",
+        "canonical": "#c74e39",
+        "tonalRamp": ["#1e0100", "#4a0600", "#7d1100", "#a9311d", "#d05641", "#f87a63", "#ffb3a4", "#ffe9e4"]
+      },
+      "accent-deep": {
+        "role": "primary",
+        "displayName": "Deep Coral",
+        "canonical": "#9f3829",
+        "tonalRamp": ["#1e0100", "#4b0400", "#7c1306", "#a13a2b", "#c85d4c", "#f0816e", "#ffb3a5", "#ffe9e4"]
+      },
+      "navy": {
+        "role": "neutral",
+        "displayName": "Deep Counterweight",
+        "canonical": "#25333d",
+        "tonalRamp": ["#020c15", "#192730", "#36444f", "#54646f", "#758591", "#97a8b4", "#bbccd9", "#e0f1ff"]
+      },
+      "focus": {
+        "role": "tertiary",
+        "displayName": "Inspection Blue",
+        "canonical": "#2f627a",
+        "tonalRamp": ["#000d15", "#00293a", "#12485f", "#356880", "#578aa3", "#79adc8", "#9dd2ed", "#dcf3ff"]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "Chalk White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#0b0b0b", "#252525", "#424242", "#616161", "#828282", "#a5a5a5", "#c9c9c9", "#eeeeee"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Workshop Display",
+        "purpose": "Self-hosted condensed project and panel headings."
+      },
+      "headline": {
+        "displayName": "Panel Headline",
+        "purpose": "Section and panel titles."
+      },
+      "body": {
+        "displayName": "Interface Body",
+        "purpose": "Instructions, field labels, and control text."
+      },
+      "label": {
+        "displayName": "Instrument Label",
+        "purpose": "Technical identifiers, units, table headings, and metadata."
+      },
+      "measurement": {
+        "displayName": "Stable Measurement",
+        "purpose": "Editable dimensions and prominent numeric readouts."
+      }
+    },
+    "shadows": [
+      {
+        "name": "panel-lift",
+        "value": "0 8px 26px rgb(34 40 43 / 7%)",
+        "purpose": "Shared subtle elevation for the major work panels."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "130ms ease",
+        "purpose": "Color and border response on action controls."
+      },
+      {
+        "name": "ticket-transition",
+        "value": "150ms ease",
+        "purpose": "Revision ticket border response to project state."
+      },
+      {
+        "name": "row-transition",
+        "value": "100ms ease",
+        "purpose": "Parts-row hover response."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms transition duration",
+        "purpose": "Minimize transitions when reduced motion is requested."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tablet-layout",
+        "value": "920px"
+      },
+      {
+        "name": "stacked-workspace",
+        "value": "680px"
+      },
+      {
+        "name": "compact-drawing-controls",
+        "value": "400px"
+      },
+      {
+        "name": "wide-page-gutter",
+        "value": "1441px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Save Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Full-width action for saving a valid changed revision, with the drawn SVG save mark.",
+      "html": "<button class=\"ds-save\" type=\"button\"><span>Salvar nova revisão</span><svg viewBox=\"0 0 20 20\" fill=\"none\" aria-hidden=\"true\"><path d=\"M4 3.5h7.2L16 8.3v8.2H4zM11 3.8v4.7h4.6M6.5 11h7M6.5 13.5h4.5\" stroke=\"currentColor\" stroke-width=\"1.35\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-save { display: flex; width: 100%; align-items: center; justify-content: space-between; min-height: 39px; padding: 0 12px; border: 1px solid var(--navy); background: var(--navy); color: #fff; font: 560 11px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; cursor: pointer; transition: background 130ms ease, border-color 130ms ease; } .ds-save svg { width: 16px; height: 16px; flex: 0 0 auto; } .ds-save:hover:not(:disabled) { border-color: #17252e; background: #17252e; } .ds-save:focus-visible { outline: 3px solid #2f627a; outline-offset: 3px; } .ds-save:disabled { border-color: #cfd3ce; background: #dce0db; color: var(--muted); cursor: not-allowed; }"
+    },
+    {
+      "name": "CSV Export",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Compact bordered secondary action for exporting the saved revision.",
+      "html": "<button class=\"ds-export\" type=\"button\"><svg viewBox=\"0 0 20 20\" fill=\"none\" aria-hidden=\"true\"><path d=\"M10 2.8v9.1m0 0 3.5-3.5M10 11.9 6.5 8.4M3.5 14v2.5h13V14\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg><span>Exportar CSV</span></button>",
+      "css": ".ds-export { display: inline-flex; min-height: 32px; align-items: center; gap: 7px; padding: 0 10px; border: 1px solid #cfd4ce; background: #f6f7f3; color: #394344; font: 400 10px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; cursor: pointer; transition: background 130ms ease, color 130ms ease; } .ds-export svg { width: 15px; height: 15px; } .ds-export:hover:not(:disabled) { background: #e9ece6; } .ds-export:focus-visible { outline: 3px solid #2f627a; outline-offset: 3px; } .ds-export:disabled { color: var(--muted); cursor: not-allowed; }"
+    },
+    {
+      "name": "Dimension Field",
+      "kind": "input",
+      "refersTo": "input-dimension",
+      "description": "Ruled, axis-labelled numeric entry with a stable millimeter suffix.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\"><span>Largura</span><small>EIXO X</small></span><span class=\"ds-value\"><input type=\"number\" value=\"800\" aria-label=\"Largura externa em milímetros\"><span>mm</span></span></label>",
+      "css": ".ds-field { display: grid; gap: 3px; padding: 10px 0 9px; border-bottom: 1px solid var(--line); color: #555e5e; font: 400 11px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; } .ds-field-label { display: flex; align-items: center; justify-content: space-between; } .ds-field-label small { color: var(--muted); font: 500 8px 'Cascadia Code', Consolas, monospace; letter-spacing: .07em; } .ds-value { display: flex; align-items: baseline; gap: 6px; } .ds-value input { width: 100%; padding: 0; border: 0; background: transparent; color: #202729; font: 500 20px 'Cascadia Code', Consolas, monospace; font-variant-numeric: tabular-nums; } .ds-value input:focus-visible { outline: 2px solid #2f627a; outline-offset: 3px; } .ds-value span { color: var(--muted); font: 400 9px 'Cascadia Code', Consolas, monospace; } .ds-field.has-error .ds-value input, .ds-field .ds-error { color: var(--accent-deep); }"
+    },
+    {
+      "name": "Work Panel",
+      "kind": "card",
+      "refersTo": "card-panel",
+      "description": "Major paper-toned work surface with a fine border and shared low lift.",
+      "html": "<section class=\"ds-panel\"><strong>Dimensões externas</strong><p>Largura · 800 mm</p></section>",
+      "css": ".ds-panel { padding: 21px 20px 14px; border: 1px solid #dbddd7; background: var(--paper); box-shadow: var(--shadow); color: var(--ink); font: 400 12px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; } .ds-panel strong { color: #283033; font: 600 16px 'Barlow Condensed', sans-serif; letter-spacing: -.02em; } .ds-panel p { margin: 12px 0 0; color: var(--muted); }"
+    },
+    {
+      "name": "Revision Ticket",
+      "kind": "custom",
+      "description": "Segmented saved-revision identity with an explicit local-demo reference.",
+      "html": "<div class=\"ds-ticket\"><div class=\"ds-ticket-main\"><small>REVISÃO ATUAL</small><strong>R01 <span>SALVA</span></strong><small>07 de nov. · 17:08</small></div><i aria-hidden=\"true\"></i><div class=\"ds-ticket-code\"><b aria-hidden=\"true\"></b><small>DEMO-R01</small></div></div>",
+      "css": ".ds-ticket { display: grid; grid-template-columns: minmax(178px, 1fr) 1px 114px; width: 352px; min-height: 74px; border: 1px solid #d4d7d1; background: #f4f4f0; color: var(--ink); transition: border-color 150ms ease; } .ds-ticket.changed { border-color: #d89c8e; } .ds-ticket-main { display: flex; flex-direction: column; justify-content: center; padding: 10px 15px; } .ds-ticket small { color: var(--muted); font: 500 9px 'Cascadia Code', Consolas, monospace; letter-spacing: .07em; } .ds-ticket strong { margin-top: 5px; font: 500 18px 'Cascadia Code', Consolas, monospace; letter-spacing: -.06em; } .ds-ticket strong span { padding: 4px 5px; background: #e6e9e3; color: #5d6862; font-size: 8px; } .ds-ticket i { position: relative; background: repeating-linear-gradient(to bottom, #cfd2cd 0 3px, transparent 3px 6px); } .ds-ticket-code { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 9px; } .ds-ticket-code b { width: 76px; height: 20px; background: repeating-linear-gradient(90deg, #24292c 0 1px, transparent 1px 3px, #24292c 3px 4px, transparent 4px 6px); }"
+    },
+    {
+      "name": "Dimension Rail",
+      "kind": "custom",
+      "description": "Three equal axis-coded measurements attached directly to the model stage.",
+      "html": "<div class=\"ds-rail\"><div><b>X</b><small>LARGURA</small><strong>800</strong><small>mm</small></div><div><b>Y</b><small>ALTURA</small><strong>720</strong><small>mm</small></div><div><b>Z</b><small>PROFUNDIDADE</small><strong>500</strong><small>mm</small></div></div>",
+      "css": ".ds-rail { display: grid; grid-template-columns: repeat(3, 1fr); min-height: 56px; border-top: 1px solid #daddd7; background: #f4f5f1; } .ds-rail > div { display: grid; grid-template-columns: 17px 1fr auto 18px; align-items: center; gap: 6px; padding: 9px 12px; border-right: 1px solid var(--line); } .ds-rail > div:last-child { border-right: 0; } .ds-rail b { display: grid; width: 16px; height: 16px; place-items: center; border: 1px solid #cfd4ce; color: var(--muted); font: 400 8px 'Cascadia Code', Consolas, monospace; } .ds-rail small { color: var(--muted); font: 400 8px 'Cascadia Code', Consolas, monospace; letter-spacing: .07em; } .ds-rail strong { color: #2e3738; font: 500 14px 'Cascadia Code', Consolas, monospace; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Material Indicator",
+      "kind": "custom",
+      "description": "Flat neutral MDF indicator beside the thickness stepper.",
+      "html": "<div class=\"ds-material\"><span class=\"ds-swatch\" aria-hidden=\"true\"></span><span><small>MATERIAL</small><strong>MDF · 18 mm</strong></span></div>",
+      "css": ".ds-material { display: flex; align-items: center; gap: 10px; padding: 13px 0; border-bottom: 1px solid var(--line); } .ds-swatch { width: 27px; height: 27px; border: 1px solid #8a928d; background: #d9dcd6; } .ds-material > span:last-child { display: grid; gap: 4px; } .ds-material small { color: var(--muted); font: 500 9px 'Cascadia Code', Consolas, monospace; letter-spacing: .07em; } .ds-material strong { color: #3a4241; font: 550 11px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }"
+    },
+    {
+      "name": "View Switcher",
+      "kind": "custom",
+      "description": "Four compact model-view buttons with a clear active segment.",
+      "html": "<div class=\"ds-switcher\" role=\"group\" aria-label=\"Vista do modelo\"><button type=\"button\" aria-label=\"Vista Isométrica\" aria-pressed=\"true\"><svg viewBox=\"0 0 20 20\" fill=\"none\" aria-hidden=\"true\"><path d=\"m10 2.8 6.5 3.6v7.2L10 17.2l-6.5-3.6V6.4L10 2.8Z\" stroke=\"currentColor\" stroke-width=\"1.3\"/><path d=\"m3.7 6.5 6.3 3.6 6.3-3.6M10 10.1v7\" stroke=\"currentColor\" stroke-width=\"1.2\"/></svg></button><button type=\"button\" aria-label=\"Vista Frontal\" aria-pressed=\"false\"><svg viewBox=\"0 0 20 20\" fill=\"none\" aria-hidden=\"true\"><path d=\"M3 4h14v12H3zM6 4v12m8-12v12\" stroke=\"currentColor\" stroke-width=\"1.3\"/></svg></button><button type=\"button\" aria-label=\"Vista Lateral\" aria-pressed=\"false\"><svg viewBox=\"0 0 20 20\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6 3h8v14H6zM9 3v14\" stroke=\"currentColor\" stroke-width=\"1.3\"/></svg></button><button type=\"button\" aria-label=\"Vista Superior\" aria-pressed=\"false\"><svg viewBox=\"0 0 20 20\" fill=\"none\" aria-hidden=\"true\"><path d=\"M3 6h14v8H3zM3 9h14\" stroke=\"currentColor\" stroke-width=\"1.3\"/></svg></button></div>",
+      "css": ".ds-switcher { display: flex; height: 30px; border: 1px solid #d9dcd6; background: #f0f1ed; } .ds-switcher button { display: grid; width: 31px; place-items: center; border: 0; border-right: 1px solid #d9dcd6; background: transparent; color: var(--muted); cursor: pointer; } .ds-switcher button:last-child { border-right: 0; } .ds-switcher svg { width: 16px; height: 16px; } .ds-switcher button:hover { background: #e4e6e1; color: #384246; } .ds-switcher button[aria-pressed='true'] { background: #fff; color: var(--navy); box-shadow: inset 0 -2px var(--navy); } .ds-switcher button:focus-visible { outline: 3px solid #2f627a; outline-offset: 2px; }"
+    },
+    {
+      "name": "Parts Table",
+      "kind": "custom",
+      "description": "Compact bill-of-parts rows with neutral hover and coral selection feedback.",
+      "html": "<table class=\"ds-parts\"><thead><tr><th>CÓDIGO</th><th>PEÇA</th><th>QTD.</th><th>COMPRIMENTO</th><th>LARGURA</th><th>ESP.</th><th>MATERIAL</th><th>BORDAS</th></tr></thead><tbody><tr><td><span>BC-01</span></td><td>Lateral</td><td>02</td><td>720</td><td>500</td><td>18</td><td>MDF 18 mm</td><td>Sem fita</td></tr><tr class=\"ds-selected\"><td><span>BC-02</span></td><td>Tampo</td><td>01</td><td>764</td><td>500</td><td>18</td><td>MDF 18 mm</td><td>Sem fita</td></tr></tbody></table>",
+      "css": ".ds-parts { width: 100%; min-width: 690px; border-collapse: collapse; text-align: left; font: 400 10px 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; } .ds-parts th { height: 31px; border-bottom: 1px solid #d8dbd5; color: var(--muted); font: 500 8px 'Cascadia Code', Consolas, monospace; letter-spacing: .07em; white-space: nowrap; } .ds-parts td { height: 40px; border-bottom: 1px solid #e5e6e1; color: #525c5b; font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-parts tbody tr { transition: background 100ms ease; } .ds-parts tbody tr:hover { background: #eef0eb; } .ds-parts tbody tr.ds-selected { background: #f6e8e3; } .ds-parts tbody tr.ds-selected td { color: #823c31; } .ds-parts td:first-child span { display: inline-block; min-width: 48px; padding: 4px 5px; border: 1px solid #d5d9d3; background: #f2f3ef; color: #43504e; font: 400 9px 'Cascadia Code', Consolas, monospace; text-align: center; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Revision Ticket and Departures Board",
+    "overview": "The interface turns a counter edit into a legible shop-floor record: measured values, one geometric model, a parts list, and a clearly numbered saved revision. A segmented revision ticket and compact technical indexing give the work a procedural, record-like character without implying transportation or scanning functionality.\n\nThe shipped visual language is precise and paper-like: a cool grey-green canvas, pale work surfaces, hairline dividers, dark ink, and a restrained coral signal. The project is explicitly a local demonstration; revision and model references carry `DEMO` identifiers rather than suggesting synchronization or a production system.",
+    "keyCharacteristics": [
+      "Project identity, demonstration status, and saved revision remain visible together.",
+      "Dimensions and parts use stable, tabular-looking numeric presentation.",
+      "Coral marks meaningful changed, selected, or validation states only.",
+      "At mobile widths, editable dimensions precede the model and its readouts."
+    ],
+    "rules": [
+      {
+        "name": "The Change Signal Rule",
+        "body": "Coral is reserved for meaningful changed, selected, or validation states; it is not an always-on decorative accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Stable Figure Rule",
+        "body": "Keep dimensions, counts, and revision identifiers in tabular numeric presentation so changing values remain easy to scan.",
+        "section": "typography"
+      },
+      {
+        "name": "The Specification-First Mobile Rule",
+        "body": "On mobile, editable dimensions come before the model; do not reverse that sequence.",
+        "section": "layout"
+      },
+      {
+        "name": "The Paper-First Rule",
+        "body": "Use tonal surfaces and fine borders for structure; reserve the soft shadow for major work panels rather than small controls.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep model dimensions, parts, and the saved revision visually associated.",
+      "Do make the local demonstration and `DEMO` revision references explicit.",
+      "Do use tabular figures for dimensions, counts, and revision identifiers.",
+      "Do use coral only for meaningful changed, selected, or validation states.",
+      "Do keep editable dimensions before the model at mobile widths.",
+      "Do retain visible keyboard focus and clear disabled states."
+    ],
+    "donts": [
+      "Don't imply that the reference strip can be scanned; it is decorative identification only.",
+      "Don't present the local demonstration as synchronized, persisted, or production-released.",
+      "Don't use coral as a persistent decorative color.",
+      "Don't force the parts table's columns below their readable minimum; use horizontal overflow.",
+      "Don't turn the one-off neutral MDF indicator or rendered model tones into reusable interface palette tokens."
+    ]
+  }
+}
