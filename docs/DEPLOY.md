@@ -35,7 +35,7 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 ## Sequência segura
 
 1. Autenticar o Wrangler na conta Cloudflare que administra `rayzen.com.br` com `npm run cloudflare:login`.
-2. O projeto Pages `rayzen-marcenaria` já foi criado, sem deploy.
+2. Confirmar no painel que o projeto Pages `rayzen-marcenaria` continua associado à conta e que o domínio personalizado aponta para o deployment esperado.
 3. Preencher `VITE_SUPABASE_PUBLISHABLE_KEY` em `.env.local` antes de gerar qualquer build destinado à publicação.
 4. Adicionar `marcenaria.rayzen.com.br` em **Workers & Pages → rayzen-marcenaria → Custom domains**. Como a zona já está no Cloudflare, concluir o fluxo no painel permite que o DNS seja criado de forma segura.
 5. A prévia foi publicada em `https://33032114.rayzen-marcenaria.pages.dev` a partir da branch `preview` em 8 de novembro de 2026.
@@ -46,4 +46,11 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 ## Ainda necessário
 
 - regra de acesso à prévia e responsável pela aprovação de publicação;
-- política de rollback e retenção de logs.
+- política de retenção de logs.
+
+## Operação e rollback
+
+- Antes de qualquer produção, registrar no PR/registro de mudança o commit, data, responsável, resultado de `npm run check`, URL de prévia e aprovação humana. O build local não substitui a revisão visual da prévia.
+- Após publicar, conferir `https://marcenaria.rayzen.com.br` e uma rota SPA direta, e registrar o ID do deployment e o resultado. Nunca registrar tokens, chaves ou valores de `.env.local`.
+- Em incidente, interromper novas publicações e obter aprovação humana para o rollback. No painel **Workers & Pages → rayzen-marcenaria → Deployments**, selecionar um deployment de **produção** bem-sucedido e usar **Rollback to this deployment**. Pré-visualizações não são alvo de rollback de produção.
+- Depois do rollback, verificar o domínio novamente, registrar deployment de origem/destino, horário, motivo e responsável; então abrir investigação no código sem apagar a evidência do incidente.

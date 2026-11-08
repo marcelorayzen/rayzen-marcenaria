@@ -9,3 +9,6 @@ coverage/
 
 .impeccable/questions/
 .impeccable/review/
+
+# Private session notes, evidence and operating records. Keep these local.
+.local/

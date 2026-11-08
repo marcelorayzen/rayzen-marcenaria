@@ -45,7 +45,7 @@ Edite as dimensões para conferir a prévia; salve uma nova revisão para habili
 - O material é fixo em MDF e a convenção das bordas é explicitamente “Sem fita” apenas para este ensaio. Catálogo, fita e descontos ainda não foram implementados.
 - O modelo não contém portas, fundo, ferragens, furos, plano de corte, etiquetas, manual ou otimização de chapas.
 - O CSV é uma lista geométrica preliminar, não um pacote liberado para fabricação.
-- Não há chat, edição por linguagem natural, importação de planos de corte, autenticação, colaboração multiusuário, armazenamento de arquivos nem publicação pública.
+- Não há chat, edição por linguagem natural, importação de planos de corte, autenticação, colaboração multiusuário ou armazenamento de arquivos. A demonstração está publicada estaticamente, mas não expõe contas, dados de clientes ou persistência.
 - A vista técnica é proporcional e deriva do mesmo cálculo que a lista. A aprovação visual não substitui conferência e liberação técnica por um profissional.
 - Nenhum teste de montagem física foi realizado.
 - Licenças de dependências diretas e transitivas: [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
@@ -65,6 +65,8 @@ Os controles de risco, evidências e gates para funcionalidades assistidas por I
 A fundação preparada para persistência em nuvem está em [supabase/README.md](./supabase/README.md). Ela contém migrations, regras de acesso, configuração de exemplo e uma pilha local validada. A migration inicial também foi aplicada ao projeto Supabase remoto; a interface continua sem conexão e nenhum dado operacional foi migrado.
 
 Os requisitos e a sequência de publicação em subdomínio estão em [docs/DEPLOY.md](./docs/DEPLOY.md). O projeto Cloudflare Pages está publicado em [marcenaria.rayzen.com.br](https://marcenaria.rayzen.com.br); esta evidência prova a entrega estática atual, não a integração futura de persistência/contas.
+
+O estado verificável, as lacunas conhecidas e a ordem segura de retomada estão em [docs/ESTADO-DO-PROJETO.md](./docs/ESTADO-DO-PROJETO.md). As regras de trabalho para sessões futuras estão em [AGENTS.md](./AGENTS.md).
 
 Ordem proposta para o primeiro protótipo: definir rastreabilidade e armazenamento, persistir projetos, anexar fotos e medidas, modelar a parede em 2D conectada ao balcão 3D e validar propostas conversacionais antes de ligar um agente real. O backlog detalha tarefas e dependências. Importar a cutlist Fusion, outros CSV, DXF, DWG, planilhas e layouts de nesting fica para etapas posteriores e depende de amostras e análise específicas.
 
