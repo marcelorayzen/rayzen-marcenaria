@@ -23,11 +23,11 @@ Este backlog transforma a direção confirmada do produto em entregas verificáv
 
 ### A2 · Definir privacidade, armazenamento e recuperação — P0
 
-- **Tarefa:** decidir o que fica somente neste dispositivo, como fotos são armazenadas, limites de tamanho, exportação/backup e comportamento quando o armazenamento falha.
-- **Tarefa:** manter a decisão de conta, sincronização e uso de serviço externo de IA separada; não enviar mídia ou dados de cliente antes de consentimento, política de retenção e fornecedor aprovados.
+- **Tarefa:** configurar a fundação aprovada em Supabase: conta interna, banco, armazenamento privado, limites de tamanho, exportação/backup e comportamento quando o armazenamento falha.
+- **Tarefa:** manter a integração de IA separada da fundação de dados; o contrato autoriza o uso de dados de cliente, mas escopo enviado, retenção e fornecedor de IA precisam ser documentados antes da conexão.
 - **Aceite:** o usuário entende onde os arquivos ficam; falhas e limites são exibidos sem sucesso falso; há um caminho testado de backup/restauração antes de uso com projetos reais.
 - **Dependências:** A1.
-- **Decisão em aberto:** primeira implantação local para um usuário/dispositivo ou serviço com login e sincronização.
+- **Decisão confirmada:** Supabase para banco, autenticação, armazenamento privado e sincronização. A migration inicial foi validada localmente e aplicada ao projeto remoto sem dados operacionais. Faltam testes de permissões no remoto, backup, retenção, limites de mídia e integração da interface.
 
 ### A3 · Persistir projetos e revisões — P0
 
@@ -127,9 +127,9 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 
 ### E3 · Verificação de prontidão para fabricação — P1
 
-- **Tarefa:** definir checklist de medidas confirmadas, materiais, bordas, ferragens, folgas, revisão e responsável técnico.
+- **Tarefa:** definir checklist de medidas confirmadas, materiais, bordas, ferragens, folgas, revisão e responsável técnico. Somente o marceneiro pode executar a liberação; definir também o substituto autorizado.
 - **Tarefa:** gerar relatório de pendências e documentos preliminares apenas para revisões válidas.
-- **Aceite:** “preparar para fabricar” não significa liberar; bloqueios são rastreáveis; liberação exige ação explícita de responsável autorizado e registra identidade/data/revisão.
+- **Aceite:** “preparar para fabricar” não significa liberar; bloqueios são rastreáveis; liberação exige ação explícita do marceneiro e registra identidade/data/revisão. A confirmação do comercial/cliente não a substitui.
 - **Dependências:** A3, E1, E2.
 
 ### E4 · Importar e reconciliar cutlist Fusion — P2

@@ -7,11 +7,22 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "supabase:status": "supabase status",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:reset": "supabase db reset",
+    "supabase:link": "supabase link --project-ref frbtknggquivbjofknhk",
+    "supabase:push": "supabase db push --remote",
+    "cloudflare:login": "wrangler login",
+    "cloudflare:pages:create": "wrangler pages project create rayzen-marcenaria --production-branch main --force",
+    "cloudflare:pages:preview": "npm run build && wrangler pages deploy dist --project-name rayzen-marcenaria --branch preview",
+    "cloudflare:pages:deploy": "npm run build && wrangler pages deploy dist --project-name rayzen-marcenaria"
   },
   "dependencies": {
     "@fontsource/barlow-condensed": "^5.3.0",
     "@react-three/fiber": "^9.1.2",
+    "@supabase/supabase-js": "^2.119.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.175.0"
@@ -21,8 +32,10 @@
     "@types/react-dom": "^19.0.4",
     "@types/three": "^0.174.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "supabase": "^3.0.0",
     "typescript": "^5.8.2",
     "vite": "^6.2.2",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "wrangler": "^4.158.0"
   }
 }

@@ -58,6 +58,14 @@ O add-in indicado é [Fusion360-ExportCutlist](https://github.com/bluekeyes/Fusi
 
 O documento [docs/EVOLUCAO-FLUXO.md](./docs/EVOLUCAO-FLUXO.md) descreve o formato de CSV encontrado no repositório, os cuidados de mapeamento e reconciliação, além do fluxo seguro para o chat. Para confirmar o adaptador com testes, ainda precisamos de um CSV realmente exportado e desidentificado com as configurações usadas na marcenaria.
 
+A direção validada para a evolução — estação interna de projeto e produção assistida por IA, ilustrativo compartilhável, aprovação comercial e liberação técnica separadas, além de rastreio de peças — está registrada em [docs/VISAO-E-GOVERNANCA-IA.md](./docs/VISAO-E-GOVERNANCA-IA.md). É uma visão de produto, não uma descrição de recursos já implementados.
+
+Os controles de risco, evidências e gates para funcionalidades assistidas por IA estão em [docs/QUALIDADE-E-GOVERNANCA-IA.md](./docs/QUALIDADE-E-GOVERNANCA-IA.md). A política adapta referências de gestão de IA à operação; não afirma certificação.
+
+A fundação preparada para persistência em nuvem está em [supabase/README.md](./supabase/README.md). Ela contém migrations, regras de acesso, configuração de exemplo e uma pilha local validada. A migration inicial também foi aplicada ao projeto Supabase remoto; a interface continua sem conexão e nenhum dado operacional foi migrado.
+
+Os requisitos e a sequência de publicação em subdomínio estão em [docs/DEPLOY.md](./docs/DEPLOY.md). O projeto Cloudflare Pages está publicado em [marcenaria.rayzen.com.br](https://marcenaria.rayzen.com.br); esta evidência prova a entrega estática atual, não a integração futura de persistência/contas.
+
 Ordem proposta para o primeiro protótipo: definir rastreabilidade e armazenamento, persistir projetos, anexar fotos e medidas, modelar a parede em 2D conectada ao balcão 3D e validar propostas conversacionais antes de ligar um agente real. O backlog detalha tarefas e dependências. Importar a cutlist Fusion, outros CSV, DXF, DWG, planilhas e layouts de nesting fica para etapas posteriores e depende de amostras e análise específicas.
 
 ## Estrutura

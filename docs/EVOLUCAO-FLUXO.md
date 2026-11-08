@@ -18,7 +18,7 @@ Preservar uma fonte única e auditável para cada revisão:
 4. Importar uma lista/plano externo como dados de referência com origem rastreável, nunca sobrescrevendo silenciosamente uma revisão.
 5. Comparar conversa, projeto paramétrico e plano importado; destacar diferenças para a pessoa responsável resolver.
 6. Salvar a confirmação como revisão imutável. Toda lista exportada e eventual plano técnico deve identificar exatamente essa revisão.
-7. Manter a revisão técnica e a liberação para produção como estados distintos, com responsável e data identificados.
+7. Manter a revisão técnica e a liberação para produção como estados distintos. Somente o marceneiro pode liberar a produção; registrar identidade e data. A confirmação comercial do cliente, inclusive quando evidenciada por WhatsApp, não substitui essa liberação.
 
 ## Conversa que propõe alterações
 
@@ -46,7 +46,7 @@ O contrato entre chat e aplicação deve ser um conjunto pequeno e versionado de
 
 ### Etapas de implementação
 
-1. **Fundação:** separar o estado do domínio da interface; definir identificadores de projeto/revisão, snapshots imutáveis, operações permitidas, migração de schema e testes. Substituir a memória isolada por uma camada de armazenamento com salvamento confiável. Para a primeira versão local, avaliar IndexedDB; para utilização por vários dispositivos ou pessoas, definir depois uma API autenticada e um banco central. IndexedDB local não é backup nem sincronização.
+1. **Fundação:** separar o estado do domínio da interface; definir identificadores de projeto/revisão, snapshots imutáveis, operações permitidas, migração de schema e testes. Substituir a memória isolada por uma camada de armazenamento com salvamento confiável. A fundação aprovada é Supabase, com banco autenticado, armazenamento privado e regras de acesso por papel; a migration local ainda precisa ser aplicada e testada em um projeto de desenvolvimento. O estado local não é backup nem sincronização.
 2. **Propostas sem IA:** implementar prévia/aceite/rejeição e eventos de revisão usando uma proposta estruturada de teste. Assim se prova o fluxo antes de integrar um modelo.
 3. **Chat em modo restrito:** adicionar extração de operações a partir de conversa, validação estrita do contrato, perguntas de esclarecimento, limites de contexto e logs sem conteúdo sensível desnecessário.
 4. **Operação real:** decidir provedor (ou inferência local), custo, proteção de dados, autenticação, exclusão e retenção antes de conectar contas ou dados reais de clientes.
@@ -119,10 +119,10 @@ Critérios mínimos de aceite: arquivo desconhecido ou inválido gera relatório
 1. Confirmar que a fonte efetivamente usada é o add-in [Fusion360-ExportCutlist](https://github.com/bluekeyes/Fusion360-ExportCutlist) no **Fusion 360** e obter um CSV real desidentificado, de preferência exportado em mm com material incluído.
 2. Confirmar se o objetivo de “plano de corte” é comparar lista de peças ou importar também o posicionamento/aproveitamento das chapas. Este add-in gera uma cutlist, não layout de nesting.
 3. Identificar outros softwares, versões e serviços de otimização usados. Compatibilidade adicional exige arquivos de amostra e adaptadores próprios; não inferir suporte do nome ou extensão.
-4. Decidir se o primeiro armazenamento persistente atende somente este computador/usuário ou se projetos precisam ser acessíveis por vários dispositivos e pessoas.
+4. A persistência inicial será em Supabase para os acessos internos e links temporários de cliente. Ainda definir backup/restauração, limites de anexos, retenção e o projeto de nuvem onde a migration será aplicada.
 5. Decidir provedor do chat, política de dados, autenticação e contexto permitido antes de incluir dados reais de clientes.
 6. Definir regras da marcenaria que ainda não aparecem no modelo: borda por lado, perdas/tolerâncias, folga, encaixes, materiais e espessuras reais.
-7. Definir responsável e checklist técnico para eventual liberação de fabricação. Confirmação de chat, aprovação visual ou importação de arquivo não substituem essa liberação.
+7. Definir checklist técnico e substituto do marceneiro para eventual liberação de fabricação. Confirmação de chat, aprovação visual, mensagem de WhatsApp ou importação de arquivo não substituem essa liberação.
 
 ## Backlog e ordem de execução
 
