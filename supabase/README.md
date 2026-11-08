@@ -30,6 +30,10 @@ Não aplique a migration diretamente em produção sem executar esses testes de 
 
 O módulo `src/supabaseClient.ts` permanece inativo (`supabase === null`) até que as duas variáveis públicas existam no ambiente local. Assim, a demonstração atual não tenta conectar ao banco por engano.
 
+## Guarda de configuracao publica
+
+O cliente do navegador so e criado quando a URL e HTTP(S), nao contem credenciais e ha uma chave publica. A validacao recusa `sb_secret_`, texto `service_role` e JWT legado que declara o papel `service_role`. Ela nao le valores, nao consulta o Supabase e nao prova autenticacao, RLS ou permissao; a interface atual tambem nao usa o cliente para persistir dados.
+
 ## Atalhos locais
 
 | Comando | Finalidade |

@@ -48,6 +48,10 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 - regra de acesso à prévia e responsável pela aprovação de publicação;
 - política de retenção de logs.
 
+## Barreira de configuracao publica
+
+Antes de criar o cliente do navegador, o codigo aceita apenas URL HTTP(S) sem credenciais e uma chave publica. Ele recusa `sb_secret_`, `service_role` e JWT legado com papel `service_role`. Esta barreira evita expor um segredo conhecido no bundle, mas nao valida RLS, autenticacao ou conectividade. Nunca registrar valores de `.env.local` ao investigar uma configuracao recusada.
+
 ## Operação e rollback
 
 - Antes de qualquer produção, registrar no PR/registro de mudança o commit, data, responsável, resultado de `npm run check`, URL de prévia e aprovação humana. O build local não substitui a revisão visual da prévia.
