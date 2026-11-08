@@ -14,13 +14,15 @@ Esta pasta prepara a primeira fundação de nuvem do Rayzen Marcenaria. Ela não
 - Projetos, revisões, peças e anexos são acessíveis apenas a membros internos do projeto.
 - Links para cliente guardam apenas o hash do token, expiram em até dez dias e podem ser revogados. A leitura externa acontece exclusivamente pela função `get_shared_revision`.
 
+O acesso próprio do cliente tem uma migration local posterior (`20261108160000_client_access_and_consent.sql`), ainda não aplicada ao projeto remoto. Ela prepara perfil de cliente, convite manual entregue por WhatsApp, escopo por projeto, consentimento versionado e confirmação do cliente. A autenticação é por Supabase Phone Auth; o código não é guardado no banco. Cliente não recebe acesso direto a projetos, revisões, peças ou arquivos: uma futura camada de apresentação precisa limitar a visualização ao ilustrativo aprovado.
+
 ## Aplicação futura
 
 1. O projeto remoto aprovado tem a referência `frbtknggquivbjofknhk`.
 2. Executar `npm run supabase:link` e concluir o login interativo com uma conta que possua acesso administrativo ao projeto. O CLI pedirá autenticação e poderá pedir a senha do banco; não registrar esses valores em arquivos do repositório ou no chat.
 3. Copiar `.env.example` para `.env.local` e configurar `VITE_SUPABASE_PUBLISHABLE_KEY` com a chave pública/publishable encontrada no painel do projeto. O endpoint do projeto já consta no exemplo. Nunca usar ou expor `service_role` no navegador.
 4. Iniciar Docker Desktop e executar `npm run supabase:start` para aplicar/testar a migration localmente. O comando requer que o daemon Docker esteja ativo. A primeira validação local deste repositório foi concluída em 8 de novembro de 2026.
-5. Testar permissões com usuários representante, marceneiro e visitante anônimo antes de qualquer `npm run supabase:push`.
+5. Testar permissões com cliente, representante, marceneiro e visitante anônimo antes de qualquer `npm run supabase:push`. Exercitar convite, revogação, consentimento, confirmação, isolamento entre projetos e ausência de acesso a peças/arquivos técnicos.
 6. Solicitar aprovação humana explícita para `npm run supabase:push -- --yes`: o comando altera o banco remoto vinculado.
 7. Validar o contrato do formulário de criação de perfil antes de permitir o primeiro login interno; revisar também limites de tamanho e tipos permitidos por arquivo antes do primeiro envio de CAD, foto ou CSV reais.
 

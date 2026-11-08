@@ -2,11 +2,13 @@
 
 Este backlog transforma a direção confirmada do produto em entregas verificáveis. A prioridade ordena o trabalho; não representa prazo ou estimativa. Uma tarefa só está concluída quando seus critérios de aceite são demonstrados e os testes/documentação relacionados estão atualizados.
 
+O roteiro de execução em fases, com limites e critérios para delegação a outros fornecedores, está em [PLANO-DE-FORNECEDORES.md](./PLANO-DE-FORNECEDORES.md). Este backlog continua sendo a fonte das capacidades e critérios de aceite; o plano organiza sua execução sem promover itens planejados a funcionalidades entregues.
+
 ## Visão e limites
 
-**Produto:** plataforma web de projeto e produção de móveis que conecta registros da visita, evidências, decisões conversacionais, ambiente, móveis paramétricos, peças e montagem, preservando a origem de cada informação até a revisão técnica e a liberação explícita.
+**Produto:** plataforma web responsiva de projeto e produção de móveis. O cliente inicia o briefing em seu acesso próprio e restrito; o marceneiro e a responsável por projeto/relacionamento com o cliente continuam o levantamento, inclusive em campo por celular ou notebook. A plataforma conecta registros da visita, evidências, decisões conversacionais, ambiente, móveis paramétricos, peças e montagem, preservando a origem de cada informação até a confirmação do cliente, validação comercial e liberação técnica explícita.
 
-**Primeira prova de valor:** abrir um projeto, anexar fotos, registrar medidas e observações por texto, desenhar uma parede em elevação 2D, configurar um balcão paramétrico em 3D, conversar sobre uma alteração e ver uma proposta que, depois de confirmada, atualiza o modelo e a lista de peças. Os registros devem apontar sua origem e nível de confiança.
+**Primeira prova de valor:** o cliente inicia um briefing restrito; a equipe abre o projeto, anexa fotos, registra medidas e observações por texto, desenha uma parede em elevação 2D, registra interferências físicas, configura um balcão paramétrico em 3D, conversa sobre uma alteração e vê uma proposta que, depois de confirmada, atualiza o modelo e a lista de peças. O cliente confirma o ilustrativo, a responsável registra essa confirmação e o marceneiro libera tecnicamente uma revisão válida antes de qualquer saída de produção. Os registros devem apontar sua origem e nível de confiança.
 
 **Fora da primeira prova:** vídeo e voz, reconstrução automática do ambiente, colaboração, nesting, integração com máquinas, e liberação automática de produção. Nenhum dado estimado ou interpretado por IA vira medida de fabricação conferida sem revisão humana.
 
@@ -25,6 +27,9 @@ Este backlog transforma a direção confirmada do produto em entregas verificáv
 
 - **Tarefa:** configurar a fundação aprovada em Supabase: conta interna, banco, armazenamento privado, limites de tamanho, exportação/backup e comportamento quando o armazenamento falha.
 - **Tarefa:** manter a integração de IA separada da fundação de dados; o contrato autoriza o uso de dados de cliente, mas escopo enviado, retenção e fornecedor de IA precisam ser documentados antes da conexão.
+- **Decisão confirmada:** criar o acesso/projeto registra consentimento versionado para operação, migração futura autorizada e evolução governada do produto/IA. A aceitação não permite transferência automática a outro servidor ou provedor.
+- **Decisão confirmada:** o levantamento pode continuar offline em rascunho local. A interface precisa indicar `local-only`, `sync-pending`, `synced`, `sync-failed` ou `conflict`; conflito não pode gerar sobrescrita silenciosa.
+- **Tarefa:** implementar rascunho local, sincronização explícita, recuperação de falhas e resolução de conflito antes do uso com clientes. Após sincronização bem-sucedida, sair da conta limpa a cópia local; rascunho não sincronizado exige escolha explícita entre manter para sincronizar depois ou descartar. Confirmação do cliente, validação comercial e liberação técnica exigem revisão sincronizada.
 - **Aceite:** o usuário entende onde os arquivos ficam; falhas e limites são exibidos sem sucesso falso; há um caminho testado de backup/restauração antes de uso com projetos reais.
 - **Dependências:** A1.
 - **Decisão confirmada:** Supabase para banco, autenticação, armazenamento privado e sincronização. A migration inicial foi validada localmente e aplicada ao projeto remoto sem dados operacionais. Faltam testes de permissões no remoto, backup, retenção, limites de mídia e integração da interface.
@@ -35,6 +40,14 @@ Este backlog transforma a direção confirmada do produto em entregas verificáv
 - **Tarefa:** salvar revisões imutáveis e permitir restaurar uma anterior como nova revisão; manter autosave de rascunho claramente distinto de revisão confirmada.
 - **Aceite:** recarregar e reabrir recupera projeto e revisões; cada exportação identifica revisão; erros de gravação são visíveis; migração de schema e restauração de backup têm testes.
 - **Dependências:** A1, A2.
+
+### A4 · Acesso do cliente e três confirmações — P0
+
+- **Decisão confirmada:** usar Supabase Phone Auth para o código único enviado ao telefone convidado; WhatsApp continua como canal manual de entrega do convite. A configuração do provedor de telefone, custos e limites permanece fora do repositório e exige autorização específica.
+- **Tarefa:** usar WhatsApp como canal preferencial de entrega manual do convite e autenticar o cliente por código único enviado ao número de telefone convidado. Definir e implementar expiração, recuperação/revogação de acesso, troca/perda de telefone e escopo por projeto; permitir iniciar briefing e enviar solicitações/referências autorizadas sem conceder edição técnica. Integração automatizada com API do WhatsApp não entra nesta fatia.
+- **Tarefa:** modelar separadamente confirmação do cliente, validação comercial e liberação técnica, todas vinculadas à revisão exata. Uma alteração relevante deve invalidar as confirmações aplicáveis de forma explícita.
+- **Aceite:** cliente só visualiza os próprios projetos e não consegue alterar dados técnicos; o sistema registra a revisão, identidade, data e resultado de cada confirmação; somente o marceneiro libera produção; uma revisão alterada não pode reutilizar confirmação ou liberação indevidamente.
+- **Dependências:** A1, A2, A3.
 
 ## Épico B — Registro da visita
 
@@ -49,6 +62,7 @@ Este backlog transforma a direção confirmada do produto em entregas verificáv
 
 - **Tarefa:** criar entradas de medida com valor, unidade, localização/contexto, origem e estado de confiança; registrar observações textuais vinculadas ao projeto e, opcionalmente, à evidência.
 - **Tarefa:** criar pendências específicas, como “medir distância da tomada ao canto”, e permitir concluí-las com uma nova medida/evidência.
+- **Tarefa:** registrar interferências físicas do ambiente como entidades tipadas e selecionáveis, com posição/referência, dimensões, orientação, origem, confiança e evidência. Exemplos incluem saída de esgoto, suporte de pia, tomadas, pilares e vãos; qualquer recuo ou adaptação é uma proposta revisável, não uma regra presumida.
 - **Aceite:** não há conversão silenciosa de estimativa em medida conferida; pendências abertas aparecem no projeto e apontam para o contexto de origem; unidade e valor são validados.
 - **Dependências:** A1, A3; B1 para vínculo com fotos.
 
@@ -72,7 +86,7 @@ Este backlog transforma a direção confirmada do produto em entregas verificáv
 
 - **Tarefa:** integrar projeto/visualização, agente e material da visita, mantendo seleção/contexto compartilhados.
 - **Tarefa:** em telas estreitas, permitir alternar entre áreas sem perder seleção, rascunho de conversa ou contexto do projeto.
-- **Aceite:** selecionar peça ou foto muda o contexto visível ao agente; usuário consegue voltar da conversa para a evidência; estados vazios e erros de mídia/projeto são compreensíveis; teclado e leitor de tela conseguem navegar nas ações centrais.
+- **Aceite:** selecionar peça ou foto muda o contexto visível ao agente; usuário consegue voltar da conversa para a evidência; estados vazios, erros de mídia/projeto e estado de sincronização são compreensíveis; em celular e notebook as ações centrais podem ser usadas durante o levantamento; teclado e leitor de tela conseguem navegar nas ações centrais.
 - **Dependências:** B1, B2, C1, C2, D1.
 
 ## Épico D — Conversa assistida com controle
@@ -109,7 +123,7 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 6. Ver proposta e consequências, rejeitar sem alteração, depois aceitar uma proposta válida e conferir a revisão atualizada.
 7. Reabrir o projeto e confirmar a trilha de revisão; verificar que nenhuma medida estimada foi apresentada como pronta para fabricação.
 
-**Composição do marco:** A1–A3, B1–B2, C1–C3, D1–D3. D2 precisa ser resolvido antes de ligar um provedor real; até lá, D1 permite testar a experiência com propostas controladas sem IA.
+**Composição do marco:** A1–A4, B1–B2, C1–C3, D1–D3. D2 precisa ser resolvido antes de ligar um provedor real; até lá, D1 permite testar a experiência com propostas controladas sem IA.
 
 ## Épico E — Ampliar projeto e fabricação
 
@@ -128,7 +142,7 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 ### E3 · Verificação de prontidão para fabricação — P1
 
 - **Tarefa:** definir checklist de medidas confirmadas, materiais, bordas, ferragens, folgas, revisão e responsável técnico. Somente o marceneiro pode executar a liberação; definir também o substituto autorizado.
-- **Tarefa:** gerar relatório de pendências e documentos preliminares apenas para revisões válidas.
+- **Tarefa:** gerar relatório de pendências e documentos preliminares apenas para revisões válidas; gerar materiais, acessórios, informações de corte, etiquetas e montagem para uso somente a partir de revisão tecnicamente liberada.
 - **Aceite:** “preparar para fabricar” não significa liberar; bloqueios são rastreáveis; liberação exige ação explícita do marceneiro e registra identidade/data/revisão. A confirmação do comercial/cliente não a substitui.
 - **Dependências:** A3, E1, E2.
 
@@ -153,11 +167,10 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 
 ## Sequência e gestão
 
-1. Resolver A1 e A2; confirmar escopo de armazenamento e política de dados.
-2. Implementar A3 e D1 como base de revisões e alterações confiáveis.
-3. Construir B1–B2 para que o projeto tenha evidências e pendências utilizáveis.
-4. Implementar C1–C3 e validar o fluxo em uma visita de teste.
-5. Integrar D2–D3 apenas após decisão de privacidade; validar o Marco M0 ponta a ponta.
+1. Resolver A1 e A2; confirmar escopo de armazenamento, política de dados e comportamento em campo.
+2. Implementar A3, depois B2 e C1–C2, para que uma alteração tenha projeto, medida, contexto e revisão-base válidos.
+3. Implementar D1 como base de propostas controladas; construir B1 e C3 para completar as evidências e a estação de trabalho responsiva.
+4. Implementar A4 antes de expor qualquer dado ao cliente. Integrar D2–D3 apenas após decisão de privacidade; validar o Marco M0 ponta a ponta em celular e notebook, com dados desidentificados.
 6. Priorizar E1–E3 conforme as regras reais da oficina e a necessidade de liberação técnica.
 7. Iniciar E4, E5 ou E6 somente quando suas dependências e amostras/decisões estiverem disponíveis.
 

@@ -27,7 +27,7 @@ Antes de ativar uma capacidade nova, documentar o cenário: entrada, saída, pes
 | Risco | Impacto | Controle mínimo | Evidência esperada |
 | --- | --- | --- | --- |
 | IA interpreta medida, unidade ou pedido de forma errada | Móvel, furo ou lista de peças incorretos | Proposta tipada, unidade obrigatória, prévia e confirmação humana | Caso de teste de ambiguidade e revisão registrada |
-| Ilustrativo aprovado não corresponde à revisão de produção | Retrabalho, conflito com cliente ou perda financeira | Link fixado a uma revisão; aprovação comercial e liberação técnica separados | Registro dos dois gates e identificador da revisão |
+| Ilustrativo confirmado não corresponde à revisão de produção | Retrabalho, conflito com cliente ou perda financeira | Acesso do cliente e confirmações fixados a uma revisão; confirmação do cliente, validação comercial e liberação técnica separados | Registro das três confirmações e identificador da revisão |
 | Link compartilhado é acessado por pessoa não autorizada | Exposição de dados de cliente/projeto | Token não adivinhável, validade de 10 dias e revogação | Teste de expiração/revogação e log de compartilhamento |
 | IA ou importador cria/duplica peça | Corte a mais, desperdício ou montagem confusa | Identificador estável por peça, regras determinísticas e reconciliação | Teste de quantidade/identidade e etiqueta vinculada |
 | Arquivo CAD/CSV é interpretado fora do seu contexto | Medida, orientação ou material incorretos | Perfil por formato, amostra real, prévia e confirmação | Fixture desidentificada e relatório de divergências |
@@ -73,9 +73,10 @@ Uma mudança em modelo de IA, provedor, contrato de operações, fonte CAD/CSV o
 
 1. **Dados recebidos:** origem, data, responsável e estado de confiança registrados; CAD/CSV não é autoridade automática.
 2. **Proposta técnica:** impacto e suposições visíveis; alteração só ocorre após confirmação interna.
-3. **Aprovação comercial:** comercial registra confirmação do cliente para a revisão compartilhada. O link expira em dez dias; mensagem de WhatsApp pode ser evidência, não automação de estado.
-4. **Liberação técnica:** responsável interno confere e libera a revisão de produção. Só então podem ser usados plano de corte, etiquetas, materiais, pedidos e manual de montagem.
-5. **Aprendizado:** divergência, perda ou retrabalho volta para o registro de risco, requisitos e testes.
+3. **Confirmação do cliente:** cliente confirma ou solicita alteração para a revisão ilustrativa exibida em seu acesso. Isso não altera dados técnicos nem libera produção.
+4. **Validação comercial:** responsável por projeto/relacionamento confere e registra a resposta do cliente para aquela revisão. Mensagem de WhatsApp pode ser evidência, não automação de estado.
+5. **Liberação técnica:** marceneiro confere e libera a revisão de produção. Só então podem ser usados plano de corte, etiquetas, materiais, acessórios, pedidos e manual de montagem.
+6. **Aprendizado:** divergência, perda ou retrabalho volta para o registro de risco, requisitos e testes.
 
 ## Cadência leve
 
@@ -87,8 +88,10 @@ Uma mudança em modelo de IA, provedor, contrato de operações, fonte CAD/CSV o
 ## Itens ainda a definir
 
 - responsável marceneiro e substituto para liberação técnica;
-- permissões dos cinco acessos internos;
+- permissões dos dois acessos internos;
+- convite entregue preferencialmente por WhatsApp, autenticação por código único no telefone convidado, recuperação, revogação e escopo por projeto do acesso do cliente; não tratar mensagem ou link encaminhado como prova de identidade;
 - renovação de link expirado: novo token ou extensão controlada;
 - retenção de anexos, conversas, logs e evidências de WhatsApp;
 - equipamento, tamanho e conferência da etiqueta portátil;
 - amostras desidentificadas de SketchUp, Promob e CSV para validar o primeiro adaptador.
+- comportamento de captura e sincronização em campo quando não houver conectividade confiável.
