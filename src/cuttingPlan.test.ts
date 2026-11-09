@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  createPreliminaryStripPlan,
   reportedWorkshopCuttingSettings,
   reportedWorkshopSheet,
   reportedWorkshopTrimRangeMm,
@@ -65,5 +66,34 @@ describe("cutting configuration", () => {
       [part],
     );
     expect(result.errors).toHaveLength(2);
+  });
+
+  it("creates a deterministic preliminary strip layout with kerf gaps", () => {
+    const sheet = { ...reportedWorkshopSheet, materialId: "mdf-15", thicknessMm: 15, grain: "none" as const };
+    const settings = { kerfMm: 3, trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } };
+    const result = createPreliminaryStripPlan(sheet, settings, [part]);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.sheets).toHaveLength(1);
+    expect(result.sheets[0].placements).toHaveLength(2);
+    const [first, second] = result.sheets[0].placements;
+    expect(second.xMm - (first.xMm + first.lengthMm)).toBe(3);
+    expect(result.sheets[0].usedPartAreaMm2).toBe(720 * 500 * 2);
+  });
+
+  it("opens another sheet when the current sheet has no remaining strip space", () => {
+    const sheet = { ...reportedWorkshopSheet, materialId: "mdf-15", thicknessMm: 15, grain: "none" as const };
+    const settings = { kerfMm: 3, trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } };
+    const large = { ...part, lengthMm: 2700, widthMm: 1800, quantity: 2, allowRotation: false };
+    const result = createPreliminaryStripPlan(sheet, settings, [large]);
+    expect(result.ok && result.sheets).toHaveLength(2);
+  });
+
+  it("refuses to plan while trim or grain remains pending", () => {
+    const sheet = { ...reportedWorkshopSheet, materialId: "mdf-15", thicknessMm: 15 };
+    const result = createPreliminaryStripPlan(sheet, reportedWorkshopCuttingSettings, [{ ...part, grain: "pending" }]);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.pending.length).toBeGreaterThan(0);
   });
 });

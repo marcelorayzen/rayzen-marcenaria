@@ -37,6 +37,29 @@ export interface CuttingConfigurationCheck {
   usableWidthMm: number | null;
 }
 
+export interface CutPlacement {
+  id: string;
+  partId: string;
+  instance: number;
+  xMm: number;
+  yMm: number;
+  lengthMm: number;
+  widthMm: number;
+  rotated: boolean;
+  strip: number;
+}
+
+export interface PlannedSheet {
+  number: number;
+  placements: CutPlacement[];
+  usedPartAreaMm2: number;
+  usableAreaMm2: number;
+}
+
+export type PreliminaryCutPlan =
+  | { ok: false; errors: string[]; pending: string[] }
+  | { ok: true; sheets: PlannedSheet[]; kerfMm: number; note: string };
+
 function finitePositive(value: number): boolean {
   return Number.isFinite(value) && value > 0;
 }
@@ -109,6 +132,137 @@ export function validateCuttingConfiguration(
   }
 
   return { errors, pending, usableLengthMm, usableWidthMm };
+}
+
+interface ExpandedPart extends RectangularCutPart {
+  instance: number;
+}
+
+interface StripState {
+  yMm: number;
+  widthMm: number;
+  nextXMm: number;
+}
+
+interface SheetState {
+  placements: CutPlacement[];
+  strips: StripState[];
+}
+
+function orientations(part: ExpandedPart): Array<{ lengthMm: number; widthMm: number; rotated: boolean }> {
+  const values = [{ lengthMm: part.lengthMm, widthMm: part.widthMm, rotated: false }];
+  if (part.allowRotation && part.grain === "none" && part.lengthMm !== part.widthMm) {
+    values.push({ lengthMm: part.widthMm, widthMm: part.lengthMm, rotated: true });
+  }
+  return values;
+}
+
+/**
+ * Deterministic strip layout used as a reviewable baseline. It is not yet a
+ * production cut sequence or a claim of optimal material use.
+ */
+export function createPreliminaryStripPlan(
+  sheet: SheetStock,
+  settings: CuttingSettings,
+  parts: RectangularCutPart[],
+): PreliminaryCutPlan {
+  const check = validateCuttingConfiguration(sheet, settings, parts);
+  if (check.errors.length || check.pending.length || check.usableLengthMm === null || check.usableWidthMm === null) {
+    return { ok: false, errors: check.errors, pending: check.pending };
+  }
+
+  const expanded: ExpandedPart[] = parts.flatMap(part =>
+    Array.from({ length: part.quantity }, (_, index) => ({ ...part, instance: index + 1 })),
+  ).sort((left, right) =>
+    Math.max(right.lengthMm, right.widthMm) - Math.max(left.lengthMm, left.widthMm)
+      || right.widthMm - left.widthMm
+      || left.id.localeCompare(right.id)
+      || left.instance - right.instance,
+  );
+  const sheetStates: SheetState[] = [];
+  const originX = settings.trim.leftMm!;
+  const originY = settings.trim.topMm!;
+  const endX = sheet.lengthMm - settings.trim.rightMm!;
+  const endY = sheet.widthMm - settings.trim.bottomMm!;
+
+  const place = (
+    state: SheetState,
+    stripIndex: number,
+    strip: StripState,
+    part: ExpandedPart,
+    orientation: { lengthMm: number; widthMm: number; rotated: boolean },
+  ) => {
+    state.placements.push({
+      id: JSON.stringify([part.id, part.instance]),
+      partId: part.id,
+      instance: part.instance,
+      xMm: strip.nextXMm,
+      yMm: strip.yMm,
+      lengthMm: orientation.lengthMm,
+      widthMm: orientation.widthMm,
+      rotated: orientation.rotated,
+      strip: stripIndex + 1,
+    });
+    strip.nextXMm += orientation.lengthMm + settings.kerfMm;
+  };
+
+  for (const part of expanded) {
+    let placed = false;
+    for (const state of sheetStates) {
+      for (const [stripIndex, strip] of state.strips.entries()) {
+        const option = orientations(part).find(candidate =>
+          candidate.widthMm <= strip.widthMm && strip.nextXMm + candidate.lengthMm <= endX,
+        );
+        if (option) {
+          place(state, stripIndex, strip, part, option);
+          placed = true;
+          break;
+        }
+      }
+      if (placed) break;
+
+      const nextY = state.strips.length === 0
+        ? originY
+        : state.strips.at(-1)!.yMm + state.strips.at(-1)!.widthMm + settings.kerfMm;
+      const option = orientations(part).find(candidate =>
+        originX + candidate.lengthMm <= endX && nextY + candidate.widthMm <= endY,
+      );
+      if (option) {
+        const strip = { yMm: nextY, widthMm: option.widthMm, nextXMm: originX };
+        state.strips.push(strip);
+        place(state, state.strips.length - 1, strip, part, option);
+        placed = true;
+        break;
+      }
+    }
+
+    if (!placed) {
+      const option = orientations(part).find(candidate =>
+        originX + candidate.lengthMm <= endX && originY + candidate.widthMm <= endY,
+      );
+      if (!option) {
+        return { ok: false, errors: [`Peça ${part.id} não cabe na chapa.`], pending: [] };
+      }
+      const state: SheetState = { placements: [], strips: [] };
+      const strip = { yMm: originY, widthMm: option.widthMm, nextXMm: originX };
+      state.strips.push(strip);
+      place(state, 0, strip, part, option);
+      sheetStates.push(state);
+    }
+  }
+
+  const usableAreaMm2 = check.usableLengthMm * check.usableWidthMm;
+  return {
+    ok: true,
+    kerfMm: settings.kerfMm,
+    note: "Distribuição preliminar em faixas; sequência de cortes e liberação técnica ainda pendentes.",
+    sheets: sheetStates.map((state, index) => ({
+      number: index + 1,
+      placements: state.placements,
+      usedPartAreaMm2: state.placements.reduce((sum, item) => sum + item.lengthMm * item.widthMm, 0),
+      usableAreaMm2,
+    })),
+  };
 }
 
 export const reportedWorkshopSheet: SheetStock = {

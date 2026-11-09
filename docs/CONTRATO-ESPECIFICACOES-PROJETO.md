@@ -37,7 +37,9 @@ Estado: contrato e testes locais, ainda sem ligação ao editor, banco ou otimiz
 
 A prática usual informada é refilo entre 3 e 4 mm por lado; cada plano registra o valor exato de cada lado. As larguras de fita informadas são 22, 35, 45 e 60 mm. Esses valores formam sugestões da oficina, não um catálogo fechado; espessura da fita e descontos continuam independentes e pendentes.
 
-As peças são separadas por material e espessura, exigem quantidade inteira, dimensões positivas e política de rotação compatível com o veio. Esta etapa valida entradas; ainda não distribui peças, gera sequência de cortes ou libera produção.
+As peças são separadas por material e espessura, exigem quantidade inteira, dimensões positivas e política de rotação compatível com o veio. Entradas incompletas impedem a distribuição; nenhuma saída libera produção.
+
+O mesmo módulo agora contém uma distribuição determinística preliminar em faixas. Ela expande quantidades, mantém afastamento da serra, respeita área útil e abre novas chapas quando necessário. É uma base verificável para a visualização: ainda não otimiza alternativas, não gera sequência operacional de cortes e não pode ser apresentada como plano liberado.
 
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
