@@ -1228,10 +1228,59 @@ tr:focus-visible {
 }
 
 .cutting-plan-heading p,
-.cutting-plan-heading > strong {
+.cutting-plan-actions > strong {
   margin: 0;
   color: var(--muted);
   font: 600 10px/1.4 var(--mono);
+}
+
+.cutting-plan-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cutting-plan-actions button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font: 600 9px var(--mono);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.cutting-plan-actions button:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.cutting-report-identity {
+  display: grid;
+  grid-template-columns: 2fr .6fr 1.2fr;
+  gap: 1px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.cutting-report-identity > div {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  background: var(--paper);
+}
+
+.cutting-report-identity span,
+.cutting-report-identity small {
+  color: var(--muted);
+  font: 500 8px/1.3 var(--mono);
+  text-transform: uppercase;
+}
+
+.cutting-report-identity strong {
+  font: 600 11px/1.3 var(--mono);
 }
 
 .cutting-settings {
@@ -1376,6 +1425,34 @@ tr:focus-visible {
   border: 1px solid var(--line);
   color: var(--ink);
   font-family: var(--mono);
+}
+
+.cutting-report-parts {
+  margin-top: 16px;
+}
+
+.cutting-report-parts h3 {
+  margin: 0 0 8px;
+  font: 600 14px var(--display);
+}
+
+.cutting-report-parts table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.cutting-report-parts th,
+.cutting-report-parts td {
+  padding: 7px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.cutting-report-parts th {
+  color: var(--muted);
+  font: 600 8px var(--mono);
+  text-transform: uppercase;
 }
 
 @media (max-width: 760px) {
@@ -2763,5 +2840,57 @@ tr:focus-visible {
     align-items: flex-start;
     flex-direction: column;
     gap: 3px;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .cutting-plan-section,
+  .cutting-plan-section * {
+    visibility: visible;
+  }
+
+  .cutting-plan-section {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .cutting-settings,
+  .cutting-plan-actions button {
+    display: none;
+  }
+
+  .cutting-sheet-card {
+    break-inside: avoid;
+    background: #fff;
+  }
+
+  .cutting-sheet-map {
+    max-height: 125mm;
+  }
+
+  .cutting-operations > ol {
+    display: grid !important;
+  }
+
+  .cutting-operations summary {
+    display: none;
   }
 }

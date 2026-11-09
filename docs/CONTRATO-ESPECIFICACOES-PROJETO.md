@@ -45,6 +45,8 @@ O mesmo módulo agora contém uma distribuição determinística preliminar em f
 
 Cada chapa agora expõe uma lista preliminar: refilos informados, separação das faixas e cortes das peças na ordem determinística do layout. Essa lista descreve o algoritmo atual, não uma sequência validada na máquina; manuseio, rotação física da chapa e convenção operacional da oficina ainda precisam de validação humana.
 
+`src/cuttingPlanReport.ts` cria uma projeção imutável para impressão, vinculada ao ID/título do projeto e ao número da revisão. O contrato confere se a quantidade planejada de cada peça coincide com a lista de entrada. A interface oferece “Imprimir relatório”, que usa a impressão/PDF do navegador e inclui identificação, parâmetros, mapas, operações e peças. Isso não é um gerador de PDF de produção, não persiste a configuração e mantém o status `preliminary-not-released`.
+
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
 - A IA não confirma a proposta, não calcula produção e não libera materiais/cortes.

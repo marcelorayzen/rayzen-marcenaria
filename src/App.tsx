@@ -2138,6 +2138,7 @@ export default function App() {
 
         <CuttingPlanPanel
           parts={createCounterModel(savedRevision.parameters).parts}
+          project={{ id: demoProject.id, title: demoProject.title }}
           revision={savedRevision.number}
         />
 

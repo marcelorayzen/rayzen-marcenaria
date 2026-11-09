@@ -6,6 +6,7 @@ import {
   type CuttingSettings,
   type SheetTrim,
 } from "./cuttingPlan";
+import { createCuttingPlanReport } from "./cuttingPlanReport";
 
 type Grain = "length" | "width" | "none" | "pending";
 type TrimSide = keyof SheetTrim;
@@ -22,7 +23,15 @@ function parseTrim(value: string): number | null {
   return Number(value);
 }
 
-export function CuttingPlanPanel({ parts, revision }: { parts: Part[]; revision: number }) {
+export function CuttingPlanPanel({
+  parts,
+  project,
+  revision,
+}: {
+  parts: Part[];
+  project: { id: string; title: string };
+  revision: number;
+}) {
   const [trim, setTrim] = useState<Record<TrimSide, string>>({
     topMm: "4",
     rightMm: "4",
@@ -31,7 +40,7 @@ export function CuttingPlanPanel({ parts, revision }: { parts: Part[]; revision:
   });
   const [grain, setGrain] = useState<Grain>("none");
 
-  const plan = useMemo(() => {
+  const calculation = useMemo(() => {
     const first = parts[0];
     if (!first) return null;
     const settings: CuttingSettings = {
@@ -43,15 +52,13 @@ export function CuttingPlanPanel({ parts, revision }: { parts: Part[]; revision:
         leftMm: parseTrim(trim.leftMm),
       },
     };
-    return createPreliminaryStripPlan(
-      {
-        ...reportedWorkshopSheet,
-        materialId: first.material,
-        thicknessMm: first.thickness,
-        grain,
-      },
-      settings,
-      parts.map(part => ({
+    const stock = {
+      ...reportedWorkshopSheet,
+      materialId: first.material,
+      thicknessMm: first.thickness,
+      grain,
+    };
+    const cutParts = parts.map(part => ({
         id: part.id,
         materialId: part.material,
         thicknessMm: part.thickness,
@@ -60,9 +67,15 @@ export function CuttingPlanPanel({ parts, revision }: { parts: Part[]; revision:
         quantity: part.quantity,
         grain,
         allowRotation: grain === "none",
-      })),
-    );
-  }, [grain, parts, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
+      }));
+    const plan = createPreliminaryStripPlan(stock, settings, cutParts);
+    return {
+      plan,
+      report: createCuttingPlanReport(project, revision, stock, settings, cutParts, plan),
+    };
+  }, [grain, parts, project.id, project.title, revision, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
+  const plan = calculation?.plan ?? null;
+  const report = calculation?.report.ok ? calculation.report.report : null;
 
   return (
     <section className="cutting-plan-section" aria-labelledby="cutting-plan-title">
@@ -72,8 +85,19 @@ export function CuttingPlanPanel({ parts, revision }: { parts: Part[]; revision:
           <h2 id="cutting-plan-title">Distribuição nas chapas</h2>
           <p>Chapa 2750 × 1850 mm · serra 3 mm · revisão R{String(revision).padStart(2, "0")}</p>
         </div>
-        <strong>{plan?.ok ? `${plan.sheets.length} CHAPA(S)` : "CONFIGURAÇÃO PENDENTE"}</strong>
+        <div className="cutting-plan-actions">
+          <strong>{plan?.ok ? `${plan.sheets.length} CHAPA(S)` : "CONFIGURAÇÃO PENDENTE"}</strong>
+          <button type="button" disabled={!report} onClick={() => window.print()}>Imprimir relatório</button>
+        </div>
       </header>
+
+      {report ? (
+        <div className="cutting-report-identity">
+          <div><span>Projeto</span><strong>{report.project.title}</strong><small>{report.project.id}</small></div>
+          <div><span>Revisão</span><strong>R{String(report.revision).padStart(2, "0")}</strong></div>
+          <div><span>Status</span><strong>PRELIMINAR · NÃO LIBERADO</strong></div>
+        </div>
+      ) : null}
 
       <div className="cutting-settings">
         <label>
@@ -158,6 +182,21 @@ export function CuttingPlanPanel({ parts, revision }: { parts: Part[]; revision:
               </article>
             );
           })}
+        </div>
+      ) : null}
+
+      {report ? (
+        <div className="cutting-report-parts">
+          <h3>Peças consideradas</h3>
+          <table>
+            <thead><tr><th>Peça</th><th>Qtd.</th><th>Dimensões</th><th>Material</th><th>Esp.</th></tr></thead>
+            <tbody>{report.parts.map(part => (
+              <tr key={part.id}>
+                <td>{part.id}</td><td>{part.quantity}</td><td>{part.lengthMm} × {part.widthMm} mm</td>
+                <td>{part.materialId}</td><td>{part.thicknessMm} mm</td>
+              </tr>
+            ))}</tbody>
+          </table>
         </div>
       ) : null}
 
