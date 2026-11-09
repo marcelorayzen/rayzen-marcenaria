@@ -17,6 +17,7 @@ import {
 import { createCuttingPieceLabels } from "./cuttingLabels";
 import { createCuttingLabelsCsv, createCuttingPlanPackage } from "./cuttingPlanExport";
 import { createCuttingMapAnnotations } from "./cuttingMapDimensions";
+import { BrowserCuttingPlanArchive } from "./browserCuttingPlanArchive";
 
 type TrimSide = keyof SheetTrim;
 
@@ -59,6 +60,15 @@ export function CuttingPlanPanel({
     [project.id],
   );
   const initialConfiguration = useMemo(() => configurationStore.load(), [configurationStore]);
+  const archiveStore = useMemo(
+    () => new BrowserCuttingPlanArchive(
+      window.localStorage,
+      `rayzen-marcenaria:project:${project.id}:cutting-plan-archive:v1`,
+    ),
+    [project.id],
+  );
+  const [archivedPlans, setArchivedPlans] = useState(() => archiveStore.load());
+  const [archiveMessage, setArchiveMessage] = useState<string | null>(null);
   const [trim, setTrim] = useState<Record<TrimSide, string>>({
     topMm: initialConfiguration ? trimInputValue(initialConfiguration.trim.topMm) : "4",
     rightMm: initialConfiguration ? trimInputValue(initialConfiguration.trim.rightMm) : "4",
@@ -198,6 +208,18 @@ export function CuttingPlanPanel({
     );
   }
 
+  function archiveCurrentPlan() {
+    if (!portablePackage?.ok) return;
+    const savedAt = new Date().toISOString();
+    const next = archiveStore.save({
+      id: `cutting-plan-${project.id}-r${revision}-${crypto.randomUUID()}`,
+      savedAt,
+      package: portablePackage.package,
+    });
+    setArchivedPlans(next);
+    setArchiveMessage(`Plano preliminar R${String(revision).padStart(2, "0")} arquivado neste dispositivo.`);
+  }
+
   return (
     <section className="cutting-plan-section" aria-labelledby="cutting-plan-title">
       <header className="cutting-plan-heading">
@@ -208,6 +230,7 @@ export function CuttingPlanPanel({
         </div>
         <div className="cutting-plan-actions">
           <strong>{plan?.ok ? `${plan.sheets.length} CHAPA(S)` : "CONFIGURAÇÃO PENDENTE"}</strong>
+          <button type="button" disabled={!portablePackage?.ok} onClick={archiveCurrentPlan}>Salvar plano</button>
           <button type="button" disabled={!portablePackage?.ok} onClick={downloadPackage}>Baixar JSON</button>
           <button type="button" disabled={!portablePackage?.ok} onClick={downloadLabelsCsv}>Etiquetas CSV</button>
           <button type="button" disabled={!report} onClick={() => window.print()}>Imprimir relatório</button>
@@ -221,6 +244,12 @@ export function CuttingPlanPanel({
           <div><span>Estratégia</span><strong>{strategyLabels[report.strategy]}</strong></div>
           <div><span>Status</span><strong>PRELIMINAR · NÃO LIBERADO</strong></div>
         </div>
+      ) : null}
+      {archivedPlans.length > 0 || archiveMessage ? (
+        <p className="cutting-plan-archive-status">
+          {archiveMessage ?? `${archivedPlans.length} plano(s) preliminar(es) arquivado(s) neste dispositivo.`}
+          {archivedPlans[0] ? ` Último: R${String(archivedPlans[0].package.revision).padStart(2, "0")} · ${new Date(archivedPlans[0].savedAt).toLocaleString("pt-BR")}.` : ""}
+        </p>
       ) : null}
 
       <div className="cutting-settings">
