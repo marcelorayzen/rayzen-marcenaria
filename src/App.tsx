@@ -38,6 +38,7 @@ import {
 import { getDraftSynchronizationPresentation } from "./draftSynchronization";
 import { AuthPanel, type AuthUser } from "./AuthPanel";
 import { isSupabaseConfigured } from "./supabaseClient";
+import { getRoleCapabilities } from "./roleCapabilities";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -291,11 +292,27 @@ export default function App() {
   const selectedConstraint = savedRevision.physicalConstraints.find(
     (constraint) => constraint.id === selectedConstraintId,
   );
+  const roleCapabilities = getRoleCapabilities(authUser?.roles ?? []);
 
   if (isSupabaseConfigured && (authUser === null || !authUser.profileReady)) {
     return (
       <main className="auth-locked-page">
         <AuthPanel onUserChange={setAuthUser} />
+        <section className="role-banner" aria-label="Papéis e permissões">
+          <div>
+            <span className="small-label">CONTEXTO DE TRABALHO</span>
+            <strong>{authUser?.displayName ?? "Demonstração local"}</strong>
+          </div>
+          <div className="role-badges">
+            {(authUser?.roles ?? []).length > 0 ? (authUser?.roles ?? []).map((role) => (
+              <span key={role}>{role}</span>
+            )) : <span>modo local</span>}
+          </div>
+          <p>
+            {roleCapabilities.canValidateCommercial ? "Pode registrar validação comercial." : "Validação comercial fica com o representante."}{" "}
+            {roleCapabilities.canReleaseProduction ? "Pode liberar tecnicamente quando o gate estiver implementado." : "Liberação técnica fica com o marceneiro."}
+          </p>
+        </section>
         <p>{authUser ? "Seu usuário foi autenticado, mas ainda não possui um perfil interno provisionado." : "Entre com uma conta da equipe para acessar o espaço de trabalho."}</p>
       </main>
     );

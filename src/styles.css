@@ -956,6 +956,47 @@ tr:focus-visible {
   font-size: 20px;
 }
 
+.role-banner {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) auto;
+  gap: 8px 14px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border: 1px solid #d4d9d3;
+  background: #eef2ed;
+  color: #394344;
+}
+
+.role-banner strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+}
+
+.role-banner p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #667677;
+  font-size: 10px;
+}
+
+.role-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: end;
+}
+
+.role-badges span {
+  padding: 4px 7px;
+  border: 1px solid #9fb0a7;
+  color: #3e5c5b;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .auth-form {
   display: flex;
   flex-wrap: wrap;
