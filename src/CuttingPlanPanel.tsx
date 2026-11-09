@@ -14,6 +14,7 @@ import {
 } from "./browserCuttingConfiguration";
 import { createCuttingPieceLabels } from "./cuttingLabels";
 import { createCuttingLabelsCsv, createCuttingPlanPackage } from "./cuttingPlanExport";
+import { createCuttingMapAnnotations } from "./cuttingMapDimensions";
 
 type TrimSide = keyof SheetTrim;
 
@@ -117,6 +118,8 @@ export function CuttingPlanPanel({
     const plan = createPreliminaryStripPlan(stock, settings, cutParts);
     return {
       plan,
+      stock,
+      settings,
       report: createCuttingPlanReport(project, revision, stock, settings, cutParts, plan),
       labels: createCuttingPieceLabels(
         project,
@@ -229,6 +232,11 @@ export function CuttingPlanPanel({
             const utilization = sheet.usableAreaMm2 > 0
               ? (sheet.usedPartAreaMm2 / sheet.usableAreaMm2) * 100
               : 0;
+            const dimensionResult = calculation
+              ? createCuttingMapAnnotations(calculation.stock, calculation.settings, sheet)
+              : null;
+            const annotations = dimensionResult?.ok ? dimensionResult.annotations : null;
+            const markerId = `cutting-dimension-arrow-${sheet.number}`;
             return (
               <article className="cutting-sheet-card" key={sheet.number}>
                 <div>
@@ -241,7 +249,21 @@ export function CuttingPlanPanel({
                   role="img"
                   aria-label={`Distribuição preliminar da chapa ${sheet.number}`}
                 >
+                  <defs>
+                    <marker id={markerId} markerWidth="18" markerHeight="18" refX="9" refY="9" orient="auto-start-reverse">
+                      <path d="M 0 9 L 18 1 L 14 9 L 18 17 Z" className="cutting-dimension-arrow" />
+                    </marker>
+                  </defs>
                   <rect className="cutting-sheet-stock" x="0" y="0" width="2750" height="1850" />
+                  {annotations ? (
+                    <rect
+                      className="cutting-usable-area"
+                      x={annotations.usableArea.x}
+                      y={annotations.usableArea.y}
+                      width={annotations.usableArea.width}
+                      height={annotations.usableArea.height}
+                    />
+                  ) : null}
                   {sheet.placements.map(placement => (
                     <g key={placement.id}>
                       <rect
@@ -254,12 +276,32 @@ export function CuttingPlanPanel({
                       <text
                         className="cutting-part-label"
                         x={placement.xMm + 18}
-                        y={placement.yMm + 42}
+                        y={placement.yMm + 92}
                       >
-                        {placement.partId} · {placement.lengthMm}×{placement.widthMm}
+                        {placement.partId} #{placement.instance} · {placement.lengthMm}×{placement.widthMm}
+                      </text>
+                      <text className="cutting-part-coordinate" x={placement.xMm + 18} y={placement.yMm + 126}>
+                        X {placement.xMm} · Y {placement.yMm}{placement.rotated ? " · GIRADA" : ""}
                       </text>
                     </g>
                   ))}
+                  {annotations?.dimensions.map(dimension => {
+                    const middleX = (dimension.x1 + dimension.x2) / 2;
+                    const middleY = (dimension.y1 + dimension.y2) / 2;
+                    return (
+                      <g key={dimension.id} className={`cutting-dimension cutting-dimension-${dimension.scope}`}>
+                        <line
+                          x1={dimension.x1} y1={dimension.y1} x2={dimension.x2} y2={dimension.y2}
+                          markerStart={`url(#${markerId})`} markerEnd={`url(#${markerId})`}
+                        />
+                        <text
+                          x={middleX}
+                          y={middleY - 10}
+                          transform={dimension.axis === "vertical" ? `rotate(-90 ${middleX} ${middleY})` : undefined}
+                        >{dimension.label}</text>
+                      </g>
+                    );
+                  })}
                 </svg>
                 <details className="cutting-operations">
                   <summary>Ver operações preliminares</summary>

@@ -1376,6 +1376,47 @@ tr:focus-visible {
   pointer-events: none;
 }
 
+.cutting-part-coordinate {
+  fill: #4f5d5d;
+  font: 600 22px var(--mono);
+  pointer-events: none;
+}
+
+.cutting-usable-area {
+  fill: none;
+  stroke: #a34432;
+  stroke-width: 6;
+  stroke-dasharray: 24 16;
+}
+
+.cutting-dimension line {
+  stroke: #a34432;
+  stroke-width: 4;
+}
+
+.cutting-dimension text {
+  fill: #762f24;
+  paint-order: stroke;
+  stroke: #f5f6f2;
+  stroke-width: 10;
+  stroke-linejoin: round;
+  font: 700 24px var(--mono);
+  text-anchor: middle;
+}
+
+.cutting-dimension-part line {
+  stroke-width: 3;
+  opacity: .78;
+}
+
+.cutting-dimension-part text {
+  font-size: 20px;
+}
+
+.cutting-dimension-arrow {
+  fill: #a34432;
+}
+
 .cutting-plan-warning {
   margin: 14px 0 0;
   padding: 10px 12px;
