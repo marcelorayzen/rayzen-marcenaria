@@ -39,7 +39,9 @@ A prática usual informada é refilo entre 3 e 4 mm por lado; cada plano registr
 
 As peças são separadas por material e espessura, exigem quantidade inteira, dimensões positivas e política de rotação compatível com o veio. Entradas incompletas impedem a distribuição; nenhuma saída libera produção.
 
-O mesmo módulo agora contém uma distribuição determinística preliminar em faixas. Ela expande quantidades, mantém afastamento da serra, respeita área útil e abre novas chapas quando necessário. É uma base verificável para a visualização: ainda não otimiza alternativas, não gera sequência operacional de cortes e não pode ser apresentada como plano liberado.
+O mesmo módulo agora contém uma distribuição determinística preliminar em faixas. Ela expande quantidades, mantém afastamento da serra, respeita área útil e abre novas chapas quando necessário. É uma base verificável para a visualização: compara alternativas limitadas, mas não garante ótimo global, não gera sequência operacional validada e não pode ser apresentada como plano liberado.
+
+O comparador executa três ordenações determinísticas (`largest-side`, `area` e `strip-width`) e classifica os resultados por quantidade de chapas, desperdício calculado, quantidade de operações e desempate estável. A estratégia selecionada fica registrada no relatório/pacote. Isso compara heurísticas conhecidas do motor atual; não prova ótimo global nem substitui a avaliação de facilidade de execução pelo marceneiro.
 
 Antes de devolver um resultado bem-sucedido, o motor audita limites da área útil, unicidade dos posicionamentos, separação mínima pela largura da serra, soma da área utilizada e numeração contínua das operações. Uma falha nessa auditoria bloqueia relatório e exportações. Essa verificação geométrica automatizada não substitui a conferência da estratégia de corte na esquadrejadeira.
 

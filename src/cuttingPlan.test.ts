@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  comparePreliminaryStripPlans,
   createPreliminaryStripPlan,
   reportedWorkshopCuttingSettings,
   reportedWorkshopSheet,
@@ -127,5 +128,18 @@ describe("cutting configuration", () => {
       "Área utilizada divergente na chapa 1.",
       "Sequência de operações inválida na chapa 1.",
     ]));
+  });
+
+  it("compares deterministic strategies and selects the lowest ranked result", () => {
+    const sheet = { ...reportedWorkshopSheet, materialId: "mdf-15", thicknessMm: 15, grain: "none" as const };
+    const settings = { kerfMm: 3, trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } };
+    const comparison = comparePreliminaryStripPlans(sheet, settings, [part]);
+    expect(comparison.ok).toBe(true);
+    if (!comparison.ok) return;
+    expect(comparison.alternatives.map(item => item.strategy).sort()).toEqual(["area", "largest-side", "strip-width"]);
+    expect(comparison.alternatives.filter(item => item.selected)).toHaveLength(1);
+    const selected = comparison.alternatives.find(item => item.selected)!;
+    expect(comparison.selectedPlan.strategy).toBe(selected.strategy);
+    expect(selected.sheetCount).toBe(Math.min(...comparison.alternatives.map(item => item.sheetCount)));
   });
 });

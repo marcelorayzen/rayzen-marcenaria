@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import type { Part } from "./furnitureEngine";
 import {
-  createPreliminaryStripPlan,
+  comparePreliminaryStripPlans,
   reportedWorkshopSheet,
   type CuttingSettings,
   type SheetTrim,
@@ -24,6 +24,12 @@ const trimLabels: Array<[TrimSide, string]> = [
   ["bottomMm", "Inferior"],
   ["leftMm", "Esquerda"],
 ];
+
+const strategyLabels = {
+  "largest-side": "Maior lado primeiro",
+  area: "Maior área primeiro",
+  "strip-width": "Maior faixa primeiro",
+} as const;
 
 function parseTrim(value: string): number | null {
   if (!value.trim()) return null;
@@ -115,9 +121,11 @@ export function CuttingPlanPanel({
         grain,
         allowRotation: grain === "none",
       }));
-    const plan = createPreliminaryStripPlan(stock, settings, cutParts);
+    const comparison = comparePreliminaryStripPlans(stock, settings, cutParts);
+    const plan = comparison.ok ? comparison.selectedPlan : comparison.plan;
     return {
       plan,
+      comparison,
       stock,
       settings,
       report: createCuttingPlanReport(project, revision, stock, settings, cutParts, plan),
@@ -190,6 +198,7 @@ export function CuttingPlanPanel({
         <div className="cutting-report-identity">
           <div><span>Projeto</span><strong>{report.project.title}</strong><small>{report.project.id}</small></div>
           <div><span>Revisão</span><strong>R{String(report.revision).padStart(2, "0")}</strong></div>
+          <div><span>Estratégia</span><strong>{strategyLabels[report.strategy]}</strong></div>
           <div><span>Status</span><strong>PRELIMINAR · NÃO LIBERADO</strong></div>
         </div>
       ) : null}
@@ -218,6 +227,19 @@ export function CuttingPlanPanel({
         ))}
       </div>
       <p className="cutting-local-status">Configuração salva neste dispositivo para este projeto.</p>
+
+      {calculation?.comparison.ok ? (
+        <div className="cutting-alternatives" aria-label="Comparação de estratégias preliminares">
+          {calculation.comparison.alternatives.map(alternative => (
+            <div key={alternative.strategy} className={alternative.selected ? "selected" : ""}>
+              <span>{strategyLabels[alternative.strategy]}</span>
+              <strong>{alternative.sheetCount} chapa(s)</strong>
+              <small>{alternative.operationCount} operações · desperdício {(alternative.wasteAreaMm2 / 1_000_000).toFixed(2)} m²</small>
+              {alternative.selected ? <em>SELECIONADA</em> : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       {!plan ? <p className="cutting-plan-warning">A revisão não contém peças calculadas.</p> : null}
       {plan && !plan.ok ? (

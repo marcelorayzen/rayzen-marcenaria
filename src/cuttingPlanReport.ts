@@ -1,5 +1,6 @@
 import type {
   CuttingSettings,
+  CuttingPlanStrategy,
   PlannedSheet,
   PreliminaryCutPlan,
   RectangularCutPart,
@@ -12,6 +13,7 @@ export interface CuttingPlanReport {
   project: { id: string; title: string };
   revision: number;
   status: "preliminary-not-released";
+  strategy: CuttingPlanStrategy;
   stock: SheetStock;
   settings: CuttingSettings;
   parts: RectangularCutPart[];
@@ -68,6 +70,7 @@ export function createCuttingPlanReport(
       project: { id: project.id, title: project.title },
       revision,
       status: "preliminary-not-released",
+      strategy: plan.strategy,
       stock: clone(stock),
       settings: clone(settings),
       parts: clone(parts),

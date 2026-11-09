@@ -9,6 +9,7 @@ const report = {
   project: { id: "project-1", title: "Cozinha; cliente" },
   revision: 2,
   status: "preliminary-not-released",
+  strategy: "largest-side",
   stock: { id: "sheet", materialId: "MDF", thicknessMm: 15, lengthMm: 2750, widthMm: 1850, grain: "none" },
   settings: { kerfMm: 3, trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } },
   parts: [],

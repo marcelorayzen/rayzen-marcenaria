@@ -66,6 +66,25 @@ export interface PreliminaryCutOperation {
   label: string;
 }
 
+export type CuttingPlanStrategy = "largest-side" | "area" | "strip-width";
+
+export interface CuttingPlanAlternativeSummary {
+  strategy: CuttingPlanStrategy;
+  sheetCount: number;
+  operationCount: number;
+  usedPartAreaMm2: number;
+  wasteAreaMm2: number;
+  selected: boolean;
+}
+
+export type CuttingPlanComparison =
+  | { ok: false; plan: Extract<PreliminaryCutPlan, { ok: false }> }
+  | {
+      ok: true;
+      selectedPlan: Extract<PreliminaryCutPlan, { ok: true }>;
+      alternatives: CuttingPlanAlternativeSummary[];
+    };
+
 export function validatePreliminaryPlanGeometry(
   sheet: SheetStock,
   settings: CuttingSettings,
@@ -121,7 +140,7 @@ export function validatePreliminaryPlanGeometry(
 
 export type PreliminaryCutPlan =
   | { ok: false; errors: string[]; pending: string[] }
-  | { ok: true; sheets: PlannedSheet[]; kerfMm: number; note: string };
+  | { ok: true; sheets: PlannedSheet[]; kerfMm: number; strategy: CuttingPlanStrategy; note: string };
 
 function finitePositive(value: number): boolean {
   return Number.isFinite(value) && value > 0;
@@ -266,6 +285,7 @@ export function createPreliminaryStripPlan(
   sheet: SheetStock,
   settings: CuttingSettings,
   parts: RectangularCutPart[],
+  strategy: CuttingPlanStrategy = "largest-side",
 ): PreliminaryCutPlan {
   const check = validateCuttingConfiguration(sheet, settings, parts);
   if (check.errors.length || check.pending.length || check.usableLengthMm === null || check.usableWidthMm === null) {
@@ -274,12 +294,15 @@ export function createPreliminaryStripPlan(
 
   const expanded: ExpandedPart[] = parts.flatMap(part =>
     Array.from({ length: part.quantity }, (_, index) => ({ ...part, instance: index + 1 })),
-  ).sort((left, right) =>
-    Math.max(right.lengthMm, right.widthMm) - Math.max(left.lengthMm, left.widthMm)
-      || right.widthMm - left.widthMm
-      || left.id.localeCompare(right.id)
-      || left.instance - right.instance,
-  );
+  ).sort((left, right) => {
+    const strategyOrder = strategy === "area"
+      ? right.lengthMm * right.widthMm - left.lengthMm * left.widthMm
+      : strategy === "strip-width"
+        ? right.widthMm - left.widthMm || right.lengthMm - left.lengthMm
+        : Math.max(right.lengthMm, right.widthMm) - Math.max(left.lengthMm, left.widthMm)
+          || right.widthMm - left.widthMm;
+    return strategyOrder || left.id.localeCompare(right.id) || left.instance - right.instance;
+  });
   const sheetStates: SheetState[] = [];
   const originX = settings.trim.leftMm!;
   const originY = settings.trim.topMm!;
@@ -365,8 +388,51 @@ export function createPreliminaryStripPlan(
   return {
     ok: true,
     kerfMm: settings.kerfMm,
+    strategy,
     note: "Distribuição preliminar em faixas; sequência de cortes e liberação técnica ainda pendentes.",
     sheets: plannedSheets,
+  };
+}
+
+export function comparePreliminaryStripPlans(
+  sheet: SheetStock,
+  settings: CuttingSettings,
+  parts: RectangularCutPart[],
+): CuttingPlanComparison {
+  const strategies: CuttingPlanStrategy[] = ["largest-side", "area", "strip-width"];
+  const plans = strategies.map(strategy => createPreliminaryStripPlan(sheet, settings, parts, strategy));
+  const successful = plans.filter((plan): plan is Extract<PreliminaryCutPlan, { ok: true }> => plan.ok);
+  if (successful.length === 0) {
+    return { ok: false, plan: plans[0] as Extract<PreliminaryCutPlan, { ok: false }> };
+  }
+  const ranked = successful.map(plan => {
+    const usedPartAreaMm2 = plan.sheets.reduce((sum, plannedSheet) => sum + plannedSheet.usedPartAreaMm2, 0);
+    const totalUsableAreaMm2 = plan.sheets.reduce((sum, plannedSheet) => sum + plannedSheet.usableAreaMm2, 0);
+    return {
+      plan,
+      sheetCount: plan.sheets.length,
+      operationCount: plan.sheets.reduce((sum, plannedSheet) => sum + plannedSheet.operations.length, 0),
+      usedPartAreaMm2,
+      wasteAreaMm2: totalUsableAreaMm2 - usedPartAreaMm2,
+    };
+  }).sort((left, right) =>
+    left.sheetCount - right.sheetCount
+      || left.wasteAreaMm2 - right.wasteAreaMm2
+      || left.operationCount - right.operationCount
+      || strategies.indexOf(left.plan.strategy) - strategies.indexOf(right.plan.strategy),
+  );
+  const selected = ranked[0];
+  return {
+    ok: true,
+    selectedPlan: selected.plan,
+    alternatives: ranked.map(item => ({
+      strategy: item.plan.strategy,
+      sheetCount: item.sheetCount,
+      operationCount: item.operationCount,
+      usedPartAreaMm2: item.usedPartAreaMm2,
+      wasteAreaMm2: item.wasteAreaMm2,
+      selected: item.plan.strategy === selected.plan.strategy,
+    })),
   };
 }
 
