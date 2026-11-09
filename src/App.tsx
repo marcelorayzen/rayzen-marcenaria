@@ -42,6 +42,7 @@ import { isSupabaseConfigured } from "./supabaseClient";
 import { getRoleCapabilities } from "./roleCapabilities";
 import { supabase } from "./supabaseClient";
 import {
+  bindDraftRemoteProject,
   BrowserDraftSyncQueue,
   enqueueDraftSync,
   markDraftSyncConflict,
@@ -1009,12 +1010,23 @@ export default function App() {
       setSyncMessage(queued.message);
       return;
     }
-    const item = queued.queue.find((candidate) => candidate.revisionId === snapshot.revision.id);
+    let queueForSync = queued.queue;
+    let item = queueForSync.find((candidate) => candidate.revisionId === snapshot.revision.id);
     if (!item) {
       setSyncMessage("Não foi possível localizar a revisão enfileirada.");
       return;
     }
-    const syncing = markDraftSyncing(queued.queue, item.id);
+    if (!item.remoteProjectId) {
+      const bound = bindDraftRemoteProject(queueForSync, item.id, crypto.randomUUID());
+      if (!bound.ok) {
+        setSyncMessage(bound.message);
+        return;
+      }
+      queueForSync = bound.queue;
+      item = queueForSync.find(candidate => candidate.id === item!.id)!;
+      new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(demoProject.id)).save(queueForSync);
+    }
+    const syncing = markDraftSyncing(queueForSync, item.id);
     if (!syncing.ok) {
       setSyncMessage(syncing.message);
       return;

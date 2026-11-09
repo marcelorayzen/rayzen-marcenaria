@@ -64,8 +64,32 @@ export function enqueueDraftSync(
     status: "pending",
     queuedAt,
     attempts: 0,
+    remoteProjectId: queue.find(
+      candidate => candidate.projectId === snapshot.project.id && candidate.remoteProjectId,
+    )?.remoteProjectId,
   };
   return { ok: true, queue: [...queue.map(cloneItem), item] };
+}
+
+export function bindDraftRemoteProject(
+  queue: DraftSyncQueueItem[],
+  id: string,
+  remoteProjectId: string,
+): QueueResult {
+  if (!remoteProjectId.trim()) {
+    return { ok: false, message: "O vínculo remoto precisa identificar o projeto." };
+  }
+  const item = queue.find(candidate => candidate.id === id);
+  if (!item) return { ok: false, message: "Item de sincronização não encontrado." };
+  if (item.remoteProjectId && item.remoteProjectId !== remoteProjectId) {
+    return { ok: false, message: "O projeto local já possui outro vínculo remoto." };
+  }
+  return {
+    ok: true,
+    queue: queue.map(candidate => candidate.projectId === item.projectId
+      ? { ...cloneItem(candidate), remoteProjectId }
+      : cloneItem(candidate)),
+  };
 }
 
 export function markDraftSyncing(queue: DraftSyncQueueItem[], id: string): QueueResult {

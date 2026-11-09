@@ -8,6 +8,7 @@ export type RemoteDraftSyncResult =
   | { status: "failed"; message: string };
 
 type RemoteRow = { id: string; model?: unknown };
+type RemoteError = { code?: string };
 
 function sameJson(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
@@ -48,24 +49,36 @@ export async function syncDraftQueueItem(
     };
   }
 
-  let remoteProjectId = item.remoteProjectId;
+  const remoteProjectId = item.remoteProjectId;
   if (!remoteProjectId) {
+    return { status: "failed", message: "O projeto local ainda não possui um vínculo remoto reservado." };
+  }
+
+  const existingProjectResult = await client
+    .from("projects")
+    .select("id")
+    .eq("id", remoteProjectId)
+    .maybeSingle();
+  if (existingProjectResult.error) {
+    return { status: "failed", message: "Não foi possível consultar o vínculo do projeto remoto." };
+  }
+
+  if (!existingProjectResult.data) {
     const projectResult = await client
       .from("projects")
-      .insert({ title: item.snapshot.project.title, owner_id: userId })
+      .insert({ id: remoteProjectId, title: item.snapshot.project.title, owner_id: userId })
       .select("id")
       .single();
     if (projectResult.error || !projectResult.data) {
       return { status: "failed", message: "Não foi possível criar o projeto remoto." };
     }
-    remoteProjectId = (projectResult.data as RemoteRow).id;
+  }
 
-    const membershipResult = await client
-      .from("project_members")
-      .insert({ project_id: remoteProjectId, user_id: userId });
-    if (membershipResult.error) {
-      return { status: "failed", message: "Não foi possível registrar o membro do projeto remoto." };
-    }
+  const membershipResult = await client
+    .from("project_members")
+    .insert({ project_id: remoteProjectId, user_id: userId });
+  if (membershipResult.error && (membershipResult.error as RemoteError).code !== "23505") {
+    return { status: "failed", message: "Não foi possível registrar o membro do projeto remoto." };
   }
 
   const existingResult = await client

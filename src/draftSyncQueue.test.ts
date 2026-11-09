@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BrowserDraftSyncQueue, enqueueDraftSync, markDraftSyncConflict, markDraftSyncFailed, markDraftSyncing, markDraftSynced } from "./draftSyncQueue";
+import { bindDraftRemoteProject, BrowserDraftSyncQueue, enqueueDraftSync, markDraftSyncConflict, markDraftSyncFailed, markDraftSyncing, markDraftSynced } from "./draftSyncQueue";
 import { PROJECT_SCHEMA_VERSION, type ProjectSnapshot } from "./projectDomain";
 
 const snapshot: ProjectSnapshot = {
@@ -33,6 +33,30 @@ describe("draft synchronization queue", () => {
     expect(syncing.queue[0].attempts).toBe(1);
     const failed = markDraftSyncFailed(syncing.queue, syncing.queue[0].id, "offline");
     expect(failed.ok && failed.queue[0].status).toBe("failed");
+  });
+
+  it("binds all revisions of a local project to one remote project", () => {
+    const first = enqueueDraftSync([], snapshot, "2026-11-09T10:01:00.000Z");
+    if (!first.ok) throw new Error(first.message);
+    const bound = bindDraftRemoteProject(first.queue, first.queue[0].id, "remote-project-1");
+    if (!bound.ok) throw new Error(bound.message);
+    const revision2 = {
+      ...snapshot,
+      revision: { id: "revision-2", number: 2, createdAt: "2026-11-09T10:02:00.000Z" },
+    };
+    const second = enqueueDraftSync(bound.queue, revision2, "2026-11-09T10:03:00.000Z");
+    expect(second.ok && second.queue[1].remoteProjectId).toBe("remote-project-1");
+  });
+
+  it("rejects changing an existing remote project binding", () => {
+    const first = enqueueDraftSync([], snapshot, "2026-11-09T10:01:00.000Z");
+    if (!first.ok) throw new Error(first.message);
+    const bound = bindDraftRemoteProject(first.queue, first.queue[0].id, "remote-project-1");
+    if (!bound.ok) throw new Error(bound.message);
+    expect(bindDraftRemoteProject(bound.queue, bound.queue[0].id, "remote-project-2")).toEqual({
+      ok: false,
+      message: "O projeto local já possui outro vínculo remoto.",
+    });
   });
 
   it("keeps conflict separate from successful synchronization", () => {
