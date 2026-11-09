@@ -43,6 +43,8 @@ O mesmo módulo agora contém uma distribuição determinística preliminar em f
 
 `CuttingPlanPanel.tsx` apresenta essa prévia para as peças da revisão salva. O operador escolhe refilo por lado e estado do veio; os valores iniciais de 4 mm ficam dentro da faixa informada pela oficina e podem ser alterados. Essa configuração ainda é estado da tela e deve ser persistida por projeto antes do uso operacional.
 
+Cada chapa agora expõe uma lista preliminar: refilos informados, separação das faixas e cortes das peças na ordem determinística do layout. Essa lista descreve o algoritmo atual, não uma sequência validada na máquina; manuseio, rotação física da chapa e convenção operacional da oficina ainda precisam de validação humana.
+
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
 - A IA não confirma a proposta, não calcula produção e não libera materiais/cortes.

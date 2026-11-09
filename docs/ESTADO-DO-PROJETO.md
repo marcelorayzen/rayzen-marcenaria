@@ -14,7 +14,7 @@ Próximo trabalho: preservar e reabrir múltiplos projetos, corrigir sincroniza�
 
 ## Estado confirmado
 
-Incremento em 9/11/2026: contratos `compositePanel.ts` para camadas, bordas e operações, e `cuttingPlan.ts` para validar chapa, largura de corte, refilos e compatibilidade das peças. A distribuição preliminar em faixas com afastamento da serra e múltiplas chapas está integrada à interface para a revisão salva, com configuração de refilo e veio. Ainda não está persistida, otimizada ou convertida em sequência operacional; não equivale a plano liberado.
+Incremento em 9/11/2026: contratos `compositePanel.ts` para camadas, bordas e operações, e `cuttingPlan.ts` para validar chapa, largura de corte, refilos e compatibilidade das peças. A distribuição preliminar em faixas com afastamento da serra e múltiplas chapas está integrada à interface para a revisão salva, com configuração de refilo/veio e lista preliminar de operações. Ainda não está persistida, otimizada ou validada na esquadrejadeira; não equivale a plano liberado.
 
 | Área | Estado | Evidência e limite |
 | --- | --- | --- |

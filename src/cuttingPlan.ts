@@ -52,8 +52,18 @@ export interface CutPlacement {
 export interface PlannedSheet {
   number: number;
   placements: CutPlacement[];
+  operations: PreliminaryCutOperation[];
   usedPartAreaMm2: number;
   usableAreaMm2: number;
+}
+
+export interface PreliminaryCutOperation {
+  sequence: number;
+  kind: "trim" | "rip-strip" | "crosscut-part";
+  axis: "length" | "width";
+  positionMm: number;
+  spanMm: number;
+  label: string;
 }
 
 export type PreliminaryCutPlan =
@@ -147,6 +157,44 @@ interface StripState {
 interface SheetState {
   placements: CutPlacement[];
   strips: StripState[];
+}
+
+function createPreliminaryOperations(
+  sheet: SheetStock,
+  settings: CuttingSettings,
+  state: SheetState,
+): PreliminaryCutOperation[] {
+  const operations: Omit<PreliminaryCutOperation, "sequence">[] = [];
+  const trims: Array<Omit<PreliminaryCutOperation, "sequence"> & { amountMm: number }> = [
+    { kind: "trim", axis: "length", positionMm: settings.trim.leftMm!, spanMm: sheet.widthMm, amountMm: settings.trim.leftMm!, label: "Refilar lado esquerdo" },
+    { kind: "trim", axis: "length", positionMm: sheet.lengthMm - settings.trim.rightMm!, spanMm: sheet.widthMm, amountMm: settings.trim.rightMm!, label: "Refilar lado direito" },
+    { kind: "trim", axis: "width", positionMm: settings.trim.topMm!, spanMm: sheet.lengthMm, amountMm: settings.trim.topMm!, label: "Refilar lado superior" },
+    { kind: "trim", axis: "width", positionMm: sheet.widthMm - settings.trim.bottomMm!, spanMm: sheet.lengthMm, amountMm: settings.trim.bottomMm!, label: "Refilar lado inferior" },
+  ];
+  operations.push(...trims.filter(item => item.amountMm > 0).map(({ amountMm: _amountMm, ...item }) => item));
+
+  for (const [stripIndex, strip] of state.strips.entries()) {
+    operations.push({
+      kind: "rip-strip",
+      axis: "width",
+      positionMm: strip.yMm + strip.widthMm,
+      spanMm: sheet.lengthMm - settings.trim.leftMm! - settings.trim.rightMm!,
+      label: `Separar faixa ${stripIndex + 1} com ${strip.widthMm} mm`,
+    });
+    const placements = state.placements
+      .filter(item => item.strip === stripIndex + 1)
+      .sort((left, right) => left.xMm - right.xMm);
+    for (const placement of placements) {
+      operations.push({
+        kind: "crosscut-part",
+        axis: "length",
+        positionMm: placement.xMm + placement.lengthMm,
+        spanMm: strip.widthMm,
+        label: `Cortar ${placement.partId} #${placement.instance} com ${placement.lengthMm} × ${placement.widthMm} mm`,
+      });
+    }
+  }
+  return operations.map((operation, index) => ({ ...operation, sequence: index + 1 }));
 }
 
 function orientations(part: ExpandedPart): Array<{ lengthMm: number; widthMm: number; rotated: boolean }> {
@@ -259,6 +307,7 @@ export function createPreliminaryStripPlan(
     sheets: sheetStates.map((state, index) => ({
       number: index + 1,
       placements: state.placements,
+      operations: createPreliminaryOperations(sheet, settings, state),
       usedPartAreaMm2: state.placements.reduce((sum, item) => sum + item.lengthMm * item.widthMm, 0),
       usableAreaMm2,
     })),

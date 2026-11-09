@@ -144,6 +144,17 @@ export function CuttingPlanPanel({ parts, revision }: { parts: Part[]; revision:
                     </g>
                   ))}
                 </svg>
+                <details className="cutting-operations">
+                  <summary>Ver operações preliminares</summary>
+                  <ol>
+                    {sheet.operations.map(operation => (
+                      <li key={operation.sequence}>
+                        <span>{operation.sequence}</span>
+                        <span>{operation.label}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
               </article>
             );
           })}

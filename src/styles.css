@@ -1319,6 +1319,45 @@ tr:focus-visible {
   font-size: 10px;
 }
 
+.cutting-operations {
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.cutting-operations summary {
+  padding: 10px 0 0;
+  color: var(--ink);
+  cursor: pointer;
+  font: 600 10px var(--mono);
+  text-transform: uppercase;
+}
+
+.cutting-operations ol {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cutting-operations li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.cutting-operations li > span:first-child {
+  display: grid;
+  place-items: center;
+  min-height: 20px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--mono);
+}
+
 @media (max-width: 760px) {
   .cutting-settings {
     grid-template-columns: repeat(2, minmax(0, 1fr));

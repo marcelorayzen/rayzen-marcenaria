@@ -79,6 +79,19 @@ describe("cutting configuration", () => {
     const [first, second] = result.sheets[0].placements;
     expect(second.xMm - (first.xMm + first.lengthMm)).toBe(3);
     expect(result.sheets[0].usedPartAreaMm2).toBe(720 * 500 * 2);
+    expect(result.sheets[0].operations.map(operation => operation.kind)).toEqual([
+      "trim", "trim", "trim", "trim", "rip-strip", "crosscut-part", "crosscut-part",
+    ]);
+    expect(result.sheets[0].operations.map(operation => operation.sequence)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("omits zero trim operations but keeps strip and part cuts", () => {
+    const sheet = { ...reportedWorkshopSheet, materialId: "mdf-15", thicknessMm: 15, grain: "none" as const };
+    const settings = { kerfMm: 3, trim: { topMm: 0, rightMm: 0, bottomMm: 0, leftMm: 0 } };
+    const result = createPreliminaryStripPlan(sheet, settings, [{ ...part, quantity: 1 }]);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.sheets[0].operations.map(operation => operation.kind)).toEqual(["rip-strip", "crosscut-part"]);
   });
 
   it("opens another sheet when the current sheet has no remaining strip space", () => {
