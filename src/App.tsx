@@ -93,6 +93,7 @@ const demoProject = {
 };
 const demoStorageKey = "rayzen-marcenaria:demo-counter:v1";
 const syncQueueStorageKey = "rayzen-marcenaria:demo-counter:sync-queue:v1";
+const projectMetaStorageKey = "rayzen-marcenaria:active-project:v1";
 
 function createDemoSnapshot(
   parameters: CounterParameters,
@@ -198,6 +199,16 @@ function revisionFromSnapshot(snapshot: ProjectSnapshot): Revision {
 
 function createDemoRepository(): InMemoryProjectRepository {
   const repository = new InMemoryProjectRepository();
+  const storedMeta = window.localStorage.getItem(projectMetaStorageKey);
+  if (storedMeta !== null) {
+    try {
+      const meta = JSON.parse(storedMeta) as { id?: unknown; title?: unknown };
+      if (typeof meta.id === "string" && meta.id.length > 0) demoProject.id = meta.id;
+      if (typeof meta.title === "string" && meta.title.trim().length > 0) demoProject.title = meta.title;
+    } catch {
+      window.localStorage.removeItem(projectMetaStorageKey);
+    }
+  }
   const createdAt = new Date().toISOString();
   repository.createProject({
     ...demoProject,
@@ -986,6 +997,38 @@ export default function App() {
     window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
   }
 
+  function downloadTechnicalPackage() {
+    if (isDirty || !model) return;
+    const technicalPackage = {
+      format: "rayzen-technical-project-package",
+      formatVersion: 1,
+      exportedAt: new Date().toISOString(),
+      project: savedRevision,
+      parts: model.parts,
+      note: "Pacote rastreavel para conferencia da marcenaria. Nao e um arquivo nativo SketchUp.",
+    };
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(technicalPackage, null, 2)], { type: "application/json" }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `rayzen-projeto-tecnico-r${String(savedRevision.number).padStart(2, "0")}.skt.json`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+  }
+
+  function startNewProject() {
+    const title = window.prompt("Nome do novo projeto", "Novo projeto de movel");
+    if (!title || title.trim().length < 2) return;
+    const nextId = `project-${crypto.randomUUID()}`;
+    window.localStorage.removeItem(demoStorageKey);
+    window.localStorage.removeItem(syncQueueStorageKey);
+    window.localStorage.setItem(projectMetaStorageKey, JSON.stringify({ id: nextId, title: title.trim() }));
+    window.location.reload();
+  }
+
   async function inspectProjectBackup(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -1020,9 +1063,10 @@ export default function App() {
           </span>
         </a>
         <div className="topbar-project">
-          <span className="project-id">DADOS DE DEMONSTRAÇÃO</span>
+          <span className="project-id">PROJETO ATUAL</span>
           <span className="topbar-divider" aria-hidden="true" />
-          <span>Balcão de ensaio</span>
+          <span>{demoProject.title}</span>
+          <button type="button" className="text-button" onClick={startNewProject}>Novo projeto</button>
         </div>
         <div className="topbar-status">
           <span className="status-dot" />
@@ -1034,7 +1078,7 @@ export default function App() {
         <AuthPanel onUserChange={setAuthUser} />
         <section className="project-heading" aria-labelledby="project-title">
           <div className="heading-main">
-            <h1 id="project-title">Balcão de ensaio</h1>
+            <h1 id="project-title">{demoProject.title}</h1>
             <p>Demonstração local · modelo geométrico em MDF, sem portas ou fundo</p>
           </div>
           <RevisionTicket
@@ -1074,6 +1118,9 @@ export default function App() {
           </button>
           <button type="button" onClick={() => void synchronizeCurrentRevision()} disabled={isDirty || latestSyncItem?.status === "syncing"}>
             {latestSyncItem?.status === "synced" ? "Revisão sincronizada" : "Sincronizar revisão salva"}
+          </button>
+          <button type="button" onClick={downloadTechnicalPackage} disabled={isDirty || !model}>
+            Exportar pacote técnico (.skt.json)
           </button>
           <label className="backup-inspect">
             Validar backup local
