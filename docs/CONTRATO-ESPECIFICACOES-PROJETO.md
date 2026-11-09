@@ -39,6 +39,8 @@ A prática usual informada é refilo entre 3 e 4 mm por lado; cada plano registr
 
 As peças são separadas por material e espessura, exigem quantidade inteira, dimensões positivas e política de rotação compatível com o veio. Entradas incompletas impedem a distribuição; nenhuma saída libera produção.
 
+`src/groupedCuttingPlan.ts` agrupa a lista completa por combinação exata de material e espessura antes de calcular. Cada grupo recebe estoque e comparação próprios, impedindo que, por exemplo, MDF de 15 mm, fundo de 6 mm e acabamento amadeirado compartilhem a mesma chapa. O contrato e os testes estão implementados; a tela e o pacote ainda usam o grupo único do balcão demonstrativo e serão evoluídos na próxima integração.
+
 O mesmo módulo agora contém uma distribuição determinística preliminar em faixas. Ela expande quantidades, mantém afastamento da serra, respeita área útil e abre novas chapas quando necessário. É uma base verificável para a visualização: compara alternativas limitadas, mas não garante ótimo global, não gera sequência operacional validada e não pode ser apresentada como plano liberado.
 
 O comparador executa três ordenações determinísticas (`largest-side`, `area` e `strip-width`) e classifica os resultados por quantidade de chapas, desperdício calculado, quantidade de operações e desempate estável. A estratégia selecionada fica registrada no relatório/pacote. Isso compara heurísticas conhecidas do motor atual; não prova ótimo global nem substitui a avaliação de facilidade de execução pelo marceneiro.
