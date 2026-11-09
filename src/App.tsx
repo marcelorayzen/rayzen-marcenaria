@@ -431,6 +431,18 @@ export default function App() {
       setChatMessage(command.message);
       return;
     }
+    if (command.kind === "draft-constraint") {
+      setConstraintKind("plumbing-outlet");
+      setConstraintLabel(command.label);
+      setConstraintX(String(command.x));
+      setConstraintY(String(command.y));
+      setConstraintDimensionLabel(command.dimensionLabel);
+      setConstraintDimensionValue(String(command.dimensionValue));
+      setConstraintError(null);
+      setChatMessage("Preenchi a interferência com as posições convertidas para mm. Revise, selecione a origem e registre a revisão.");
+      setChatInput("");
+      return;
+    }
     const proposal: SetCounterDimensionProposal = {
       operation: "set-counter-dimension",
       baseRevisionId: savedRevision.id,
