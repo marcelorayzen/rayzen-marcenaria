@@ -23,6 +23,7 @@ class AppErrorBoundary extends React.Component<{ children: ReactNode }, { error:
         <main className="runtime-error">
           <h1>Não foi possível carregar esta tela</h1>
           <p>A sessão ou o perfil não puderam ser carregados. Atualize a página e tente novamente.</p>
+          {this.state.error ? <small className="runtime-error-detail">Diagnóstico: {this.state.error}</small> : null}
         </main>
       );
     }

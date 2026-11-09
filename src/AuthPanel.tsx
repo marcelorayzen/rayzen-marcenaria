@@ -15,7 +15,7 @@ async function loadUserProfile(user: { id: string; email?: string | null }): Pro
   try {
     const profileResult = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
     const rolesResult = await supabase.from("profile_roles").select("role").eq("profile_id", user.id);
-    const roles = (rolesResult.data ?? [])
+    const roles = (Array.isArray(rolesResult.data) ? rolesResult.data : [])
       .map((row) => row.role)
       .filter((role): role is AuthRole => role === "representante" || role === "marceneiro");
     return {

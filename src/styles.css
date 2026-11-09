@@ -965,6 +965,11 @@ tr:focus-visible {
   margin: 0;
 }
 
+.runtime-error-detail {
+  color: #8e3d2e;
+  font-family: monospace;
+}
+
 .auth-locked-page > p {
   margin: 0;
   color: #667677;
