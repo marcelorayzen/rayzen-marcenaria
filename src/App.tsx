@@ -35,6 +35,7 @@ import {
   type LocalProjectBackup,
   validateLocalProjectBackup,
 } from "./projectBackup";
+import { getDraftSynchronizationPresentation } from "./draftSynchronization";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -277,6 +278,7 @@ export default function App() {
     [issues.length, parameters],
   );
   const savedRevision = revisions[revisions.length - 1]!;
+  const draftSynchronization = getDraftSynchronizationPresentation("local-only");
   const projectChecks = useMemo(() => {
     const snapshots = repository.listRevisions(demoProject.id);
     return getProjectChecks(snapshots[snapshots.length - 1]!);
@@ -916,7 +918,7 @@ export default function App() {
         </div>
         <div className="topbar-status">
           <span className="status-dot" />
-          <span>Local · rascunho no dispositivo</span>
+          <span>{draftSynchronization.label} · rascunho no dispositivo</span>
         </div>
       </header>
 
@@ -974,6 +976,9 @@ export default function App() {
           <button className="clear-local-button" type="button" onClick={clearLocalDraft}>
             Limpar rascunho local
           </button>
+          <p className="synchronization-note" role="status">
+            <strong>{draftSynchronization.label}.</strong> {draftSynchronization.detail} Confirmação do cliente, validação comercial e liberação técnica permanecem indisponíveis neste demonstrador.
+          </p>
           {historyError ? <p className="measurement-error" role="alert">{historyError}</p> : null}
         </section>
         <section className="project-checks" aria-labelledby="checks-title">

@@ -915,6 +915,16 @@ tr:focus-visible {
   font-size: 10px;
 }
 
+.synchronization-note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid #667677;
+  background: #eff2ef;
+  color: #394344;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .draft-mark {
   width: 6px;
   height: 6px;
