@@ -3,6 +3,7 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient";
 
 export type AuthRole = "representante" | "marceneiro";
 export type AuthUser = {
+  id: string;
   email?: string | null;
   displayName?: string | null;
   roles: AuthRole[];
@@ -10,13 +11,14 @@ export type AuthUser = {
 };
 
 async function loadUserProfile(user: { id: string; email?: string | null }): Promise<AuthUser> {
-  if (!supabase) return { email: user.email, roles: [], profileReady: false };
+  if (!supabase) return { id: user.id, email: user.email, roles: [], profileReady: false };
   const profileResult = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
   const rolesResult = await supabase.from("profile_roles").select("role").eq("profile_id", user.id);
   const roles = (rolesResult.data ?? [])
     .map((row) => row.role)
     .filter((role): role is AuthRole => role === "representante" || role === "marceneiro");
   return {
+    id: user.id,
     email: user.email,
     displayName: profileResult.data?.display_name ?? null,
     roles,

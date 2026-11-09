@@ -39,6 +39,17 @@ import { getDraftSynchronizationPresentation } from "./draftSynchronization";
 import { AuthPanel, type AuthUser } from "./AuthPanel";
 import { isSupabaseConfigured } from "./supabaseClient";
 import { getRoleCapabilities } from "./roleCapabilities";
+import { supabase } from "./supabaseClient";
+import {
+  BrowserDraftSyncQueue,
+  enqueueDraftSync,
+  markDraftSyncConflict,
+  markDraftSyncFailed,
+  markDraftSyncing,
+  markDraftSynced,
+  type DraftSyncQueueItem,
+} from "./draftSyncQueue";
+import { syncDraftQueueItem } from "./supabaseDraftSync";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -81,6 +92,7 @@ const demoProject = {
   title: "Balcão de ensaio",
 };
 const demoStorageKey = "rayzen-marcenaria:demo-counter:v1";
+const syncQueueStorageKey = "rayzen-marcenaria:demo-counter:sync-queue:v1";
 
 function createDemoSnapshot(
   parameters: CounterParameters,
@@ -275,6 +287,10 @@ export default function App() {
   const [backupInspection, setBackupInspection] = useState<string | null>(null);
   const [restorableBackup, setRestorableBackup] = useState<LocalProjectBackup | null>(null);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [syncQueue, setSyncQueue] = useState<DraftSyncQueueItem[]>(() =>
+    new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).load(),
+  );
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const issues = validateCounter(parameters);
   const model = useMemo(
@@ -282,7 +298,19 @@ export default function App() {
     [issues.length, parameters],
   );
   const savedRevision = revisions[revisions.length - 1]!;
-  const draftSynchronization = getDraftSynchronizationPresentation("local-only");
+  const latestSyncItem = syncQueue.find(
+    (item) => item.revisionId === savedRevision.id,
+  );
+  const syncState = latestSyncItem?.status === "synced"
+    ? "synced"
+    : latestSyncItem?.status === "conflict"
+      ? "conflict"
+      : latestSyncItem?.status === "failed"
+        ? "sync-failed"
+        : latestSyncItem?.status === "syncing" || latestSyncItem?.status === "pending"
+          ? "sync-pending"
+          : "local-only";
+  const draftSynchronization = getDraftSynchronizationPresentation(syncState);
   const projectChecks = useMemo(() => {
     const snapshots = repository.listRevisions(demoProject.id);
     return getProjectChecks(snapshots[snapshots.length - 1]!);
@@ -865,6 +893,57 @@ export default function App() {
     window.location.reload();
   }
 
+  async function synchronizeCurrentRevision() {
+    if (!supabase || !authUser) {
+      setSyncMessage("Entre com uma conta provisionada antes de sincronizar.");
+      return;
+    }
+    if (isDirty) {
+      setSyncMessage("Salve a revisão atual antes de sincronizar.");
+      return;
+    }
+    const snapshot = repository.listRevisions(demoProject.id).at(-1);
+    if (!snapshot) {
+      setSyncMessage("Não há revisão local para sincronizar.");
+      return;
+    }
+    const queued = enqueueDraftSync(syncQueue, snapshot, new Date().toISOString());
+    if (!queued.ok) {
+      setSyncMessage(queued.message);
+      return;
+    }
+    const item = queued.queue.find((candidate) => candidate.revisionId === snapshot.revision.id);
+    if (!item) {
+      setSyncMessage("Não foi possível localizar a revisão enfileirada.");
+      return;
+    }
+    const syncing = markDraftSyncing(queued.queue, item.id);
+    if (!syncing.ok) {
+      setSyncMessage(syncing.message);
+      return;
+    }
+    setSyncQueue(syncing.queue);
+    new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).save(syncing.queue);
+    const result = await syncDraftQueueItem(supabase, syncing.queue.find((candidate) => candidate.id === item.id)!);
+    if (result.status === "synced") {
+      const completed = markDraftSynced(syncing.queue, item.id, result.remoteProjectId, result.remoteRevisionId);
+      if (completed.ok) {
+        setSyncQueue(completed.queue);
+        new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).save(completed.queue);
+        setSyncMessage("Revisão sincronizada. O rascunho local foi preservado até uma política de limpeza ser aplicada.");
+      }
+      return;
+    }
+    const failed = result.status === "conflict"
+      ? markDraftSyncConflict(syncing.queue, item.id, result.message)
+      : markDraftSyncFailed(syncing.queue, item.id, result.message);
+    if (failed.ok) {
+      setSyncQueue(failed.queue);
+      new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).save(failed.queue);
+      setSyncMessage(result.message);
+    }
+  }
+
   const pendingPreview = useMemo(
     () =>
       pendingProposal === null
@@ -993,6 +1072,9 @@ export default function App() {
           <button type="button" onClick={downloadProjectBackup} disabled={isDirty}>
             Baixar backup local (JSON)
           </button>
+          <button type="button" onClick={() => void synchronizeCurrentRevision()} disabled={isDirty || latestSyncItem?.status === "syncing"}>
+            {latestSyncItem?.status === "synced" ? "Revisão sincronizada" : "Sincronizar revisão salva"}
+          </button>
           <label className="backup-inspect">
             Validar backup local
             <input type="file" accept="application/json,.json" onChange={inspectProjectBackup} />
@@ -1010,6 +1092,7 @@ export default function App() {
             <strong>{draftSynchronization.label}.</strong> {draftSynchronization.detail} Confirmação do cliente, validação comercial e liberação técnica permanecem indisponíveis neste demonstrador.
           </p>
           {historyError ? <p className="measurement-error" role="alert">{historyError}</p> : null}
+          {syncMessage ? <p className="sync-message" role="status">{syncMessage}</p> : null}
         </section>
         <section className="project-checks" aria-labelledby="checks-title">
           <div className="constraint-heading">
