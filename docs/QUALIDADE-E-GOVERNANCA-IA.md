@@ -50,6 +50,8 @@ Cada entrega deve guardar separadamente: requisito e aceite; decisão de arquite
 
 **Evidência de infraestrutura (8 de novembro de 2026):** a migration inicial de governança foi aplicada e conferida no projeto Supabase remoto. Isso prova somente o esquema implantado; não prova permissões por papel em uso real, integração da interface, envio de anexos, aprovação comercial ou liberação de produção.
 
+**Evidência de migration (9 de novembro de 2026):** a migration de acesso/consentimento foi aplicada ao projeto Supabase remoto e um dry-run posterior retornou `upToDate: true`. Isso não prova provisionamento de perfis, autenticação Phone Auth ou RLS exercitada por papel.
+
 **Evidência de prévia (8 de novembro de 2026):** o build atual foi enviado ao Cloudflare Pages na branch `preview`. Isso prova upload e build estático; ainda requer validação humana da interface e não equivale à publicação de produção.
 
 **Evidência de produção (9 de novembro de 2026):** após aprovação humana, o build atual foi publicado no Cloudflare Pages em `marcenaria.rayzen.com.br`, deployment `3c98e441.rayzen-marcenaria.pages.dev` do commit `0596f0a`. A verificação HTTPS retornou `200 OK` e o HTML referenciou o bundle do build publicado. Isso prova disponibilidade da versão estática, não prova persistência, permissões, dados de cliente ou operação da IA.
