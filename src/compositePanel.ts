@@ -14,6 +14,9 @@ export interface PanelEdge {
   bandThicknessMm: number | null;
 }
 
+/** Widths reported as commonly available in the workshop; not a closed catalog. */
+export const reportedWorkshopBandWidthsMm = [22, 35, 45, 60] as const;
+
 export interface CompositePanel {
   id: string;
   revisionId: string;

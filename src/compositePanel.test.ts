@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expandCompositePanel, type CompositePanel } from "./compositePanel";
+import { expandCompositePanel, reportedWorkshopBandWidthsMm, type CompositePanel } from "./compositePanel";
 
 // Synthetic cut dimensions, not a workshop-approved door design.
 function door(): CompositePanel {
@@ -15,6 +15,9 @@ function door(): CompositePanel {
 }
 
 describe("composite panel cut blanks", () => {
+  it("records the reported workshop band widths without restricting project-specific choices", () => {
+    expect(reportedWorkshopBandWidthsMm).toEqual([22, 35, 45, 60]);
+  });
   it("expands two 21 mm doors into four blanks at their actual stock thicknesses", () => {
     const result = expandCompositePanel(door());
     expect(result.ok).toBe(true);

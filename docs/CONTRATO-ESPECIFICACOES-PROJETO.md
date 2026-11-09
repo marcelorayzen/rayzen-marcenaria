@@ -35,6 +35,8 @@ Estado: contrato e testes locais, ainda sem ligação ao editor, banco ou otimiz
 
 `src/cuttingPlan.ts` registra a chapa informada de 2750 × 1850 mm e a largura de corte de 3 mm. Material, espessura, veio e os quatro refilos permanecem pendentes por grupo de chapa. O validador não transforma refilo ausente em zero e só calcula a área útil quando todos os lados foram informados.
 
+A prática usual informada é refilo entre 3 e 4 mm por lado; cada plano registra o valor exato de cada lado. As larguras de fita informadas são 22, 35, 45 e 60 mm. Esses valores formam sugestões da oficina, não um catálogo fechado; espessura da fita e descontos continuam independentes e pendentes.
+
 As peças são separadas por material e espessura, exigem quantidade inteira, dimensões positivas e política de rotação compatível com o veio. Esta etapa valida entradas; ainda não distribui peças, gera sequência de cortes ou libera produção.
 
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.

@@ -124,3 +124,6 @@ export const reportedWorkshopCuttingSettings: CuttingSettings = {
   kerfMm: 3,
   trim: { topMm: null, rightMm: null, bottomMm: null, leftMm: null },
 };
+
+/** Reported usual trim range. Each production plan still records exact values per side. */
+export const reportedWorkshopTrimRangeMm = { min: 3, max: 4 } as const;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   reportedWorkshopCuttingSettings,
   reportedWorkshopSheet,
+  reportedWorkshopTrimRangeMm,
   validateCuttingConfiguration,
   type RectangularCutPart,
 } from "./cuttingPlan";
@@ -18,6 +19,9 @@ const part: RectangularCutPart = {
 };
 
 describe("cutting configuration", () => {
+  it("records the reported 3 to 4 mm workshop trim range", () => {
+    expect(reportedWorkshopTrimRangeMm).toEqual({ min: 3, max: 4 });
+  });
   it("preserves the reported sheet and 3 mm kerf while keeping trim pending", () => {
     const sheet = { ...reportedWorkshopSheet, materialId: "mdf-15", thicknessMm: 15, grain: "none" as const };
     const result = validateCuttingConfiguration(sheet, reportedWorkshopCuttingSettings, [part]);
