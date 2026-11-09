@@ -82,9 +82,14 @@ describe("cutting configuration", () => {
     expect(second.xMm - (first.xMm + first.lengthMm)).toBe(3);
     expect(result.sheets[0].usedPartAreaMm2).toBe(720 * 500 * 2);
     expect(result.sheets[0].operations.map(operation => operation.kind)).toEqual([
-      "trim", "trim", "trim", "trim", "rip-strip", "crosscut-part", "crosscut-part",
+      "trim", "trim", "trim", "trim", "reference-clean-edges", "rip-strip", "crosscut-part", "crosscut-part",
     ]);
-    expect(result.sheets[0].operations.map(operation => operation.sequence)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(result.sheets[0].operations.map(operation => operation.sequence)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(result.sheets[0].operations[4]).toMatchObject({
+      kind: "reference-clean-edges",
+      axis: null,
+      label: "Usar bordas refiladas como referência zero; não refilar cada peça",
+    });
   });
 
   it("omits zero trim operations but keeps strip and part cuts", () => {

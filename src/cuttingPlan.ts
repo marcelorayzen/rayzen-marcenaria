@@ -57,14 +57,50 @@ export interface PlannedSheet {
   usableAreaMm2: number;
 }
 
-export interface PreliminaryCutOperation {
+interface PreliminaryCutOperationBase {
   sequence: number;
-  kind: "trim" | "rip-strip" | "crosscut-part";
+  label: string;
+}
+
+export type PreliminaryCutOperation = PreliminaryCutOperationBase & (
+  | {
+      kind: "reference-clean-edges";
+      axis: null;
+      positionMm: null;
+      spanMm: null;
+    }
+  | {
+      kind: "trim" | "rip-strip" | "crosscut-part";
+      axis: "length" | "width";
+      positionMm: number;
+      spanMm: number;
+    }
+);
+
+type UnsequencedCutOperation =
+  | {
+      kind: "reference-clean-edges";
+      axis: null;
+      positionMm: null;
+      spanMm: null;
+      label: string;
+    }
+  | {
+      kind: "trim" | "rip-strip" | "crosscut-part";
+      axis: "length" | "width";
+      positionMm: number;
+      spanMm: number;
+      label: string;
+    };
+
+type UnsequencedTrimOperation = {
+  kind: "trim";
   axis: "length" | "width";
   positionMm: number;
   spanMm: number;
+  amountMm: number;
   label: string;
-}
+};
 
 export type CuttingPlanStrategy = "largest-side" | "area" | "strip-width";
 
@@ -236,14 +272,24 @@ function createPreliminaryOperations(
   settings: CuttingSettings,
   state: SheetState,
 ): PreliminaryCutOperation[] {
-  const operations: Omit<PreliminaryCutOperation, "sequence">[] = [];
-  const trims: Array<Omit<PreliminaryCutOperation, "sequence"> & { amountMm: number }> = [
+  const operations: UnsequencedCutOperation[] = [];
+  const trims: UnsequencedTrimOperation[] = [
     { kind: "trim", axis: "length", positionMm: settings.trim.leftMm!, spanMm: sheet.widthMm, amountMm: settings.trim.leftMm!, label: "Refilar lado esquerdo" },
     { kind: "trim", axis: "length", positionMm: sheet.lengthMm - settings.trim.rightMm!, spanMm: sheet.widthMm, amountMm: settings.trim.rightMm!, label: "Refilar lado direito" },
     { kind: "trim", axis: "width", positionMm: settings.trim.topMm!, spanMm: sheet.lengthMm, amountMm: settings.trim.topMm!, label: "Refilar lado superior" },
     { kind: "trim", axis: "width", positionMm: sheet.widthMm - settings.trim.bottomMm!, spanMm: sheet.lengthMm, amountMm: settings.trim.bottomMm!, label: "Refilar lado inferior" },
   ];
-  operations.push(...trims.filter(item => item.amountMm > 0).map(({ amountMm: _amountMm, ...item }) => item));
+  const appliedTrims = trims.filter(item => item.amountMm > 0);
+  operations.push(...appliedTrims.map(({ amountMm: _amountMm, ...item }) => item));
+  if (appliedTrims.length > 0) {
+    operations.push({
+      kind: "reference-clean-edges",
+      axis: null,
+      positionMm: null,
+      spanMm: null,
+      label: "Usar bordas refiladas como referência zero; não refilar cada peça",
+    });
+  }
 
   for (const [stripIndex, strip] of state.strips.entries()) {
     operations.push({
