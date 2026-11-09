@@ -322,6 +322,14 @@ export default function App() {
   );
   const roleCapabilities = getRoleCapabilities(authUser?.roles ?? []);
 
+  const pendingPreview = useMemo(
+    () =>
+      pendingProposal === null
+        ? null
+        : previewSetCounterDimensionProposal(pendingProposal, savedRevision.parameters),
+    [pendingProposal, savedRevision.parameters],
+  );
+
   if (isSupabaseConfigured && (authUser === null || !authUser.profileReady)) {
     return (
       <main className="auth-locked-page">
@@ -943,14 +951,6 @@ export default function App() {
       setSyncMessage(result.message);
     }
   }
-
-  const pendingPreview = useMemo(
-    () =>
-      pendingProposal === null
-        ? null
-        : previewSetCounterDimensionProposal(pendingProposal, savedRevision.parameters),
-    [pendingProposal, savedRevision.parameters],
-  );
 
   function downloadCsv() {
     if (!model || isDirty) return;
