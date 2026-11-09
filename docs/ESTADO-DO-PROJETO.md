@@ -31,6 +31,12 @@ Começar por **A1 + a decisão de provisionamento de identidade**, sem conectar 
 
 Não iniciar integração de IA externa, importação CAD/CSV, compartilhamento de cliente ou liberação de produção nesta fatia.
 
+## Fila local de sincronizacao
+
+`src/draftSyncQueue.ts` valida snapshots antes de enfileirar e conserva estados `pending`, `syncing`, `synced`, `failed` e `conflict`, incluindo tentativas e referencias remotas quando um adaptador futuro confirmar o envio. Esta fila ainda nao envia dados ao Supabase; identidade, RLS e o adaptador remoto permanecem pendentes.
+
+Última verificação desta fatia: `npm.cmd test` aprovou 14 arquivos e 55 testes; `npm.cmd run build` foi concluído.
+
 ## Backup local
 
 O histórico permite baixar todas as revisões locais em JSON. Um arquivo escolhido pode ser validado no navegador antes de a ação de restauração aparecer. Restaurar exige confirmação explícita e substitui somente o rascunho local deste demonstrador; não envia dados ao Supabase nem à produção.
