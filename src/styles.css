@@ -1461,7 +1461,75 @@ tr:focus-visible {
   text-transform: uppercase;
 }
 
+.cutting-labels-section {
+  margin-top: 18px;
+}
+
+.cutting-labels-section h3 {
+  margin: 0 0 8px;
+  font: 600 14px var(--display);
+}
+
+.cutting-label-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cutting-piece-label {
+  padding: 10px;
+  border: 1px solid var(--ink);
+  background: #fff;
+}
+
+.cutting-piece-label header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font: 600 11px var(--mono);
+}
+
+.cutting-piece-label p {
+  margin: 5px 0 8px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.cutting-piece-label dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 10px;
+  margin: 0 0 8px;
+}
+
+.cutting-piece-label dl > div {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 5px;
+}
+
+.cutting-piece-label dt,
+.cutting-piece-label dd {
+  margin: 0;
+  font-size: 9px;
+}
+
+.cutting-piece-label dt,
+.cutting-piece-label small {
+  color: var(--muted);
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+
+.cutting-piece-label small {
+  font-size: 7px;
+}
+
 @media (max-width: 760px) {
+  .cutting-label-grid {
+    grid-template-columns: 1fr;
+  }
+
   .cutting-settings {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2887,6 +2955,10 @@ tr:focus-visible {
   .cutting-sheet-card {
     break-inside: avoid;
     background: #fff;
+  }
+
+  .cutting-piece-label {
+    break-inside: avoid;
   }
 
   .cutting-sheet-map {

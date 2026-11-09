@@ -12,6 +12,7 @@ import {
   type CuttingGrain,
   type LocalCuttingConfiguration,
 } from "./browserCuttingConfiguration";
+import { createCuttingPieceLabels } from "./cuttingLabels";
 
 type TrimSide = keyof SheetTrim;
 
@@ -116,10 +117,24 @@ export function CuttingPlanPanel({
     return {
       plan,
       report: createCuttingPlanReport(project, revision, stock, settings, cutParts, plan),
+      labels: createCuttingPieceLabels(
+        project,
+        revision,
+        parts.map(part => ({
+          id: part.id,
+          code: part.code,
+          name: part.name,
+          material: part.material,
+          thicknessMm: part.thickness,
+          edges: part.edges,
+        })),
+        plan,
+      ),
     };
   }, [grain, parts, project.id, project.title, revision, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
   const plan = calculation?.plan ?? null;
   const report = calculation?.report.ok ? calculation.report.report : null;
+  const labels = calculation?.labels.ok ? calculation.labels.labels : [];
 
   return (
     <section className="cutting-plan-section" aria-labelledby="cutting-plan-title">
@@ -242,6 +257,29 @@ export function CuttingPlanPanel({
               </tr>
             ))}</tbody>
           </table>
+        </div>
+      ) : null}
+
+      {labels.length > 0 ? (
+        <div className="cutting-labels-section">
+          <h3>Etiquetas preliminares</h3>
+          <div className="cutting-label-grid">
+            {labels.map(label => (
+              <article key={label.id} className="cutting-piece-label">
+                <header><strong>{label.partCode} · {label.partName}</strong><span>R{String(label.revision).padStart(2, "0")}</span></header>
+                <p>{label.projectTitle}</p>
+                <dl>
+                  <div><dt>Peça</dt><dd>{label.instance}</dd></div>
+                  <div><dt>Chapa</dt><dd>{label.sheetNumber}</dd></div>
+                  <div><dt>Medida</dt><dd>{label.lengthMm} × {label.widthMm} mm</dd></div>
+                  <div><dt>Espessura</dt><dd>{label.thicknessMm} mm</dd></div>
+                  <div><dt>Material</dt><dd>{label.material}</dd></div>
+                  <div><dt>Bordas</dt><dd>{label.edges}</dd></div>
+                </dl>
+                <small>PRELIMINAR · NÃO LIBERADO{label.rotatedInPlan ? " · GIRADA NO MAPA" : ""}</small>
+              </article>
+            ))}
+          </div>
         </div>
       ) : null}
 
