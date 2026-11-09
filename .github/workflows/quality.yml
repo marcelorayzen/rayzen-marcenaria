@@ -24,3 +24,12 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: git diff --check HEAD~1 HEAD
+      - name: Reject tracked environment files
+        shell: bash
+        run: |
+          tracked_environment_files="$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v -E '(^|/)\.env\.example$' || true)"
+          if [ -n "$tracked_environment_files" ]; then
+            echo "Environment files must not be tracked. Keep only .env.example."
+            echo "$tracked_environment_files"
+            exit 1
+          fi
