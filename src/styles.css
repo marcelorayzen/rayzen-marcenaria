@@ -1321,6 +1321,22 @@ tr:focus-visible {
   font: 500 9px/1.4 var(--mono);
 }
 
+.supplemental-base-selector {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+  color: var(--muted);
+  font: 600 8px/1.2 var(--mono);
+  text-transform: uppercase;
+}
+
+.supplemental-base-selector select {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
 .supplemental-parts-form {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1377,6 +1393,12 @@ tr:focus-visible {
 .supplemental-parts-error {
   margin: 10px 0 0;
   color: var(--accent-dark);
+  font: 600 9px/1.4 var(--mono);
+}
+
+.supplemental-parts-success {
+  margin: 10px 0 0;
+  color: #42554e;
   font: 600 9px/1.4 var(--mono);
 }
 

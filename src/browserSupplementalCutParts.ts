@@ -20,6 +20,32 @@ export type SupplementalCutPartsValidation =
   | { ok: false; errors: string[] };
 
 const grains: CuttingGrain[] = ["length", "width", "none", "pending"];
+const fieldLabels = {
+  code: "o código",
+  name: "o nome",
+  material: "o material",
+  edges: "as bordas ou fita",
+  sourceReference: "a origem",
+} as const;
+const dimensionLabels = {
+  thickness: "a espessura",
+  length: "o comprimento",
+  width: "a largura",
+} as const;
+
+function revisionLabel(revision: number): string {
+  if (!Number.isSafeInteger(revision) || revision <= 0) throw new Error("Revisão inválida para registrar a origem.");
+  return `R${String(revision).padStart(2, "0")}`;
+}
+
+export function manualSupplementalSource(revision: number): string {
+  return `Entrada manual registrada na revisão ${revisionLabel(revision)}`;
+}
+
+export function calculatedSupplementalSource(code: string, revision: number): string {
+  if (!code.trim()) throw new Error("Código da peça calculada é obrigatório para registrar a origem.");
+  return `Derivada da peça calculada ${code.trim()} na revisão ${revisionLabel(revision)}`;
+}
 
 export function validateSupplementalCutParts(value: unknown): SupplementalCutPartsValidation {
   if (!Array.isArray(value)) return { ok: false, errors: ["A lista de peças complementares é inválida."] };
@@ -36,12 +62,12 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
     ids.add(id);
     for (const field of ["code", "name", "material", "edges", "sourceReference"] as const) {
       if (typeof part[field] !== "string" || !part[field].trim()) {
-        errors.push(`Peça complementar ${index + 1}: informe ${field}.`);
+        errors.push(`Peça complementar ${index + 1}: informe ${fieldLabels[field]}.`);
       }
     }
     for (const field of ["thickness", "length", "width"] as const) {
       if (typeof part[field] !== "number" || !Number.isFinite(part[field]) || part[field] <= 0) {
-        errors.push(`Peça complementar ${index + 1}: ${field} deve ser positivo.`);
+        errors.push(`Peça complementar ${index + 1}: ${dimensionLabels[field]} deve ser positiva.`);
       }
     }
     if (typeof part.quantity !== "number" || !Number.isSafeInteger(part.quantity) || part.quantity <= 0) {

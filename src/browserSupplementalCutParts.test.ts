@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { KeyValueStorage } from "./browserProjectStorage";
 import {
   BrowserSupplementalCutParts,
+  calculatedSupplementalSource,
+  manualSupplementalSource,
   validateSupplementalCutParts,
   type SupplementalCutPart,
 } from "./browserSupplementalCutParts";
@@ -28,6 +30,11 @@ const layer: SupplementalCutPart = {
 };
 
 describe("supplemental cut parts browser storage", () => {
+  it("creates truthful automatic provenance for manual and copied inputs", () => {
+    expect(manualSupplementalSource(3)).toBe("Entrada manual registrada na revisão R03");
+    expect(calculatedSupplementalSource(" PT-01 ", 3)).toBe("Derivada da peça calculada PT-01 na revisão R03");
+  });
+
   it("persists a validated revision-specific list without sharing project keys", () => {
     const storage = new MemoryStorage();
     const first = new BrowserSupplementalCutParts(storage, "project-a:r1");
@@ -44,8 +51,8 @@ describe("supplemental cut parts browser storage", () => {
     ]);
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.errors).toContain("Peça complementar 1: informe sourceReference.");
-    expect(result.errors).toContain("Peça complementar 1: thickness deve ser positivo.");
+    expect(result.errors).toContain("Peça complementar 1: informe a origem.");
+    expect(result.errors).toContain("Peça complementar 1: a espessura deve ser positiva.");
     expect(result.errors).toContain("Peça complementar 2 precisa de ID único.");
   });
 

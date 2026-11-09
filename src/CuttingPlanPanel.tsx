@@ -21,6 +21,8 @@ import { createGroupedCuttingPlans } from "./groupedCuttingPlan";
 import { createGroupedCuttingPlanPackage } from "./groupedCuttingPlanExport";
 import {
   BrowserSupplementalCutParts,
+  calculatedSupplementalSource,
+  manualSupplementalSource,
   type SupplementalCutPart,
 } from "./browserSupplementalCutParts";
 
@@ -130,7 +132,9 @@ export function CuttingPlanPanel({
   );
   const [supplementalDraft, setSupplementalDraft] = useState<SupplementalPartDraft>(emptySupplementalDraft);
   const [supplementalError, setSupplementalError] = useState<string | null>(null);
+  const [supplementalMessage, setSupplementalMessage] = useState<string | null>(null);
   const [editingSupplementalId, setEditingSupplementalId] = useState<string | null>(null);
+  const [supplementalBasePartId, setSupplementalBasePartId] = useState("");
 
   useEffect(() => {
     const loaded = configurationStore.load();
@@ -149,7 +153,9 @@ export function CuttingPlanPanel({
     setSupplementalParts(supplementalStore.load());
     setSupplementalDraft(emptySupplementalDraft);
     setSupplementalError(null);
+    setSupplementalMessage(null);
     setEditingSupplementalId(null);
+    setSupplementalBasePartId("");
   }, [supplementalStore]);
 
   function persistConfiguration(
@@ -207,6 +213,29 @@ export function CuttingPlanPanel({
     setSupplementalDraft(current => ({ ...current, [field]: value }));
   }
 
+  function useCalculatedPartAsBase(partId: string) {
+    setSupplementalBasePartId(partId);
+    const part = parts.find(candidate => candidate.id === partId);
+    if (!part) {
+      setSupplementalDraft(emptySupplementalDraft);
+      return;
+    }
+    setSupplementalDraft({
+      code: part.code,
+      name: part.name,
+      material: part.material,
+      thickness: String(part.thickness),
+      length: String(part.length),
+      width: String(part.width),
+      quantity: String(part.quantity),
+      edges: part.edges,
+      grain: part.grain ?? grain,
+      sourceReference: calculatedSupplementalSource(part.code, revision),
+    });
+    setSupplementalError(null);
+    setSupplementalMessage("Dados copiados. Ajuste somente o que muda e salve como peça adicional.");
+  }
+
   function saveSupplementalPart() {
     const part: SupplementalCutPart = {
       id: editingSupplementalId ?? `supplemental-${crypto.randomUUID()}`,
@@ -219,7 +248,7 @@ export function CuttingPlanPanel({
       quantity: Number(supplementalDraft.quantity),
       edges: supplementalDraft.edges.trim(),
       grain: supplementalDraft.grain,
-      sourceReference: supplementalDraft.sourceReference.trim(),
+      sourceReference: supplementalDraft.sourceReference.trim() || manualSupplementalSource(revision),
     };
     try {
       const nextParts = editingSupplementalId
@@ -229,7 +258,11 @@ export function CuttingPlanPanel({
       setSupplementalParts(next);
       setSupplementalDraft(emptySupplementalDraft);
       setSupplementalError(null);
+      setSupplementalMessage(editingSupplementalId
+        ? "Alteração salva. A peça manteve o mesmo ID técnico."
+        : "Peça adicionada. Use Editar na lista abaixo para alterá-la.");
       setEditingSupplementalId(null);
+      setSupplementalBasePartId("");
     } catch (error) {
       setSupplementalError(error instanceof Error ? error.message : "Não foi possível salvar a peça complementar.");
     }
@@ -250,18 +283,23 @@ export function CuttingPlanPanel({
       sourceReference: part.sourceReference,
     });
     setSupplementalError(null);
+    setSupplementalMessage("Editando a peça selecionada. Salve ou cancele a alteração.");
+    setSupplementalBasePartId("");
   }
 
   function cancelSupplementalEdit() {
     setEditingSupplementalId(null);
     setSupplementalDraft(emptySupplementalDraft);
     setSupplementalError(null);
+    setSupplementalMessage(null);
+    setSupplementalBasePartId("");
   }
 
   function removeSupplementalPart(id: string) {
     const next = supplementalStore.save(supplementalParts.filter(part => part.id !== id));
     setSupplementalParts(next);
     setSupplementalError(null);
+    setSupplementalMessage("Peça removida desta revisão local.");
     if (editingSupplementalId === id) cancelSupplementalEdit();
   }
 
@@ -427,8 +465,17 @@ export function CuttingPlanPanel({
           <span>{supplementalParts.length} ITEM(NS)</span>
         </header>
         <p>
-          Use para camadas, portas ou peças que ainda não vêm do módulo paramétrico. Os dados ficam somente neste dispositivo e nesta revisão.
+          As peças calculadas do móvel já entram automaticamente no plano. Use esta área somente para uma nova camada, porta ou peça que ainda não existe no módulo; ela fica neste dispositivo e nesta revisão.
         </p>
+        <label className="supplemental-base-selector">
+          Reaproveitar uma peça calculada como base
+          <select value={supplementalBasePartId} onChange={event => useCalculatedPartAsBase(event.target.value)}>
+            <option value="">Começar uma peça adicional em branco</option>
+            {parts.map(part => (
+              <option value={part.id} key={part.id}>{part.code} · {part.name} · {part.length} × {part.width} × {part.thickness} mm</option>
+            ))}
+          </select>
+        </label>
         <div className="supplemental-parts-form">
           <label>Código<input value={supplementalDraft.code} onChange={event => updateSupplementalDraft("code", event.target.value)} /></label>
           <label>Nome<input value={supplementalDraft.name} onChange={event => updateSupplementalDraft("name", event.target.value)} /></label>
@@ -444,11 +491,12 @@ export function CuttingPlanPanel({
             <option value="width">Na largura</option>
           </select></label>
           <label className="supplemental-wide">Bordas / fita<input value={supplementalDraft.edges} onChange={event => updateSupplementalDraft("edges", event.target.value)} placeholder="Descreva somente o que foi definido" /></label>
-          <label className="supplemental-wide">Origem da informação<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder="Ex.: medição da porta PT-01" /></label>
+          <label className="supplemental-wide">Origem da informação · opcional<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder={`Se vazio: entrada manual da revisão R${String(revision).padStart(2, "0")}`} /></label>
           <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : "Adicionar peça"}</button>
           {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
         </div>
         {supplementalError ? <p className="supplemental-parts-error" role="alert">{supplementalError}</p> : null}
+        {supplementalMessage ? <p className="supplemental-parts-success" role="status">{supplementalMessage}</p> : null}
         {supplementalParts.length > 0 ? (
           <div className="supplemental-parts-list">
             {supplementalParts.map(part => (
