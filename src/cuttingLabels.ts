@@ -7,6 +7,7 @@ export interface CuttingLabelPart {
   material: string;
   thicknessMm: number;
   edges: string;
+  sourceReference?: string;
 }
 
 export interface CuttingPieceLabel {
@@ -24,6 +25,7 @@ export interface CuttingPieceLabel {
   thicknessMm: number;
   material: string;
   edges: string;
+  sourceReference?: string;
   rotatedInPlan: boolean;
   status: "preliminary-not-released";
 }
@@ -64,6 +66,7 @@ export function createCuttingPieceLabels(
         thicknessMm: part.thicknessMm,
         material: part.material,
         edges: part.edges,
+        sourceReference: part.sourceReference,
         rotatedInPlan: placement.rotated,
         status: "preliminary-not-released",
       });

@@ -28,6 +28,7 @@ export interface RectangularCutPart {
   quantity: number;
   grain: "length" | "width" | "none" | "pending";
   allowRotation: boolean;
+  sourceReference?: string;
 }
 
 export interface CuttingConfigurationCheck {

@@ -1293,6 +1293,104 @@ tr:focus-visible {
   font: 600 9px/1.4 var(--mono);
 }
 
+.supplemental-parts {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  background: #f5f6f2;
+}
+
+.supplemental-parts > header,
+.supplemental-parts-list article {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.supplemental-parts h3 {
+  margin: 3px 0 0;
+  font: 600 17px/1.2 var(--display);
+}
+
+.supplemental-parts > header > span,
+.supplemental-parts > p,
+.supplemental-parts-list span,
+.supplemental-parts-list small {
+  color: var(--muted);
+  font: 500 9px/1.4 var(--mono);
+}
+
+.supplemental-parts-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.supplemental-parts-form label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font: 600 8px/1.2 var(--mono);
+  text-transform: uppercase;
+}
+
+.supplemental-parts-form label > span {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.supplemental-parts-form input,
+.supplemental-parts-form select {
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.supplemental-parts-form .supplemental-wide {
+  grid-column: span 2;
+}
+
+.supplemental-parts-form > button,
+.supplemental-parts-list button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font: 600 8px var(--mono);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.supplemental-parts-error {
+  margin: 10px 0 0;
+  color: var(--accent-dark);
+  font: 600 9px/1.4 var(--mono);
+}
+
+.supplemental-parts-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.supplemental-parts-list article {
+  padding: 9px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.supplemental-parts-list article > div {
+  display: grid;
+  gap: 3px;
+}
+
 .cutting-settings {
   display: grid;
   grid-template-columns: minmax(150px, 1.4fr) repeat(4, minmax(100px, 1fr));
@@ -1708,6 +1806,15 @@ tr:focus-visible {
 
   .cutting-settings label:first-child {
     grid-column: 1 / -1;
+  }
+
+  .supplemental-parts-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .supplemental-parts > header,
+  .supplemental-parts-list article {
+    flex-direction: column;
   }
 
   .cutting-plan-heading,
@@ -3120,6 +3227,7 @@ tr:focus-visible {
   }
 
   .cutting-settings,
+  .supplemental-parts,
   .cutting-local-status,
   .cutting-plan-archive-status,
   .cutting-strategy-auto,

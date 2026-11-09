@@ -22,6 +22,7 @@ const label = {
   sheetNumber: 1, partId: "side", partCode: "BC-01", partName: "Lateral", instance: 1,
   lengthMm: 720, widthMm: 500, thicknessMm: 15, material: "MDF", edges: "Frente; fundo",
   rotatedInPlan: false, status: "preliminary-not-released",
+  sourceReference: "Medição da visita",
 } satisfies CuttingPieceLabel;
 
 describe("cutting plan portable exports", () => {
@@ -43,6 +44,7 @@ describe("cutting plan portable exports", () => {
     const csv = createCuttingLabelsCsv([label]);
     expect(csv).toContain('"Cozinha; cliente"');
     expect(csv).toContain('"Frente; fundo"');
+    expect(csv).toContain("Medição da visita");
     expect(csv.split("\r\n")).toHaveLength(2);
   });
 });

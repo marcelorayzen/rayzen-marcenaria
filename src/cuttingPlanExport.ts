@@ -51,7 +51,7 @@ export function createCuttingPlanPackage(
 export function createCuttingLabelsCsv(labels: CuttingPieceLabel[]): string {
   const header = [
     "projeto_id", "projeto", "revisao", "chapa", "codigo", "peca", "instancia",
-    "comprimento_mm", "largura_mm", "espessura_mm", "material", "bordas", "girada_no_plano", "status",
+    "comprimento_mm", "largura_mm", "espessura_mm", "material", "bordas", "origem", "girada_no_plano", "status",
   ];
   const rows = labels.map(label => [
     label.projectId,
@@ -66,6 +66,7 @@ export function createCuttingLabelsCsv(labels: CuttingPieceLabel[]): string {
     label.thicknessMm,
     label.material,
     label.edges,
+    label.sourceReference ?? "",
     label.rotatedInPlan ? "sim" : "nao",
     label.status,
   ].map(csvCell).join(";"));

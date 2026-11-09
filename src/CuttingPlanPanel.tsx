@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Part } from "./furnitureEngine";
 import {
   createPreliminaryStripPlan,
@@ -19,8 +19,43 @@ import { createCuttingMapAnnotations } from "./cuttingMapDimensions";
 import { BrowserCuttingPlanArchive } from "./browserCuttingPlanArchive";
 import { createGroupedCuttingPlans } from "./groupedCuttingPlan";
 import { createGroupedCuttingPlanPackage } from "./groupedCuttingPlanExport";
+import {
+  BrowserSupplementalCutParts,
+  type SupplementalCutPart,
+} from "./browserSupplementalCutParts";
 
 type TrimSide = keyof SheetTrim;
+
+type CuttingPanelPart = Pick<
+  Part,
+  "id" | "code" | "name" | "material" | "thickness" | "length" | "width" | "quantity" | "edges"
+> & { grain?: CuttingGrain; sourceReference?: string };
+
+interface SupplementalPartDraft {
+  code: string;
+  name: string;
+  material: string;
+  thickness: string;
+  length: string;
+  width: string;
+  quantity: string;
+  edges: string;
+  grain: CuttingGrain;
+  sourceReference: string;
+}
+
+const emptySupplementalDraft: SupplementalPartDraft = {
+  code: "",
+  name: "",
+  material: "",
+  thickness: "",
+  length: "",
+  width: "",
+  quantity: "1",
+  edges: "",
+  grain: "pending",
+  sourceReference: "",
+};
 
 const trimLabels: Array<[TrimSide, string]> = [
   ["topMm", "Superior"],
@@ -49,7 +84,7 @@ export function CuttingPlanPanel({
   project,
   revision,
 }: {
-  parts: Part[];
+  parts: CuttingPanelPart[];
   project: { id: string; title: string };
   revision: number;
 }) {
@@ -68,6 +103,13 @@ export function CuttingPlanPanel({
     ),
     [project.id],
   );
+  const supplementalStore = useMemo(
+    () => new BrowserSupplementalCutParts(
+      window.localStorage,
+      `rayzen-marcenaria:project:${project.id}:revision:${revision}:supplemental-cut-parts:v1`,
+    ),
+    [project.id, revision],
+  );
   const [archivedPlans, setArchivedPlans] = useState(() => archiveStore.load());
   const [archiveMessage, setArchiveMessage] = useState<string | null>(null);
   const [trim, setTrim] = useState<Record<TrimSide, string>>({
@@ -80,6 +122,17 @@ export function CuttingPlanPanel({
   const [preferredStrategy, setPreferredStrategy] = useState<CuttingPlanStrategy | null>(
     initialConfiguration?.preferredStrategy ?? null,
   );
+  const [supplementalParts, setSupplementalParts] = useState<SupplementalCutPart[]>(
+    () => supplementalStore.load(),
+  );
+  const [supplementalDraft, setSupplementalDraft] = useState<SupplementalPartDraft>(emptySupplementalDraft);
+  const [supplementalError, setSupplementalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSupplementalParts(supplementalStore.load());
+    setSupplementalDraft(emptySupplementalDraft);
+    setSupplementalError(null);
+  }, [supplementalStore]);
 
   function persistConfiguration(
     nextTrim: Record<TrimSide, string>,
@@ -119,8 +172,46 @@ export function CuttingPlanPanel({
     persistConfiguration(trim, grain, next);
   }
 
+  function updateSupplementalDraft<K extends keyof SupplementalPartDraft>(
+    field: K,
+    value: SupplementalPartDraft[K],
+  ) {
+    setSupplementalDraft(current => ({ ...current, [field]: value }));
+  }
+
+  function addSupplementalPart() {
+    const part: SupplementalCutPart = {
+      id: `supplemental-${crypto.randomUUID()}`,
+      code: supplementalDraft.code.trim(),
+      name: supplementalDraft.name.trim(),
+      material: supplementalDraft.material.trim(),
+      thickness: Number(supplementalDraft.thickness),
+      length: Number(supplementalDraft.length),
+      width: Number(supplementalDraft.width),
+      quantity: Number(supplementalDraft.quantity),
+      edges: supplementalDraft.edges.trim(),
+      grain: supplementalDraft.grain,
+      sourceReference: supplementalDraft.sourceReference.trim(),
+    };
+    try {
+      const next = supplementalStore.save([...supplementalParts, part]);
+      setSupplementalParts(next);
+      setSupplementalDraft(emptySupplementalDraft);
+      setSupplementalError(null);
+    } catch (error) {
+      setSupplementalError(error instanceof Error ? error.message : "Não foi possível salvar a peça complementar.");
+    }
+  }
+
+  function removeSupplementalPart(id: string) {
+    const next = supplementalStore.save(supplementalParts.filter(part => part.id !== id));
+    setSupplementalParts(next);
+    setSupplementalError(null);
+  }
+
   const calculation = useMemo(() => {
-    if (parts.length === 0) return null;
+    const allParts: CuttingPanelPart[] = [...parts, ...supplementalParts];
+    if (allParts.length === 0) return null;
     const settings: CuttingSettings = {
       kerfMm: 3,
       trim: {
@@ -130,15 +221,16 @@ export function CuttingPlanPanel({
         leftMm: parseTrim(trim.leftMm),
       },
     };
-    const cutParts = parts.map(part => ({
+    const cutParts = allParts.map(part => ({
         id: part.id,
         materialId: part.material,
         thicknessMm: part.thickness,
         lengthMm: part.length,
         widthMm: part.width,
         quantity: part.quantity,
-        grain,
-        allowRotation: grain === "none",
+        grain: part.grain ?? grain,
+        allowRotation: (part.grain ?? grain) === "none",
+        sourceReference: part.sourceReference ?? "Módulo paramétrico da revisão salva",
       }));
     const grouped = createGroupedCuttingPlans(
       {
@@ -150,13 +242,14 @@ export function CuttingPlanPanel({
       cutParts,
     );
     if (!grouped.ok) return { settings, grouped, artifacts: [], portablePackage: null };
-    const labelParts = parts.map(part => ({
+    const labelParts = allParts.map(part => ({
       id: part.id,
       code: part.code,
       name: part.name,
       material: part.material,
       thicknessMm: part.thickness,
       edges: part.edges,
+      sourceReference: part.sourceReference ?? "Módulo paramétrico da revisão salva",
     }));
     const artifacts = grouped.groups.map(group => {
       const preferredPlan = preferredStrategy
@@ -188,7 +281,7 @@ export function CuttingPlanPanel({
       artifacts,
       portablePackage,
     };
-  }, [grain, parts, preferredStrategy, project.id, project.title, revision, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
+  }, [grain, parts, preferredStrategy, project.id, project.title, revision, supplementalParts, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
   const artifacts = calculation?.artifacts ?? [];
   const labels = artifacts.flatMap(artifact => artifact.labels.ok ? artifact.labels.labels : []);
   const portablePackage = calculation?.portablePackage ?? null;
@@ -267,6 +360,52 @@ export function CuttingPlanPanel({
           {archivedPlans[0] ? ` Último: R${String(archivedPlans[0].package.revision).padStart(2, "0")} · ${new Date(archivedPlans[0].savedAt).toLocaleString("pt-BR")}.` : ""}
         </p>
       ) : null}
+
+      <section className="supplemental-parts" aria-labelledby="supplemental-parts-title">
+        <header>
+          <div>
+            <span className="small-label">ENTRADA COMPLEMENTAR · REVISÃO SALVA</span>
+            <h3 id="supplemental-parts-title">Peças adicionais para o corte</h3>
+          </div>
+          <span>{supplementalParts.length} ITEM(NS)</span>
+        </header>
+        <p>
+          Use para camadas, portas ou peças que ainda não vêm do módulo paramétrico. Os dados ficam somente neste dispositivo e nesta revisão.
+        </p>
+        <div className="supplemental-parts-form">
+          <label>Código<input value={supplementalDraft.code} onChange={event => updateSupplementalDraft("code", event.target.value)} /></label>
+          <label>Nome<input value={supplementalDraft.name} onChange={event => updateSupplementalDraft("name", event.target.value)} /></label>
+          <label>Material<input value={supplementalDraft.material} onChange={event => updateSupplementalDraft("material", event.target.value)} /></label>
+          <label>Espessura<span><input type="number" min="0.1" step="0.1" value={supplementalDraft.thickness} onChange={event => updateSupplementalDraft("thickness", event.target.value)} /> mm</span></label>
+          <label>Comprimento<span><input type="number" min="1" step="1" value={supplementalDraft.length} onChange={event => updateSupplementalDraft("length", event.target.value)} /> mm</span></label>
+          <label>Largura<span><input type="number" min="1" step="1" value={supplementalDraft.width} onChange={event => updateSupplementalDraft("width", event.target.value)} /> mm</span></label>
+          <label>Quantidade<input type="number" min="1" step="1" value={supplementalDraft.quantity} onChange={event => updateSupplementalDraft("quantity", event.target.value)} /></label>
+          <label>Veio<select value={supplementalDraft.grain} onChange={event => updateSupplementalDraft("grain", event.target.value as CuttingGrain)}>
+            <option value="pending">Definir antes de calcular</option>
+            <option value="none">Sem veio</option>
+            <option value="length">No comprimento</option>
+            <option value="width">Na largura</option>
+          </select></label>
+          <label className="supplemental-wide">Bordas / fita<input value={supplementalDraft.edges} onChange={event => updateSupplementalDraft("edges", event.target.value)} placeholder="Descreva somente o que foi definido" /></label>
+          <label className="supplemental-wide">Origem da informação<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder="Ex.: medição da porta PT-01" /></label>
+          <button type="button" onClick={addSupplementalPart}>Adicionar peça</button>
+        </div>
+        {supplementalError ? <p className="supplemental-parts-error" role="alert">{supplementalError}</p> : null}
+        {supplementalParts.length > 0 ? (
+          <div className="supplemental-parts-list">
+            {supplementalParts.map(part => (
+              <article key={part.id}>
+                <div>
+                  <strong>{part.code} · {part.name}</strong>
+                  <span>{part.quantity} × {part.length} × {part.width} mm · {part.material} · {part.thickness} mm</span>
+                  <small>{part.edges} · origem: {part.sourceReference}</small>
+                </div>
+                <button type="button" onClick={() => removeSupplementalPart(part.id)}>Remover</button>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
 
       <div className="cutting-settings">
         <label>
@@ -442,11 +581,11 @@ export function CuttingPlanPanel({
             <div className="cutting-report-parts">
               <h3>Peças consideradas · {artifact.materialId} · {artifact.thicknessMm} mm</h3>
               <table>
-                <thead><tr><th>Peça</th><th>Qtd.</th><th>Dimensões</th><th>Material</th><th>Esp.</th></tr></thead>
+                <thead><tr><th>Peça</th><th>Qtd.</th><th>Dimensões</th><th>Material</th><th>Esp.</th><th>Origem</th></tr></thead>
                 <tbody>{artifact.report.report.parts.map(part => (
                   <tr key={part.id}>
                     <td>{part.id}</td><td>{part.quantity}</td><td>{part.lengthMm} × {part.widthMm} mm</td>
-                    <td>{part.materialId}</td><td>{part.thicknessMm} mm</td>
+                    <td>{part.materialId}</td><td>{part.thicknessMm} mm</td><td>{part.sourceReference ?? "Não registrada"}</td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -470,6 +609,7 @@ export function CuttingPlanPanel({
                   <div><dt>Espessura</dt><dd>{label.thicknessMm} mm</dd></div>
                   <div><dt>Material</dt><dd>{label.material}</dd></div>
                   <div><dt>Bordas</dt><dd>{label.edges}</dd></div>
+                  <div><dt>Origem</dt><dd>{label.sourceReference ?? "Não registrada"}</dd></div>
                 </dl>
                 <small>PRELIMINAR · NÃO LIBERADO{label.rotatedInPlan ? " · GIRADA NO MAPA" : ""}</small>
               </article>

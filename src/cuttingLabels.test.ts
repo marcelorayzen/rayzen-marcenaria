@@ -9,6 +9,7 @@ const part = {
   material: "MDF 15 mm",
   thicknessMm: 15,
   edges: "Sem fita",
+  sourceReference: "Módulo paramétrico R2",
 };
 const stock = { id: "sheet", materialId: part.material, thicknessMm: 15, lengthMm: 2750, widthMm: 1850, grain: "none" as const };
 const settings = { kerfMm: 3, trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } };
@@ -28,6 +29,7 @@ describe("cutting piece labels", () => {
       partCode: "BC-01",
       instance: 2,
       status: "preliminary-not-released",
+      sourceReference: "Módulo paramétrico R2",
     });
   });
 
