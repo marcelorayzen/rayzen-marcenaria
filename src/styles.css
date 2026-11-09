@@ -1187,6 +1187,154 @@ tr:focus-visible {
   gap: 7px;
 }
 
+.cutting-plan-section {
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.cutting-plan-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+}
+
+.cutting-plan-heading h2 {
+  margin: 4px 0;
+  font: 600 22px/1 var(--display);
+}
+
+.cutting-plan-heading p,
+.cutting-plan-heading > strong {
+  margin: 0;
+  color: var(--muted);
+  font: 600 10px/1.4 var(--mono);
+}
+
+.cutting-settings {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.4fr) repeat(4, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #f1f2ee;
+}
+
+.cutting-settings label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font: 600 9px/1.2 var(--mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.cutting-settings select,
+.cutting-settings input {
+  width: 100%;
+  min-height: 32px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.cutting-settings label > span {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.cutting-sheet-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.cutting-sheet-card {
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: #f5f6f2;
+}
+
+.cutting-sheet-card > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.cutting-sheet-card strong {
+  color: var(--ink);
+}
+
+.cutting-sheet-map {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  border: 1px solid #98a3a0;
+  background: #e2e4dd;
+}
+
+.cutting-sheet-stock {
+  fill: #eceee8;
+  stroke: #394344;
+  stroke-width: 8;
+}
+
+.cutting-part-rect {
+  fill: #cfd9d3;
+  stroke: #394344;
+  stroke-width: 5;
+}
+
+.cutting-part-label {
+  fill: #263032;
+  font: 600 30px var(--mono);
+  pointer-events: none;
+}
+
+.cutting-plan-warning {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent-dark);
+  background: #fbf2ef;
+  color: var(--accent-dark);
+  font-size: 11px;
+}
+
+.cutting-plan-warning p {
+  margin: 3px 0;
+}
+
+.cutting-plan-note {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+@media (max-width: 760px) {
+  .cutting-settings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cutting-settings label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .cutting-plan-heading,
+  .cutting-sheet-card > div {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+
 .footer-dot {
   width: 5px;
   height: 5px;

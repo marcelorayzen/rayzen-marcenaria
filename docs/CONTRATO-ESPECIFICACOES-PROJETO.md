@@ -41,6 +41,8 @@ As peças são separadas por material e espessura, exigem quantidade inteira, di
 
 O mesmo módulo agora contém uma distribuição determinística preliminar em faixas. Ela expande quantidades, mantém afastamento da serra, respeita área útil e abre novas chapas quando necessário. É uma base verificável para a visualização: ainda não otimiza alternativas, não gera sequência operacional de cortes e não pode ser apresentada como plano liberado.
 
+`CuttingPlanPanel.tsx` apresenta essa prévia para as peças da revisão salva. O operador escolhe refilo por lado e estado do veio; os valores iniciais de 4 mm ficam dentro da faixa informada pela oficina e podem ser alterados. Essa configuração ainda é estado da tela e deve ser persistida por projeto antes do uso operacional.
+
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
 - A IA não confirma a proposta, não calcula produção e não libera materiais/cortes.

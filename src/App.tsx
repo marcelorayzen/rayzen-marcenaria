@@ -51,6 +51,7 @@ import {
 } from "./draftSyncQueue";
 import { syncDraftQueueItem } from "./supabaseDraftSync";
 import { parseProjectChatMessage } from "./projectChat";
+import { CuttingPlanPanel } from "./CuttingPlanPanel";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -2058,9 +2059,14 @@ export default function App() {
               <span className="footer-dot" />
               Regra aplicada: tampo e base encaixados entre as laterais
             </span>
-            <span>Sem portas · sem fundo · sem otimização de corte</span>
+            <span>Sem portas · sem fundo · distribuição preliminar abaixo</span>
           </div>
         </section>
+
+        <CuttingPlanPanel
+          parts={createCounterModel(savedRevision.parameters).parts}
+          revision={savedRevision.number}
+        />
 
         <footer className="page-footer">
           <span>RAYZEN · CADERNO DE PROJETO</span>
