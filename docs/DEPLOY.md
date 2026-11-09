@@ -40,7 +40,7 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 4. Adicionar `marcenaria.rayzen.com.br` em **Workers & Pages → rayzen-marcenaria → Custom domains**. Como a zona já está no Cloudflare, concluir o fluxo no painel permite que o DNS seja criado de forma segura.
 5. A prévia foi publicada em `https://33032114.rayzen-marcenaria.pages.dev` a partir da branch `preview` em 8 de novembro de 2026.
 6. Validar visualmente login, acesso negado, links expirados, navegação por URL direta, HTTPS e conexão Supabase.
-7. A produção foi aprovada e publicada em `marcenaria.rayzen.com.br` em 9 de novembro de 2026, deployment `b28619b4.rayzen-marcenaria.pages.dev` da branch `main`, a partir do commit `2bbe184`. O bundle público foi conferido com a URL Supabase incorporada; a chave não é registrada na documentação.
+7. A produção foi aprovada e publicada em `marcenaria.rayzen.com.br` em 9 de novembro de 2026, deployment `60134df3.rayzen-marcenaria.pages.dev` da branch `main`, a partir do commit `e25ef0a`. O bundle público foi conferido com a URL Supabase incorporada; a chave não é registrada na documentação. Esta versão também exibe um diagnóstico sanitizado quando a interface sofre erro de carregamento.
 8. A verificação HTTPS retornou `200 OK`. Uma publicação futura ainda deve executar `npm run cloudflare:pages:deploy`, conferir o domínio e registrar versão/data.
 
 ## Ainda necessário
