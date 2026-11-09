@@ -14,10 +14,17 @@ describe("browser cutting configuration", () => {
     const storage = new MemoryStorage();
     const first = new BrowserCuttingConfiguration(storage, "cutting:a");
     const second = new BrowserCuttingConfiguration(storage, "cutting:b");
-    first.save({ version: 1, grain: "length", trim: { topMm: 3, rightMm: 4, bottomMm: 3, leftMm: 4 }, preferredStrategy: "area" });
+    first.save({
+      version: 1,
+      grain: "length",
+      trim: { topMm: 3, rightMm: 4, bottomMm: 3, leftMm: 4 },
+      preferredStrategy: "area",
+      preferredStrategies: { '["MDF branco",15]': "strip-width" },
+    });
     second.save({ version: 1, grain: "none", trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } });
     expect(first.load()?.trim).toEqual({ topMm: 3, rightMm: 4, bottomMm: 3, leftMm: 4 });
     expect(first.load()?.preferredStrategy).toBe("area");
+    expect(first.load()?.preferredStrategies).toEqual({ '["MDF branco",15]': "strip-width" });
     expect(second.load()?.grain).toBe("none");
   });
 
@@ -28,5 +35,16 @@ describe("browser cutting configuration", () => {
     expect(adapter.load()?.trim.topMm).toBeNull();
     storage.setItem("cutting", JSON.stringify({ version: 1, grain: "none", trim: { topMm: -1 } }));
     expect(adapter.load()).toBeNull();
+  });
+
+  it("rejects malformed per-group strategy preferences", () => {
+    const storage = new MemoryStorage();
+    storage.setItem("cutting", JSON.stringify({
+      version: 1,
+      grain: "none",
+      trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 },
+      preferredStrategies: { group: "unknown" },
+    }));
+    expect(new BrowserCuttingConfiguration(storage, "cutting").load()).toBeNull();
   });
 });

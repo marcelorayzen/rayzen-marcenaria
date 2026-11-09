@@ -8,6 +8,7 @@ export interface LocalCuttingConfiguration {
   grain: CuttingGrain;
   trim: SheetTrim;
   preferredStrategy?: CuttingPlanStrategy | null;
+  preferredStrategies?: Record<string, CuttingPlanStrategy>;
 }
 
 function validTrim(value: unknown): value is number | null {
@@ -18,6 +19,15 @@ function isConfiguration(value: unknown): value is LocalCuttingConfiguration {
   if (!value || typeof value !== "object") return false;
   const item = value as Record<string, unknown>;
   const trim = item.trim as Record<string, unknown> | undefined;
+  const preferredStrategies = item.preferredStrategies;
+  const validStrategies = preferredStrategies === undefined || (
+    !!preferredStrategies
+    && typeof preferredStrategies === "object"
+    && !Array.isArray(preferredStrategies)
+    && Object.entries(preferredStrategies as Record<string, unknown>).every(([key, strategy]) =>
+      key.trim() && ["largest-side", "area", "strip-width"].includes(String(strategy)),
+    )
+  );
   return item.version === 1
     && ["length", "width", "none", "pending"].includes(String(item.grain))
     && !!trim
@@ -27,7 +37,8 @@ function isConfiguration(value: unknown): value is LocalCuttingConfiguration {
     && validTrim(trim.leftMm)
     && (item.preferredStrategy === undefined
       || item.preferredStrategy === null
-      || ["largest-side", "area", "strip-width"].includes(String(item.preferredStrategy)));
+      || ["largest-side", "area", "strip-width"].includes(String(item.preferredStrategy)))
+    && validStrategies;
 }
 
 export class BrowserCuttingConfiguration {

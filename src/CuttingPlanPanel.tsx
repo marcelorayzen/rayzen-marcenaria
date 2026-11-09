@@ -122,12 +122,28 @@ export function CuttingPlanPanel({
   const [preferredStrategy, setPreferredStrategy] = useState<CuttingPlanStrategy | null>(
     initialConfiguration?.preferredStrategy ?? null,
   );
+  const [preferredStrategies, setPreferredStrategies] = useState<Record<string, CuttingPlanStrategy>>(
+    initialConfiguration?.preferredStrategies ?? {},
+  );
   const [supplementalParts, setSupplementalParts] = useState<SupplementalCutPart[]>(
     () => supplementalStore.load(),
   );
   const [supplementalDraft, setSupplementalDraft] = useState<SupplementalPartDraft>(emptySupplementalDraft);
   const [supplementalError, setSupplementalError] = useState<string | null>(null);
   const [editingSupplementalId, setEditingSupplementalId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loaded = configurationStore.load();
+    setTrim({
+      topMm: loaded ? trimInputValue(loaded.trim.topMm) : "4",
+      rightMm: loaded ? trimInputValue(loaded.trim.rightMm) : "4",
+      bottomMm: loaded ? trimInputValue(loaded.trim.bottomMm) : "4",
+      leftMm: loaded ? trimInputValue(loaded.trim.leftMm) : "4",
+    });
+    setGrain(loaded?.grain ?? "none");
+    setPreferredStrategy(loaded?.preferredStrategy ?? null);
+    setPreferredStrategies(loaded?.preferredStrategies ?? {});
+  }, [configurationStore]);
 
   useEffect(() => {
     setSupplementalParts(supplementalStore.load());
@@ -140,6 +156,7 @@ export function CuttingPlanPanel({
     nextTrim: Record<TrimSide, string>,
     nextGrain: CuttingGrain,
     nextStrategy: CuttingPlanStrategy | null,
+    nextStrategies: Record<string, CuttingPlanStrategy>,
   ) {
     const configuration: LocalCuttingConfiguration = {
       version: 1,
@@ -151,6 +168,7 @@ export function CuttingPlanPanel({
         leftMm: parseTrim(nextTrim.leftMm),
       },
       preferredStrategy: nextStrategy,
+      preferredStrategies: nextStrategies,
     };
     const values = Object.values(configuration.trim);
     if (values.every(value => value === null || (Number.isFinite(value) && value >= 0))) {
@@ -161,17 +179,25 @@ export function CuttingPlanPanel({
   function updateTrim(side: TrimSide, value: string) {
     const next = { ...trim, [side]: value };
     setTrim(next);
-    persistConfiguration(next, grain, preferredStrategy);
+    persistConfiguration(next, grain, preferredStrategy, preferredStrategies);
   }
 
   function updateGrain(next: CuttingGrain) {
     setGrain(next);
-    persistConfiguration(trim, next, preferredStrategy);
+    persistConfiguration(trim, next, preferredStrategy, preferredStrategies);
   }
 
-  function updateStrategy(next: CuttingPlanStrategy | null) {
-    setPreferredStrategy(next);
-    persistConfiguration(trim, grain, next);
+  function updateStrategy(groupId: string, next: CuttingPlanStrategy) {
+    const nextStrategies = { ...preferredStrategies, [groupId]: next };
+    setPreferredStrategy(null);
+    setPreferredStrategies(nextStrategies);
+    persistConfiguration(trim, grain, null, nextStrategies);
+  }
+
+  function resetStrategies() {
+    setPreferredStrategy(null);
+    setPreferredStrategies({});
+    persistConfiguration(trim, grain, null, {});
   }
 
   function updateSupplementalDraft<K extends keyof SupplementalPartDraft>(
@@ -282,8 +308,9 @@ export function CuttingPlanPanel({
       sourceReference: part.sourceReference ?? "Módulo paramétrico da revisão salva",
     }));
     const artifacts = grouped.groups.map(group => {
-      const preferredPlan = preferredStrategy
-        ? createPreliminaryStripPlan(group.stock, settings, group.parts, preferredStrategy)
+      const groupStrategy = preferredStrategies[group.id] ?? preferredStrategy;
+      const preferredPlan = groupStrategy
+        ? createPreliminaryStripPlan(group.stock, settings, group.parts, groupStrategy)
         : null;
       const plan = preferredPlan?.ok ? preferredPlan : group.comparison.selectedPlan;
       const report = createCuttingPlanReport(project, revision, group.stock, settings, group.parts, plan);
@@ -311,7 +338,7 @@ export function CuttingPlanPanel({
       artifacts,
       portablePackage,
     };
-  }, [grain, parts, preferredStrategy, project.id, project.title, revision, supplementalParts, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
+  }, [grain, parts, preferredStrategies, preferredStrategy, project.id, project.title, revision, supplementalParts, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
   const artifacts = calculation?.artifacts ?? [];
   const labels = artifacts.flatMap(artifact => artifact.labels.ok ? artifact.labels.labels : []);
   const portablePackage = calculation?.portablePackage ?? null;
@@ -475,7 +502,7 @@ export function CuttingPlanPanel({
                 type="button"
                 key={alternative.strategy}
                 className={artifact.plan.strategy === alternative.strategy ? "selected" : ""}
-                onClick={() => updateStrategy(alternative.strategy)}
+                onClick={() => updateStrategy(artifact.id, alternative.strategy)}
               >
                 <span>{strategyLabels[alternative.strategy]}</span>
                 <strong>{alternative.sheetCount} chapa(s)</strong>
@@ -487,7 +514,7 @@ export function CuttingPlanPanel({
         </section>
       ))}
       {artifacts.length > 0 ? (
-        <button type="button" className="cutting-strategy-auto" disabled={preferredStrategy === null} onClick={() => updateStrategy(null)}>
+        <button type="button" className="cutting-strategy-auto" disabled={preferredStrategy === null && Object.keys(preferredStrategies).length === 0} onClick={resetStrategies}>
           Usar seleção automática por grupo
         </button>
       ) : null}
