@@ -1488,6 +1488,19 @@ tr:focus-visible {
   background: #f4f5f1;
 }
 
+.chat-area {
+  border: 1px solid var(--line, #c8cfcc);
+  padding: 1rem;
+  margin-top: 1rem;
+  background: #f7f8f5;
+}
+
+.chat-area > p,
+.proposal-message {
+  margin: 0.4rem 0 0.8rem;
+  color: #485652;
+}
+
 .proposal-area > p {
   margin: 4px 0 10px;
   color: var(--muted);

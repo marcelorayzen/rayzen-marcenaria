@@ -50,6 +50,7 @@ import {
   type DraftSyncQueueItem,
 } from "./draftSyncQueue";
 import { syncDraftQueueItem } from "./supabaseDraftSync";
+import { parseProjectChatMessage } from "./projectChat";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -302,6 +303,8 @@ export default function App() {
     new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).load(),
   );
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [chatInput, setChatInput] = useState("");
+  const [chatMessage, setChatMessage] = useState<string | null>(null);
 
   const issues = validateCounter(parameters);
   const model = useMemo(
@@ -420,6 +423,34 @@ export default function App() {
 
     setProposalError(null);
     setPendingProposal(proposal);
+  }
+
+  function submitProjectChat() {
+    const command = parseProjectChatMessage(chatInput);
+    if (command.kind === "unsupported") {
+      setChatMessage(command.message);
+      return;
+    }
+    const proposal: SetCounterDimensionProposal = {
+      operation: "set-counter-dimension",
+      baseRevisionId: savedRevision.id,
+      field: "width",
+      currentValue: savedRevision.parameters.width,
+      proposedValue: command.value,
+      unit: "mm",
+      reason: "Proposta recebida pela conversa local.",
+      proposedBy: "internal",
+    };
+    const proposalIssues = validateSetCounterDimensionProposal(proposal, savedRevision.parameters);
+    if (proposalIssues.length > 0) {
+      setChatMessage(proposalIssues[0]!.message);
+      return;
+    }
+    setProposedWidth(String(command.value));
+    setProposalError(null);
+    setPendingProposal(proposal);
+    setChatMessage("Preparei uma proposta. Revise o impacto e aceite somente se estiver correto.");
+    setChatInput("");
   }
 
   function acceptProposal() {
@@ -1242,6 +1273,27 @@ export default function App() {
                 Espessura aplicada no cálculo. Meça e confirme no local antes de
                 fabricar.
               </p>
+            </div>
+
+            <div className="chat-area" aria-labelledby="chat-title">
+              <span className="small-label" id="chat-title">CONVERSA DE PROJETO</span>
+              <p>Descreva uma alteração. A conversa gera apenas uma proposta para sua confirmação.</p>
+              <div className="proposal-input-row">
+                <label>
+                  Mensagem
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(event) => setChatInput(event.target.value)}
+                    placeholder="Ex.: largura 900 mm"
+                    aria-label="Mensagem para a conversa de projeto"
+                  />
+                </label>
+                <button className="proposal-button" type="button" onClick={submitProjectChat} disabled={chatInput.trim().length === 0}>
+                  Propor
+                </button>
+              </div>
+              {chatMessage ? <p className="proposal-message" role="status">{chatMessage}</p> : null}
             </div>
 
             <div className="proposal-area" aria-labelledby="proposal-title">
