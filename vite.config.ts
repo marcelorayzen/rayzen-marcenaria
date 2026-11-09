@@ -9,6 +9,7 @@ export default defineConfig({
         manualChunks: {
           "three-vendor": ["three"],
           "fiber-vendor": ["@react-three/fiber"],
+          "supabase-vendor": ["@supabase/supabase-js"],
         },
       },
     },

@@ -925,6 +925,81 @@ tr:focus-visible {
   line-height: 1.5;
 }
 
+.auth-panel {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #cfd4ce;
+  background: #f6f7f3;
+}
+
+.auth-panel h2 {
+  margin: 2px 0 0;
+  color: #24292c;
+  font-size: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 4px;
+  min-width: 210px;
+  color: #596466;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.auth-form input {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid #cfd4ce;
+  background: white;
+  color: #24292c;
+}
+
+.auth-form button,
+.auth-session button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  background: #3e5c5b;
+  color: white;
+  cursor: pointer;
+}
+
+.auth-form button:disabled,
+.auth-session button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.auth-session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #394344;
+  font-size: 12px;
+}
+
+.auth-muted,
+.auth-message {
+  margin: 0;
+  color: #667677;
+  font-size: 11px;
+}
+
+.auth-message {
+  color: #8e3d2e;
+}
+
 .draft-mark {
   width: 6px;
   height: 6px;

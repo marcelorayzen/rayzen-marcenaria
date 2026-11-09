@@ -6,7 +6,7 @@ Esta pasta prepara a primeira fundação de nuvem do Rayzen Marcenaria. Ela não
 
 **Atualização de 9 de novembro de 2026:** a migration `20261108160000_client_access_and_consent.sql` foi aplicada ao projeto remoto `frbtknggquivbjofknhk` e o dry-run confirmou `upToDate: true`. Ainda não há provisionamento de perfis nem teste de RLS com usuários reais.
 
-A migration `20261109090000_profile_multiple_roles.sql` também foi aplicada. Ela permite que um perfil interno tenha mais de uma responsabilidade; a matriz atual é Kevin (marceneiro), Moises (marceneiro e representante), Marcelo (marceneiro) e Tais (representante). Os perfis só devem ser criados após os usuários existirem no Phone Auth.
+A migration `20261109090000_profile_multiple_roles.sql` também foi aplicada. Ela permite que um perfil interno tenha mais de uma responsabilidade; a matriz atual é Kevin (marceneiro), Moises (marceneiro e representante), Marcelo (marceneiro) e Tais (representante). Por enquanto, a equipe interna usa e-mail e senha; os perfis só devem ser criados após os usuários existirem no Supabase Auth.
 
 - `migrations/20261108123000_initial_project_governance.sql`: esquema, RLS, funções de aprovação/liberação e bucket privado de arquivos.
 - `../.env.example`: somente valores públicos consumidos pelo navegador; a chave `service_role` nunca pertence ao frontend nem a este arquivo.
@@ -18,7 +18,7 @@ A migration `20261109090000_profile_multiple_roles.sql` também foi aplicada. El
 - Projetos, revisões, peças e anexos são acessíveis apenas a membros internos do projeto.
 - Links para cliente guardam apenas o hash do token, expiram em até dez dias e podem ser revogados. A leitura externa acontece exclusivamente pela função `get_shared_revision`.
 
-O acesso próprio do cliente tem a migration `20261108160000_client_access_and_consent.sql`, aplicada ao projeto remoto em 9 de novembro de 2026. Ela prepara perfil de cliente, convite manual entregue por WhatsApp, escopo por projeto, consentimento versionado e confirmação do cliente. A autenticação é por Supabase Phone Auth; o código não é guardado no banco. Cliente não recebe acesso direto a projetos, revisões, peças ou arquivos: uma futura camada de apresentação precisa limitar a visualização ao ilustrativo aprovado.
+O acesso próprio do cliente tem a migration `20261108160000_client_access_and_consent.sql`, aplicada ao projeto remoto em 9 de novembro de 2026. Ela prepara perfil de cliente, convite manual entregue por WhatsApp, escopo por projeto, consentimento versionado e confirmação do cliente. O cliente poderá usar Supabase Phone Auth quando o provedor SMS for escolhido; o código não é guardado no banco. Cliente não recebe acesso direto a projetos, revisões, peças ou arquivos: uma futura camada de apresentação precisa limitar a visualização ao ilustrativo aprovado.
 
 ## Aplicação futura
 

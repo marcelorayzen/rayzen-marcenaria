@@ -50,7 +50,7 @@ Cada entrega deve guardar separadamente: requisito e aceite; decisão de arquite
 
 **Evidência de infraestrutura (8 de novembro de 2026):** a migration inicial de governança foi aplicada e conferida no projeto Supabase remoto. Isso prova somente o esquema implantado; não prova permissões por papel em uso real, integração da interface, envio de anexos, aprovação comercial ou liberação de produção.
 
-**Evidência de migration (9 de novembro de 2026):** a migration de acesso/consentimento foi aplicada ao projeto Supabase remoto e um dry-run posterior retornou `upToDate: true`. Isso não prova provisionamento de perfis, autenticação Phone Auth ou RLS exercitada por papel.
+**Evidência de migration (9 de novembro de 2026):** as migrations de acesso/consentimento e múltiplos papéis foram aplicadas ao projeto Supabase remoto e um dry-run posterior retornou `upToDate: true`. Um perfil de representante de teste foi provisionado. Isso não prova autenticação de produção ou RLS exercitada por todos os papéis.
 
 **Evidência de prévia (8 de novembro de 2026):** o build atual foi enviado ao Cloudflare Pages na branch `preview`. Isso prova upload e build estático; ainda requer validação humana da interface e não equivale à publicação de produção.
 

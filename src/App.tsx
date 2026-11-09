@@ -36,6 +36,7 @@ import {
   validateLocalProjectBackup,
 } from "./projectBackup";
 import { getDraftSynchronizationPresentation } from "./draftSynchronization";
+import { AuthPanel } from "./AuthPanel";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -923,6 +924,7 @@ export default function App() {
       </header>
 
       <div className="page">
+        <AuthPanel />
         <section className="project-heading" aria-labelledby="project-title">
           <div className="heading-main">
             <h1 id="project-title">Balcão de ensaio</h1>
