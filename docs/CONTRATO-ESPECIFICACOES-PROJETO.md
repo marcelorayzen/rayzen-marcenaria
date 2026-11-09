@@ -23,6 +23,14 @@ O projeto canônico pode ser mantido para continuidade operacional e uma futura 
 
 ## Limites
 
+### Peças compostas — contrato inicial de 9/11/2026
+
+`src/compositePanel.ts` expande uma peça composta em blanks individuais por camada e quantidade, preservando material, espessura de chapa, dimensões explícitas, veio, identidade e revisão. A soma das camadas é espessura nominal: não incorpora espessura de cola ou tolerâncias não informadas. As dimensões de corte são entradas explícitas; este contrato não calcula descontos de borda.
+
+Largura e espessura da fita são campos distintos. A largura deve cobrir a espessura nominal; isso não prova tolerância de acabamento. Veio pendente, espessura de fita ausente e operação sem especificação permanecem pendências. Cava, colagem e aplicação de borda são operações referenciadas; não há geração de geometria de usinagem ou autorização de fabricação.
+
+Estado: contrato e testes locais, ainda sem ligação ao editor, banco ou otimizador. O exemplo 15 + 6 usa dimensões sintéticas nos testes. O caso 15 + 15 testa a aritmética de uma composição explícita e não estabelece uma regra universal de engrossamento.
+
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
 - A IA não confirma a proposta, não calcula produção e não libera materiais/cortes.

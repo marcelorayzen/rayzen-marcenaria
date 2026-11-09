@@ -14,6 +14,8 @@ Próximo trabalho: preservar e reabrir múltiplos projetos, corrigir sincroniza�
 
 ## Estado confirmado
 
+Incremento de domínio em 9/11/2026: contrato local `compositePanel.ts` para camadas, bordas e operações, com expansão em blanks por espessura de origem. Ainda não integrado à UI, persistência ou plano de corte; não altera a produção publicada.
+
 | Área | Estado | Evidência e limite |
 | --- | --- | --- |
 | Motor do balcão | Implementado e testado localmente | Calcula laterais, tampo e base para o caso MDF de 18 mm; não representa outros módulos nem valida fabricação real. |
