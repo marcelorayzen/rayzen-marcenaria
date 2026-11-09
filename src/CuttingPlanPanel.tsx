@@ -7,8 +7,12 @@ import {
   type SheetTrim,
 } from "./cuttingPlan";
 import { createCuttingPlanReport } from "./cuttingPlanReport";
+import {
+  BrowserCuttingConfiguration,
+  type CuttingGrain,
+  type LocalCuttingConfiguration,
+} from "./browserCuttingConfiguration";
 
-type Grain = "length" | "width" | "none" | "pending";
 type TrimSide = keyof SheetTrim;
 
 const trimLabels: Array<[TrimSide, string]> = [
@@ -23,6 +27,10 @@ function parseTrim(value: string): number | null {
   return Number(value);
 }
 
+function trimInputValue(value: number | null): string {
+  return value === null ? "" : String(value);
+}
+
 export function CuttingPlanPanel({
   parts,
   project,
@@ -32,13 +40,49 @@ export function CuttingPlanPanel({
   project: { id: string; title: string };
   revision: number;
 }) {
+  const configurationStore = useMemo(
+    () => new BrowserCuttingConfiguration(
+      window.localStorage,
+      `rayzen-marcenaria:project:${project.id}:cutting-configuration:v1`,
+    ),
+    [project.id],
+  );
+  const initialConfiguration = useMemo(() => configurationStore.load(), [configurationStore]);
   const [trim, setTrim] = useState<Record<TrimSide, string>>({
-    topMm: "4",
-    rightMm: "4",
-    bottomMm: "4",
-    leftMm: "4",
+    topMm: initialConfiguration ? trimInputValue(initialConfiguration.trim.topMm) : "4",
+    rightMm: initialConfiguration ? trimInputValue(initialConfiguration.trim.rightMm) : "4",
+    bottomMm: initialConfiguration ? trimInputValue(initialConfiguration.trim.bottomMm) : "4",
+    leftMm: initialConfiguration ? trimInputValue(initialConfiguration.trim.leftMm) : "4",
   });
-  const [grain, setGrain] = useState<Grain>("none");
+  const [grain, setGrain] = useState<CuttingGrain>(initialConfiguration?.grain ?? "none");
+
+  function persistConfiguration(nextTrim: Record<TrimSide, string>, nextGrain: CuttingGrain) {
+    const configuration: LocalCuttingConfiguration = {
+      version: 1,
+      grain: nextGrain,
+      trim: {
+        topMm: parseTrim(nextTrim.topMm),
+        rightMm: parseTrim(nextTrim.rightMm),
+        bottomMm: parseTrim(nextTrim.bottomMm),
+        leftMm: parseTrim(nextTrim.leftMm),
+      },
+    };
+    const values = Object.values(configuration.trim);
+    if (values.every(value => value === null || (Number.isFinite(value) && value >= 0))) {
+      configurationStore.save(configuration);
+    }
+  }
+
+  function updateTrim(side: TrimSide, value: string) {
+    const next = { ...trim, [side]: value };
+    setTrim(next);
+    persistConfiguration(next, grain);
+  }
+
+  function updateGrain(next: CuttingGrain) {
+    setGrain(next);
+    persistConfiguration(trim, next);
+  }
 
   const calculation = useMemo(() => {
     const first = parts[0];
@@ -102,7 +146,7 @@ export function CuttingPlanPanel({
       <div className="cutting-settings">
         <label>
           Sentido do veio
-          <select value={grain} onChange={event => setGrain(event.target.value as Grain)}>
+          <select value={grain} onChange={event => updateGrain(event.target.value as CuttingGrain)}>
             <option value="none">Sem veio</option>
             <option value="length">No comprimento</option>
             <option value="width">Na largura</option>
@@ -117,11 +161,12 @@ export function CuttingPlanPanel({
               min="0"
               step="1"
               value={trim[side]}
-              onChange={event => setTrim(current => ({ ...current, [side]: event.target.value }))}
+              onChange={event => updateTrim(side, event.target.value)}
             /> mm</span>
           </label>
         ))}
       </div>
+      <p className="cutting-local-status">Configuração salva neste dispositivo para este projeto.</p>
 
       {!plan ? <p className="cutting-plan-warning">A revisão não contém peças calculadas.</p> : null}
       {plan && !plan.ok ? (

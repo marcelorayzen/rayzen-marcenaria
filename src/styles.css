@@ -1318,6 +1318,12 @@ tr:focus-visible {
   gap: 5px;
 }
 
+.cutting-local-status {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font: 500 9px var(--mono);
+}
+
 .cutting-sheet-list {
   display: grid;
   gap: 14px;
@@ -2873,6 +2879,7 @@ tr:focus-visible {
   }
 
   .cutting-settings,
+  .cutting-local-status,
   .cutting-plan-actions button {
     display: none;
   }
