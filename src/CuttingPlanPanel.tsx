@@ -13,6 +13,7 @@ import {
   type LocalCuttingConfiguration,
 } from "./browserCuttingConfiguration";
 import { createCuttingPieceLabels } from "./cuttingLabels";
+import { createCuttingLabelsCsv, createCuttingPlanPackage } from "./cuttingPlanExport";
 
 type TrimSide = keyof SheetTrim;
 
@@ -135,6 +136,36 @@ export function CuttingPlanPanel({
   const plan = calculation?.plan ?? null;
   const report = calculation?.report.ok ? calculation.report.report : null;
   const labels = calculation?.labels.ok ? calculation.labels.labels : [];
+  const portablePackage = report ? createCuttingPlanPackage(report, labels) : null;
+
+  function downloadText(filename: string, content: string, type: string) {
+    const url = URL.createObjectURL(new Blob([content], { type }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+  }
+
+  function downloadPackage() {
+    if (!portablePackage?.ok) return;
+    downloadText(
+      `rayzen-plano-corte-${project.id}-r${revision}.json`,
+      JSON.stringify(portablePackage.package, null, 2),
+      "application/json;charset=utf-8",
+    );
+  }
+
+  function downloadLabelsCsv() {
+    if (!portablePackage?.ok) return;
+    downloadText(
+      `rayzen-etiquetas-${project.id}-r${revision}.csv`,
+      `\uFEFF${createCuttingLabelsCsv(labels)}`,
+      "text/csv;charset=utf-8",
+    );
+  }
 
   return (
     <section className="cutting-plan-section" aria-labelledby="cutting-plan-title">
@@ -146,6 +177,8 @@ export function CuttingPlanPanel({
         </div>
         <div className="cutting-plan-actions">
           <strong>{plan?.ok ? `${plan.sheets.length} CHAPA(S)` : "CONFIGURAÇÃO PENDENTE"}</strong>
+          <button type="button" disabled={!portablePackage?.ok} onClick={downloadPackage}>Baixar JSON</button>
+          <button type="button" disabled={!portablePackage?.ok} onClick={downloadLabelsCsv}>Etiquetas CSV</button>
           <button type="button" disabled={!report} onClick={() => window.print()}>Imprimir relatório</button>
         </div>
       </header>

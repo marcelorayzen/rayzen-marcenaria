@@ -49,6 +49,8 @@ Cada chapa agora expõe uma lista preliminar: refilos informados, separação da
 
 `src/cuttingLabels.ts` deriva uma etiqueta por peça posicionada, com projeto, revisão, chapa, código/nome, instância, dimensões, material, espessura e bordas exatamente registradas no modelo. A etiqueta não infere fita, cava, usinagem ou acabamento ausente. As etiquetas aparecem no relatório com o mesmo estado `preliminary-not-released`; formato físico, impressora e leitura na oficina ainda não foram validados.
 
+`src/cuttingPlanExport.ts` combina relatório e etiquetas somente quando projeto, revisão e contagens conferem. A interface baixa um pacote JSON versionado e um CSV de etiquetas em UTF-8, ambos identificados como preliminares. Esses arquivos são portáveis para arquivo/conferência e futura integração; não são formato nativo de SketchCut, não acionam máquina e não substituem a liberação técnica.
+
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
 - A IA não confirma a proposta, não calcula produção e não libera materiais/cortes.
