@@ -5,7 +5,7 @@
 
 ## Resultado pretendido
 
-Rayzen Marcenaria será uma estação de trabalho que começa no acesso próprio e restrito do cliente e continua com dois acessos internos iniciais: o marceneiro e a responsável por projeto e relacionamento com o cliente. Ela deve acompanhar o serviço desde o material recebido no levantamento até a entrega: medidas e referências CAD, comunicação com cliente/arquiteto, projeto ilustrativo, aprovação, produção, compras, corte, etiquetagem, montagem e acompanhamento.
+Rayzen Marcenaria será uma estação de trabalho que começa no acesso próprio e restrito do cliente e continua com papéis internos de marceneiro e responsável por projeto e relacionamento com o cliente. Uma pessoa pode acumular os dois papéis. Ela deve acompanhar o serviço desde o material recebido no levantamento até a entrega: medidas e referências CAD, comunicação com cliente/arquiteto, projeto ilustrativo, aprovação, produção, compras, corte, etiquetagem, montagem e acompanhamento.
 
 O primeiro valor operacional a preservar é evitar perda, duplicidade ou esquecimento de peças. Toda peça de uma revisão aprovada deve poder receber uma identidade estável, aparecer no plano de corte, na etiqueta e no manual de montagem. Uma peça extra só pode ser criada por uma decisão explícita e rastreável, nunca por ambiguidade em lista ou comunicação.
 
@@ -22,8 +22,8 @@ O primeiro valor operacional a preservar é evitar perda, duplicidade ou esqueci
 
 | Papel | Escopo inicial |
 | --- | --- |
-| Responsável por projeto e relacionamento com o cliente (`representante` no perfil técnico) | Realiza ou registra o levantamento no cliente, desenvolve o projeto, mantém o relacionamento, reúne referências e comunica o orçamento/ilustrativo. |
-| Marceneiro | Confere medidas, viabilidade construtiva, peças e execução de produção. |
+| Responsável por projeto e relacionamento com o cliente (`representante` no perfil técnico) | Realiza ou registra o levantamento no cliente, desenvolve o projeto, mantém o relacionamento, reúne referências e comunica o orçamento/ilustrativo. Tais e Moises exercem este papel. |
+| Marceneiro | Confere medidas, viabilidade construtiva, peças e execução de produção. Kevin, Moises e Marcelo exercem este papel. |
 | Cliente e arquiteto | Possui acesso próprio, restrito ao(s) projeto(s) autorizado(s), para iniciar briefing, enviar referências permitidas, acompanhar o ilustrativo e confirmar ou solicitar alterações. Não altera dados técnicos, regras, peças, materiais ou liberação de fabricação. WhatsApp entrega o convite e o acesso é autenticado por código único enviado ao número de telefone convidado. |
 | Marceneiro (responsável técnico) | É a única pessoa autorizada a liberar uma revisão para corte e produção. Confere pendências, materiais, medidas, regras e revisão; sua identidade e a data da liberação devem ficar registradas. |
 | Assistente de IA | Analisa contexto autorizado, faz perguntas, sugere alternativas e cria propostas. Não tem permissão de aprovar pelo cliente, liberar produção, alterar preços, fazer pedidos ou executar ações irreversíveis. |
@@ -93,7 +93,7 @@ Não se deve converter automaticamente arquivos SketchUp ou Promob em dados de p
 ## Decisões ainda necessárias
 
 - O cliente terá acesso próprio e restrito para iniciar o briefing e revisar o ilustrativo. WhatsApp é o canal preferencial para entregar o convite, de forma inicialmente manual; a integração automática com a API do WhatsApp não faz parte do escopo atual. O acesso é autenticado por código único enviado ao número de telefone convidado. Ainda faltam especificar consentimento, expiração/revogação, recuperação de troca/perda de telefone e limitação a cada projeto. Links temporários podem continuar como complemento, mas não substituem a conta do cliente.
-- Confirmar a matriz dos dois acessos internos: a responsável por projeto/relacionamento pode registrar levantamento, alterar projeto, compartilhar material quando aprovado e registrar confirmação comercial; o marceneiro confere a construção e é o único a liberar corte e produção. Ainda falta definir quem provisiona esses perfis e quem administra substituições futuras.
+- Confirmar a autoridade de provisionamento e substituições: Tais e Moises exercem `representante`; Kevin, Moises e Marcelo exercem `marceneiro`; Moises acumula os dois papéis. O marceneiro continua sendo o único a liberar corte e produção.
 - As fontes prioritárias são SketchUp, Promob e CSV. Faltam uma amostra desidentificada, versão e extensão de cada fonte, além da definição do que será apenas anexado, visualizado, extraído ou convertido para lista/plano de corte.
 - Qual é a fonte de preços, materiais, ferragens e estoque, e quem pode aprovar um pedido de compra?
 - A identificação física inicial será uma etiqueta portátil simples com número da peça, nome e medidas. Falta confirmar equipamento, dimensões e material da etiqueta, além de quando a etiqueta é impressa e conferida.
