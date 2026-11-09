@@ -41,6 +41,8 @@ As peças são separadas por material e espessura, exigem quantidade inteira, di
 
 `src/groupedCuttingPlan.ts` agrupa a lista completa por combinação exata de material e espessura antes de calcular. Cada grupo recebe estoque e comparação próprios, impedindo que, por exemplo, MDF de 15 mm, fundo de 6 mm e acabamento amadeirado compartilhem a mesma chapa. O contrato e os testes estão implementados; a tela e o pacote ainda usam o grupo único do balcão demonstrativo e serão evoluídos na próxima integração.
 
+`src/groupedCuttingPlanExport.ts` combina pacotes individuais somente quando pertencem ao mesmo projeto/revisão e quando material/espessura não se repetem. O arquivo local aceita o pacote individual existente ou o novo pacote agrupado. Essa compatibilidade está testada; a UI ainda precisa construir o pacote agrupado a partir dos grupos calculados.
+
 O mesmo módulo agora contém uma distribuição determinística preliminar em faixas. Ela expande quantidades, mantém afastamento da serra, respeita área útil e abre novas chapas quando necessário. É uma base verificável para a visualização: compara alternativas limitadas, mas não garante ótimo global, não gera sequência operacional validada e não pode ser apresentada como plano liberado.
 
 O comparador executa três ordenações determinísticas (`largest-side`, `area` e `strip-width`) e classifica os resultados por quantidade de chapas, desperdício calculado, quantidade de operações e desempate estável. A estratégia selecionada fica registrada no relatório/pacote. Isso compara heurísticas conhecidas do motor atual; não prova ótimo global nem substitui a avaliação de facilidade de execução pelo marceneiro.

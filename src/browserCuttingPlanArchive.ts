@@ -1,13 +1,24 @@
 import type { KeyValueStorage } from "./browserProjectStorage";
 import type { CuttingPlanPackage } from "./cuttingPlanExport";
+import type { GroupedCuttingPlanPackage } from "./groupedCuttingPlanExport";
 
 export interface ArchivedCuttingPlan {
   id: string;
   savedAt: string;
-  package: CuttingPlanPackage;
+  package: CuttingPlanPackage | GroupedCuttingPlanPackage;
 }
 
-function isPackage(value: unknown): value is CuttingPlanPackage {
+function hasProjectRevision(value: Record<string, unknown>): boolean {
+  const project = value.project as Record<string, unknown> | undefined;
+  return typeof value.revision === "number"
+    && Number.isSafeInteger(value.revision)
+    && value.revision > 0
+    && !!project
+    && typeof project.id === "string"
+    && project.id.length > 0;
+}
+
+function isSinglePackage(value: unknown): value is CuttingPlanPackage {
   if (!value || typeof value !== "object") return false;
   const item = value as Record<string, unknown>;
   const project = item.project as Record<string, unknown> | undefined;
@@ -16,17 +27,30 @@ function isPackage(value: unknown): value is CuttingPlanPackage {
   return item.format === "rayzen-preliminary-cutting-package"
     && item.formatVersion === 1
     && item.status === "preliminary-not-released"
-    && typeof item.revision === "number"
-    && Number.isSafeInteger(item.revision)
-    && item.revision > 0
+    && hasProjectRevision(item)
     && !!project
-    && typeof project.id === "string"
-    && project.id.length > 0
     && Array.isArray(item.labels)
     && !!report
     && report.format === "rayzen-preliminary-cutting-report"
     && report.revision === item.revision
     && reportProject?.id === project.id;
+}
+
+function isGroupedPackage(value: unknown): value is GroupedCuttingPlanPackage {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Record<string, unknown>;
+  return item.format === "rayzen-preliminary-grouped-cutting-package"
+    && item.formatVersion === 1
+    && item.status === "preliminary-not-released"
+    && hasProjectRevision(item)
+    && Array.isArray(item.groups)
+    && item.groups.length > 0
+    && item.groups.every(isSinglePackage)
+    && Array.isArray(item.labels);
+}
+
+function isPackage(value: unknown): value is CuttingPlanPackage | GroupedCuttingPlanPackage {
+  return isSinglePackage(value) || isGroupedPackage(value);
 }
 
 function isArchived(value: unknown): value is ArchivedCuttingPlan {
