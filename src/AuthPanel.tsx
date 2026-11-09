@@ -12,18 +12,22 @@ export type AuthUser = {
 
 async function loadUserProfile(user: { id: string; email?: string | null }): Promise<AuthUser> {
   if (!supabase) return { id: user.id, email: user.email, roles: [], profileReady: false };
-  const profileResult = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
-  const rolesResult = await supabase.from("profile_roles").select("role").eq("profile_id", user.id);
-  const roles = (rolesResult.data ?? [])
-    .map((row) => row.role)
-    .filter((role): role is AuthRole => role === "representante" || role === "marceneiro");
-  return {
-    id: user.id,
-    email: user.email,
-    displayName: profileResult.data?.display_name ?? null,
-    roles,
-    profileReady: !profileResult.error && Boolean(profileResult.data),
-  };
+  try {
+    const profileResult = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+    const rolesResult = await supabase.from("profile_roles").select("role").eq("profile_id", user.id);
+    const roles = (rolesResult.data ?? [])
+      .map((row) => row.role)
+      .filter((role): role is AuthRole => role === "representante" || role === "marceneiro");
+    return {
+      id: user.id,
+      email: user.email,
+      displayName: profileResult.data?.display_name ?? null,
+      roles,
+      profileReady: !profileResult.error && Boolean(profileResult.data),
+    };
+  } catch {
+    return { id: user.id, email: user.email, roles: [], profileReady: false };
+  }
 }
 
 export function AuthPanel({ onUserChange }: { onUserChange?: (user: AuthUser | null) => void }) {
@@ -65,7 +69,14 @@ export function AuthPanel({ onUserChange }: { onUserChange?: (user: AuthUser | n
     if (!supabase) return;
     setBusy(true);
     setMessage(null);
-    const result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    let result;
+    try {
+      result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    } catch {
+      setBusy(false);
+      setMessage("Não foi possível conectar ao Supabase. Tente novamente.");
+      return;
+    }
     setBusy(false);
     if (result.error) {
       setMessage("Não foi possível entrar. Confira o e-mail e a senha.");

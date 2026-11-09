@@ -950,6 +950,21 @@ tr:focus-visible {
   width: min(720px, 100%);
 }
 
+.runtime-error {
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  min-height: 100vh;
+  padding: 24px;
+  color: #394344;
+  text-align: center;
+}
+
+.runtime-error h1,
+.runtime-error p {
+  margin: 0;
+}
+
 .auth-locked-page > p {
   margin: 0;
   color: #667677;
