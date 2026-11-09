@@ -14,7 +14,7 @@ Próximo trabalho: preservar e reabrir múltiplos projetos, corrigir sincroniza�
 
 ## Estado confirmado
 
-Incremento de domínio em 9/11/2026: contrato local `compositePanel.ts` para camadas, bordas e operações, com expansão em blanks por espessura de origem. Ainda não integrado à UI, persistência ou plano de corte; não altera a produção publicada.
+Incremento de domínio em 9/11/2026: contratos locais `compositePanel.ts` para camadas, bordas e operações, e `cuttingPlan.ts` para validar chapa, largura de corte, refilos e compatibilidade das peças. Ainda não integrados à UI, persistência ou otimizador; não alteram a produção publicada.
 
 | Área | Estado | Evidência e limite |
 | --- | --- | --- |

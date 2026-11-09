@@ -31,6 +31,12 @@ Largura e espessura da fita são campos distintos. A largura deve cobrir a espes
 
 Estado: contrato e testes locais, ainda sem ligação ao editor, banco ou otimizador. O exemplo 15 + 6 usa dimensões sintéticas nos testes. O caso 15 + 15 testa a aritmética de uma composição explícita e não estabelece uma regra universal de engrossamento.
 
+### Chapa e configuração de corte — contrato inicial de 9/11/2026
+
+`src/cuttingPlan.ts` registra a chapa informada de 2750 × 1850 mm e a largura de corte de 3 mm. Material, espessura, veio e os quatro refilos permanecem pendentes por grupo de chapa. O validador não transforma refilo ausente em zero e só calcula a área útil quando todos os lados foram informados.
+
+As peças são separadas por material e espessura, exigem quantidade inteira, dimensões positivas e política de rotação compatível com o veio. Esta etapa valida entradas; ainda não distribui peças, gera sequência de cortes ou libera produção.
+
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
 - A IA não confirma a proposta, não calcula produção e não libera materiais/cortes.
