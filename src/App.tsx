@@ -36,7 +36,8 @@ import {
   validateLocalProjectBackup,
 } from "./projectBackup";
 import { getDraftSynchronizationPresentation } from "./draftSynchronization";
-import { AuthPanel } from "./AuthPanel";
+import { AuthPanel, type AuthUser } from "./AuthPanel";
+import { isSupabaseConfigured } from "./supabaseClient";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -272,6 +273,7 @@ export default function App() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [backupInspection, setBackupInspection] = useState<string | null>(null);
   const [restorableBackup, setRestorableBackup] = useState<LocalProjectBackup | null>(null);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
 
   const issues = validateCounter(parameters);
   const model = useMemo(
@@ -289,6 +291,15 @@ export default function App() {
   const selectedConstraint = savedRevision.physicalConstraints.find(
     (constraint) => constraint.id === selectedConstraintId,
   );
+
+  if (isSupabaseConfigured && authUser === null) {
+    return (
+      <main className="auth-locked-page">
+        <AuthPanel onUserChange={setAuthUser} />
+        <p>Entre com uma conta da equipe para acessar o espaço de trabalho.</p>
+      </main>
+    );
+  }
 
   function updateParameter(field: keyof CounterParameters, rawValue: string) {
     const value = Number(rawValue);
@@ -924,7 +935,7 @@ export default function App() {
       </header>
 
       <div className="page">
-        <AuthPanel />
+        <AuthPanel onUserChange={setAuthUser} />
         <section className="project-heading" aria-labelledby="project-title">
           <div className="heading-main">
             <h1 id="project-title">Balcão de ensaio</h1>

@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
 
-type AuthUser = { email?: string | null };
+export type AuthUser = { email?: string | null };
 
-export function AuthPanel() {
+export function AuthPanel({ onUserChange }: { onUserChange?: (user: AuthUser | null) => void }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,16 +14,22 @@ export function AuthPanel() {
     if (!supabase) return undefined;
     let active = true;
     void supabase.auth.getUser().then(({ data }) => {
-      if (active) setUser(data.user ? { email: data.user.email } : null);
+      if (active) {
+        const nextUser = data.user ? { email: data.user.email } : null;
+        setUser(nextUser);
+        onUserChange?.(nextUser);
+      }
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? { email: session.user.email } : null);
+      const nextUser = session?.user ? { email: session.user.email } : null;
+      setUser(nextUser);
+      onUserChange?.(nextUser);
     });
     return () => {
       active = false;
       data.subscription.unsubscribe();
     };
-  }, []);
+  }, [onUserChange]);
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
