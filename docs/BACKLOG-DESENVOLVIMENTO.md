@@ -6,11 +6,15 @@ O roteiro de execução em fases, com limites e critérios para delegação a ou
 
 ## Visão e limites
 
+**Repriorização em 9/11/2026:** a primeira versão operacional deve conectar ilustrativo, módulos construtivos, peças, ferragens e plano de corte para serra/esquadrejadeira própria. A gestão das duas contas existentes apoia o desenvolvimento; cadastrar toda a equipe não é pré-requisito. O cliente/WhatsApp permanece no escopo, mas não bloqueia a primeira demonstração interna de corte. Esta direção substitui a ordem anterior que adiava fabricação e excluía o plano de corte da primeira prova.
+
+**Sequência vigente:** corrigir preservação/reabertura de projetos e sincronização → lista de peças e configuração de chapas → plano de corte visual/PDF/etiquetas → ambiente e módulos alimentando automaticamente as peças → fluxo de aprovação e oficina → piloto. A IA real é desenvolvida junto aos contratos de operações e ativada para cada capacidade validada. Os marcos abaixo não equivalem a funcionalidade entregue.
+
 **Produto:** plataforma web responsiva de projeto e produção de móveis. O cliente inicia o briefing em seu acesso próprio e restrito; o marceneiro e a responsável por projeto/relacionamento com o cliente continuam o levantamento, inclusive em campo por celular ou notebook. A plataforma conecta registros da visita, evidências, decisões conversacionais, ambiente, móveis paramétricos, peças e montagem, preservando a origem de cada informação até a confirmação do cliente, validação comercial e liberação técnica explícita.
 
 **Primeira prova de valor:** o cliente inicia um briefing restrito; a equipe abre o projeto, anexa fotos, registra medidas e observações por texto, desenha uma parede em elevação 2D, registra interferências físicas, configura um balcão paramétrico em 3D, conversa sobre uma alteração e vê uma proposta que, depois de confirmada, atualiza o modelo e a lista de peças. O cliente confirma o ilustrativo, a responsável registra essa confirmação e o marceneiro libera tecnicamente uma revisão válida antes de qualquer saída de produção. Os registros devem apontar sua origem e nível de confiança.
 
-**Fora da primeira prova:** vídeo e voz, reconstrução automática do ambiente, colaboração, nesting, integração com máquinas, e liberação automática de produção. Nenhum dado estimado ou interpretado por IA vira medida de fabricação conferida sem revisão humana.
+**Fora da primeira prova:** vídeo e voz, reconstrução automática do ambiente, colaboração simultânea, nesting irregular/CNC, integração com máquinas e liberação automática de produção. Plano de corte retangular com sequência para serra faz parte da primeira versão operacional. Nenhum dado estimado ou interpretado por IA vira medida de fabricação conferida sem revisão humana.
 
 **Prioridades:** P0 = necessário para a primeira prova; P1 = evolução necessária para operação mais ampla; P2 = capacidade especializada ou dependente de decisões futuras. Não há datas estimadas.
 
@@ -35,6 +39,8 @@ O roteiro de execução em fases, com limites e critérios para delegação a ou
 - **Decisão confirmada:** Supabase para banco, autenticação, armazenamento privado e sincronização. A migration inicial foi validada localmente e aplicada ao projeto remoto sem dados operacionais. Faltam testes de permissões no remoto, backup, retenção, limites de mídia e integração da interface.
 
 ### A3 · Persistir projetos e revisões — P0
+
+- **Correção prioritária identificada em 9/11/2026:** criar um projeto não pode remover o rascunho/fila anteriores. Implementar listagem e reabertura, isolamento local por conta/projeto, vínculo remoto por projeto e sincronização idempotente. Aceite adicional: duas revisões no mesmo projeto remoto, retentativa sem duplicação e recuperação em outro dispositivo.
 
 - **Tarefa:** substituir o estado efêmero da aba por armazenamento persistente compatível com o escopo decidido; criar, abrir, renomear e arquivar projetos.
 - **Tarefa:** salvar revisões imutáveis e permitir restaurar uma anterior como nova revisão; manter autosave de rascunho claramente distinto de revisão confirmada.
@@ -127,19 +133,19 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 
 ## Épico E — Ampliar projeto e fabricação
 
-### E1 · Módulos, equipamentos e interferências — P1
+### E1 · Módulos, equipamentos e interferências — P0
 
 - **Tarefa:** expandir o catálogo para portas, gavetas, ferragens e equipamentos; representar zonas de uso e folgas conforme regras confirmadas pelo marceneiro/fabricante.
 - **Aceite:** regras têm fonte e testes; interferências são explicadas com medidas; nenhuma regra desconhecida é inventada pelo agente.
 - **Dependências:** C2, D1.
 
-### E2 · Inspeção interna e montagem — P1
+### E2 · Inspeção interna e montagem — P0
 
 - **Tarefa:** vistas de inspeção para interior, divisórias, ferragens e interferências; plano de montagem vinculado a peças/revisão.
 - **Aceite:** seleção sincroniza vista e peça; montagem identifica componentes e sequência verificados; conteúdo demonstrativo é marcado como tal.
 - **Dependências:** E1, C3.
 
-### E3 · Verificação de prontidão para fabricação — P1
+### E3 · Verificação de prontidão para fabricação — P0
 
 - **Tarefa:** definir checklist de medidas confirmadas, materiais, bordas, ferragens, folgas, revisão e responsável técnico. Somente o marceneiro pode executar a liberação; definir também o substituto autorizado.
 - **Tarefa:** gerar relatório de pendências e documentos preliminares apenas para revisões válidas; gerar materiais, acessórios, informações de corte, etiquetas e montagem para uso somente a partir de revisão tecnicamente liberada.
@@ -167,6 +173,8 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 
 ## Sequência e gestão
 
+A sequência histórica abaixo é substituída pela repriorização de 9/11/2026 para a primeira versão operacional. O M0 anterior permanece uma prova intermediária: concluir o produto também exige E1–E3 e E7, IA contextual e piloto de corte/montagem validado pela oficina.
+
 1. Resolver A1 e A2; confirmar escopo de armazenamento, política de dados e comportamento em campo.
 2. Implementar A3, depois B2 e C1–C2, para que uma alteração tenha projeto, medida, contexto e revisão-base válidos.
 3. Implementar D1 como base de propostas controladas; construir B1 e C3 para completar as evidências e a estação de trabalho responsiva.
@@ -175,3 +183,13 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 7. Iniciar E4, E5 ou E6 somente quando suas dependências e amostras/decisões estiverem disponíveis.
 
 Não há estimativas de esforço ou datas neste backlog. Reestimar após o primeiro vertical slice e teste com dados de uma visita desidentificada. Alterações de escopo devem atualizar também os critérios de aceite e os documentos de produto.
+
+### E7 · Plano de corte para serra/esquadrejadeira — P0
+
+- **Tarefa E7.1:** contrato de peças por unidade e chapas/sobras, com material/acabamento, espessura, dimensões de corte, veio, bordas, refilo e largura real de corte. Valores da oficina devem ser informados; fixtures de teste são identificadas como tais.
+- **Tarefa E7.2:** otimizador retangular com sequência de cortes guilhotinados; separar materiais/espessuras e respeitar rotação/veio. Informar peças não alocadas e comparar alternativas por consumo e execução.
+- **Tarefa E7.3:** mapa cotado por chapa, sequência, aproveitamento, PDF e etiquetas vinculados a projeto/revisão/peça. Ajuste manual exige revalidação do plano.
+- **Tarefa E7.4:** alimentar o corte com as peças calculadas dos módulos sem redigitação; alterações invalidam o plano derivado anterior. Recortes internos e usinagens permanecem operações específicas, distintas do desdobro retangular.
+- **Aceite:** contagem exata, ausência de sobreposição, dimensões/refilo/serra/veio respeitados, cortes reproduzíveis e comparação com projeto já executado. Marceneiro valida a execução e libera a revisão antes do uso em fabricação.
+- **Dependências:** A1–A3 para persistência; E1 para geração automática; E3 para liberação. O motor pode ser desenvolvido com lista conferida antes do catálogo completo.
+- **Referências:** SketchCut como referência de experiência; Promob Cut Pro como organização de produção; OpenCutList como referência de peças/diagramas/etiquetas; Fusion360-ExportCutlist como possível adaptador de lista. Compatibilidade de arquivos e reaproveitamento de código exigem análise própria.

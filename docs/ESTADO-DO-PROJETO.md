@@ -1,6 +1,16 @@
 # Estado verificável e retomada
 
-**Atualizado em 8 de novembro de 2026.** Este documento separa evidências do que ainda é plano para que uma nova sessão possa retomar o projeto sem promover suposições a fatos.
+**Revisão de direção em 9 de novembro de 2026.** Este documento separa evidências do que ainda é plano para que uma nova sessão possa retomar o projeto sem promover suposições a fatos.
+
+## Auditoria e direção vigente — 9/11/2026
+
+Esta seção prevalece sobre os registros históricos abaixo que ainda descrevem a etapa anterior à conexão remota. O usuário relatou sucesso de login, sincronização explícita e download. Isso não comprova recuperação em outro dispositivo, isolamento integral ou fabricação. A última rodada registrada na conversa aprovou 64 testes; qualquer nova execução deve registrar seu próprio resultado.
+
+Inspeção atual do código: o chat usa expressões regulares, sem provedor de IA; `.skt.json` é JSON, não plano de corte; “Novo projeto” remove rascunho e fila anteriores. O vínculo remoto está no item de sincronização, sem herança automática entre revisões. Essas limitações devem ser corrigidas, não promovidas a capacidades completas.
+
+Direção confirmada: projeto/ambiente → móveis paramétricos → peças/ferragens → plano de corte para serra/esquadrejadeira → etiquetas/montagem, com IA contextual ao longo do fluxo. A oficina quer reduzir o trabalho manual do aplicativo de corte atual. “SKT” não foi solicitação de uma extensão de arquivo própria. Prioridades e critérios atualizados estão no backlog, incluindo E7. O plano operacional detalhado fica em `.local/PLANO-CONCLUSAO-PRODUTO.md`.
+
+Próximo trabalho: preservar e reabrir múltiplos projetos, corrigir sincronização e introduzir contrato de peças/chapas para plano de corte. Usar as duas contas existentes nos testes autorizados; os demais cadastros não bloqueiam desenvolvimento. Plano de corte e IA fazem parte da primeira versão operacional. A limpeza local no logout continua requisito pendente, não comportamento demonstrado.
 
 ## Estado confirmado
 
