@@ -52,7 +52,7 @@ Cada entrega deve guardar separadamente: requisito e aceite; decisão de arquite
 
 **Evidência de prévia (8 de novembro de 2026):** o build atual foi enviado ao Cloudflare Pages na branch `preview`. Isso prova upload e build estático; ainda requer validação humana da interface e não equivale à publicação de produção.
 
-**Evidência de produção (9 de novembro de 2026):** após aprovação humana, o build atual foi publicado no Cloudflare Pages em `marcenaria.rayzen.com.br`, deployment `4351e532.rayzen-marcenaria.pages.dev` do commit `d803037`. A verificação HTTPS retornou `200 OK` e o HTML referenciou o bundle do build publicado. Isso prova disponibilidade da versão estática, não prova persistência, permissões, dados de cliente ou operação da IA.
+**Evidência de produção (9 de novembro de 2026):** após aprovação humana, o build atual foi publicado no Cloudflare Pages em `marcenaria.rayzen.com.br`, deployment `3c98e441.rayzen-marcenaria.pages.dev` do commit `0596f0a`. A verificação HTTPS retornou `200 OK` e o HTML referenciou o bundle do build publicado. Isso prova disponibilidade da versão estática, não prova persistência, permissões, dados de cliente ou operação da IA.
 
 Métricas iniciais úteis:
 
