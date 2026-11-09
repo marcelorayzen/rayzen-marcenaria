@@ -1413,6 +1413,19 @@ tr:focus-visible {
   font-size: 10px;
 }
 
+.cutting-sheet-card > .cutting-map-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 6px 14px;
+  margin: 0 0 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #425052;
+  font: 600 9px var(--mono);
+}
+
 .cutting-sheet-card strong {
   color: var(--ink);
 }
@@ -1458,30 +1471,26 @@ tr:focus-visible {
 
 .cutting-dimension line {
   stroke: #a34432;
-  stroke-width: 4;
+  stroke-width: 2.5;
 }
 
 .cutting-dimension text {
   fill: #762f24;
   paint-order: stroke;
   stroke: #f5f6f2;
-  stroke-width: 10;
+  stroke-width: 8;
   stroke-linejoin: round;
-  font: 700 24px var(--mono);
+  font: 700 27px var(--mono);
   text-anchor: middle;
 }
 
 .cutting-dimension-part line {
-  stroke-width: 3;
-  opacity: .78;
+  stroke-width: 2.5;
+  opacity: .9;
 }
 
 .cutting-dimension-part text {
-  font-size: 20px;
-}
-
-.cutting-dimension-arrow {
-  fill: #a34432;
+  font-size: 27px;
 }
 
 .cutting-plan-warning {

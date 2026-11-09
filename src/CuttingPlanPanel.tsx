@@ -315,24 +315,26 @@ export function CuttingPlanPanel({
               ? createCuttingMapAnnotations(calculation.stock, calculation.settings, sheet)
               : null;
             const annotations = dimensionResult?.ok ? dimensionResult.annotations : null;
-            const markerId = `cutting-dimension-arrow-${sheet.number}`;
             return (
               <article className="cutting-sheet-card" key={sheet.number}>
                 <div>
                   <strong>Chapa {sheet.number}</strong>
                   <span>{sheet.placements.length} peças · {utilization.toFixed(1)}% da área útil em peças</span>
                 </div>
+                {annotations ? (
+                  <div className="cutting-map-summary">
+                    <span>Chapa {calculation!.stock.lengthMm} × {calculation!.stock.widthMm} mm</span>
+                    <span>Área útil {annotations.usableArea.width} × {annotations.usableArea.height} mm</span>
+                    <span>Refilos S {calculation!.settings.trim.topMm} · D {calculation!.settings.trim.rightMm} · I {calculation!.settings.trim.bottomMm} · E {calculation!.settings.trim.leftMm} mm</span>
+                    <span>Serra {calculation!.settings.kerfMm} mm</span>
+                  </div>
+                ) : null}
                 <svg
                   className="cutting-sheet-map"
                   viewBox="0 0 2750 1850"
                   role="img"
                   aria-label={`Distribuição preliminar da chapa ${sheet.number}`}
                 >
-                  <defs>
-                    <marker id={markerId} markerWidth="18" markerHeight="18" refX="9" refY="9" orient="auto-start-reverse">
-                      <path d="M 0 9 L 18 1 L 14 9 L 18 17 Z" className="cutting-dimension-arrow" />
-                    </marker>
-                  </defs>
                   <rect className="cutting-sheet-stock" x="0" y="0" width="2750" height="1850" />
                   {annotations ? (
                     <rect
@@ -364,15 +366,24 @@ export function CuttingPlanPanel({
                       </text>
                     </g>
                   ))}
-                  {annotations?.dimensions.map(dimension => {
+                  {annotations?.dimensions.filter(dimension => dimension.scope === "part").map(dimension => {
                     const middleX = (dimension.x1 + dimension.x2) / 2;
                     const middleY = (dimension.y1 + dimension.y2) / 2;
+                    const tick = 14;
                     return (
                       <g key={dimension.id} className={`cutting-dimension cutting-dimension-${dimension.scope}`}>
-                        <line
-                          x1={dimension.x1} y1={dimension.y1} x2={dimension.x2} y2={dimension.y2}
-                          markerStart={`url(#${markerId})`} markerEnd={`url(#${markerId})`}
-                        />
+                        <line x1={dimension.x1} y1={dimension.y1} x2={dimension.x2} y2={dimension.y2} />
+                        {dimension.axis === "horizontal" ? (
+                          <>
+                            <line x1={dimension.x1} y1={dimension.y1 - tick} x2={dimension.x1} y2={dimension.y1 + tick} />
+                            <line x1={dimension.x2} y1={dimension.y2 - tick} x2={dimension.x2} y2={dimension.y2 + tick} />
+                          </>
+                        ) : (
+                          <>
+                            <line x1={dimension.x1 - tick} y1={dimension.y1} x2={dimension.x1 + tick} y2={dimension.y1} />
+                            <line x1={dimension.x2 - tick} y1={dimension.y2} x2={dimension.x2 + tick} y2={dimension.y2} />
+                          </>
+                        )}
                         <text
                           x={middleX}
                           y={middleY - 10}

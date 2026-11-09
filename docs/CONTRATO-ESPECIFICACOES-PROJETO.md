@@ -61,6 +61,8 @@ Cada chapa agora expõe uma lista preliminar: refilos informados, separação da
 
 `src/cuttingMapDimensions.ts` deriva do mesmo estoque, refilos e posicionamentos as cotas da chapa, área útil e dimensões/posição de cada peça. A visualização mostra limites úteis, X/Y, instância e rotação no mapa. A cotagem é determinística e testada, mas legibilidade em diferentes impressoras/tamanhos ainda exige validação visual.
 
+Após avaliação visual do usuário, as cotas gerais sobrepostas e setas grandes foram removidas do interior da chapa. Chapa, área útil, refilos e serra aparecem em um resumo textual; cada peça mantém linhas finas com marcas de extremidade, dimensão, X/Y e rotação. A correção tem build/testes, mas a nova composição ainda requer nova conferência visual.
+
 - Importar Promob, SketchUp ou CSV não equivale a aceitar regras, ferragens ou medidas.
 - O cliente não altera especificação técnica diretamente.
 - A IA não confirma a proposta, não calcula produção e não libera materiais/cortes.
