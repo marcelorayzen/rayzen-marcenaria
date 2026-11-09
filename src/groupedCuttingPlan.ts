@@ -30,6 +30,19 @@ export function createGroupedCuttingPlans(
   parts: RectangularCutPart[],
 ): GroupedCuttingPlanResult {
   if (parts.length === 0) return { ok: false, errors: ["Informe ao menos uma peça para agrupar."], pending: [] };
+  const partIds = new Set<string>();
+  const duplicateIds = new Set<string>();
+  for (const part of parts) {
+    if (partIds.has(part.id)) duplicateIds.add(part.id);
+    partIds.add(part.id);
+  }
+  if (duplicateIds.size > 0) {
+    return {
+      ok: false,
+      errors: [...duplicateIds].sort().map(id => `ID de peça repetido entre grupos: ${id}.`),
+      pending: [],
+    };
+  }
   const grouped = new Map<string, RectangularCutPart[]>();
   for (const part of parts) {
     const key = groupId(part.materialId, part.thicknessMm);

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { Part } from "./furnitureEngine";
 import {
-  comparePreliminaryStripPlans,
   createPreliminaryStripPlan,
   reportedWorkshopSheet,
   type CuttingPlanStrategy,
@@ -18,6 +17,8 @@ import { createCuttingPieceLabels } from "./cuttingLabels";
 import { createCuttingLabelsCsv, createCuttingPlanPackage } from "./cuttingPlanExport";
 import { createCuttingMapAnnotations } from "./cuttingMapDimensions";
 import { BrowserCuttingPlanArchive } from "./browserCuttingPlanArchive";
+import { createGroupedCuttingPlans } from "./groupedCuttingPlan";
+import { createGroupedCuttingPlanPackage } from "./groupedCuttingPlanExport";
 
 type TrimSide = keyof SheetTrim;
 
@@ -119,8 +120,7 @@ export function CuttingPlanPanel({
   }
 
   const calculation = useMemo(() => {
-    const first = parts[0];
-    if (!first) return null;
+    if (parts.length === 0) return null;
     const settings: CuttingSettings = {
       kerfMm: 3,
       trim: {
@@ -129,12 +129,6 @@ export function CuttingPlanPanel({
         bottomMm: parseTrim(trim.bottomMm),
         leftMm: parseTrim(trim.leftMm),
       },
-    };
-    const stock = {
-      ...reportedWorkshopSheet,
-      materialId: first.material,
-      thicknessMm: first.thickness,
-      grain,
     };
     const cutParts = parts.map(part => ({
         id: part.id,
@@ -146,38 +140,60 @@ export function CuttingPlanPanel({
         grain,
         allowRotation: grain === "none",
       }));
-    const comparison = comparePreliminaryStripPlans(stock, settings, cutParts);
-    const preferredPlan = comparison.ok && preferredStrategy
-      ? createPreliminaryStripPlan(stock, settings, cutParts, preferredStrategy)
-      : null;
-    const plan = preferredPlan?.ok
-      ? preferredPlan
-      : comparison.ok ? comparison.selectedPlan : comparison.plan;
-    return {
-      plan,
-      comparison,
-      stock,
+    const grouped = createGroupedCuttingPlans(
+      {
+        lengthMm: reportedWorkshopSheet.lengthMm,
+        widthMm: reportedWorkshopSheet.widthMm,
+        grain,
+      },
       settings,
-      report: createCuttingPlanReport(project, revision, stock, settings, cutParts, plan),
-      labels: createCuttingPieceLabels(
+      cutParts,
+    );
+    if (!grouped.ok) return { settings, grouped, artifacts: [], portablePackage: null };
+    const labelParts = parts.map(part => ({
+      id: part.id,
+      code: part.code,
+      name: part.name,
+      material: part.material,
+      thicknessMm: part.thickness,
+      edges: part.edges,
+    }));
+    const artifacts = grouped.groups.map(group => {
+      const preferredPlan = preferredStrategy
+        ? createPreliminaryStripPlan(group.stock, settings, group.parts, preferredStrategy)
+        : null;
+      const plan = preferredPlan?.ok ? preferredPlan : group.comparison.selectedPlan;
+      const report = createCuttingPlanReport(project, revision, group.stock, settings, group.parts, plan);
+      const partIds = new Set(group.parts.map(part => part.id));
+      const labels = createCuttingPieceLabels(
         project,
         revision,
-        parts.map(part => ({
-          id: part.id,
-          code: part.code,
-          name: part.name,
-          material: part.material,
-          thicknessMm: part.thickness,
-          edges: part.edges,
-        })),
+        labelParts.filter(part => partIds.has(part.id)),
         plan,
-      ),
+      );
+      const singlePackage = report.ok && labels.ok
+        ? createCuttingPlanPackage(report.report, labels.labels)
+        : null;
+      return { ...group, plan, report, labels, singlePackage };
+    });
+    const singlePackages = artifacts.flatMap(artifact =>
+      artifact.singlePackage?.ok ? [artifact.singlePackage.package] : [],
+    );
+    const portablePackage = singlePackages.length === artifacts.length
+      ? createGroupedCuttingPlanPackage(singlePackages)
+      : null;
+    return {
+      settings,
+      grouped,
+      artifacts,
+      portablePackage,
     };
   }, [grain, parts, preferredStrategy, project.id, project.title, revision, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
-  const plan = calculation?.plan ?? null;
-  const report = calculation?.report.ok ? calculation.report.report : null;
-  const labels = calculation?.labels.ok ? calculation.labels.labels : [];
-  const portablePackage = report ? createCuttingPlanPackage(report, labels) : null;
+  const artifacts = calculation?.artifacts ?? [];
+  const labels = artifacts.flatMap(artifact => artifact.labels.ok ? artifact.labels.labels : []);
+  const portablePackage = calculation?.portablePackage ?? null;
+  const totalSheets = artifacts.reduce((sum, artifact) => sum + artifact.plan.sheets.length, 0);
+  const reportReady = artifacts.length > 0 && artifacts.every(artifact => artifact.report.ok);
 
   function downloadText(filename: string, content: string, type: string) {
     const url = URL.createObjectURL(new Blob([content], { type }));
@@ -229,19 +245,19 @@ export function CuttingPlanPanel({
           <p>Chapa 2750 × 1850 mm · serra 3 mm · revisão R{String(revision).padStart(2, "0")}</p>
         </div>
         <div className="cutting-plan-actions">
-          <strong>{plan?.ok ? `${plan.sheets.length} CHAPA(S)` : "CONFIGURAÇÃO PENDENTE"}</strong>
+          <strong>{reportReady ? `${totalSheets} CHAPA(S) · ${artifacts.length} GRUPO(S)` : "CONFIGURAÇÃO PENDENTE"}</strong>
           <button type="button" disabled={!portablePackage?.ok} onClick={archiveCurrentPlan}>Salvar plano</button>
           <button type="button" disabled={!portablePackage?.ok} onClick={downloadPackage}>Baixar JSON</button>
           <button type="button" disabled={!portablePackage?.ok} onClick={downloadLabelsCsv}>Etiquetas CSV</button>
-          <button type="button" disabled={!report} onClick={() => window.print()}>Imprimir relatório</button>
+          <button type="button" disabled={!reportReady} onClick={() => window.print()}>Imprimir relatório</button>
         </div>
       </header>
 
-      {report ? (
+      {reportReady ? (
         <div className="cutting-report-identity">
-          <div><span>Projeto</span><strong>{report.project.title}</strong><small>{report.project.id}</small></div>
-          <div><span>Revisão</span><strong>R{String(report.revision).padStart(2, "0")}</strong></div>
-          <div><span>Estratégia</span><strong>{strategyLabels[report.strategy]}</strong></div>
+          <div><span>Projeto</span><strong>{project.title}</strong><small>{project.id}</small></div>
+          <div><span>Revisão</span><strong>R{String(revision).padStart(2, "0")}</strong></div>
+          <div><span>Materiais/esp.</span><strong>{artifacts.length} GRUPO(S)</strong></div>
           <div><span>Status</span><strong>PRELIMINAR · NÃO LIBERADO</strong></div>
         </div>
       ) : null}
@@ -277,53 +293,66 @@ export function CuttingPlanPanel({
       </div>
       <p className="cutting-local-status">Configuração salva neste dispositivo para este projeto.</p>
 
-      {calculation?.comparison.ok ? (
-        <div className="cutting-alternatives" aria-label="Comparação de estratégias preliminares">
-          {calculation.comparison.alternatives.map(alternative => (
-            <button
-              type="button"
-              key={alternative.strategy}
-              className={plan?.ok && plan.strategy === alternative.strategy ? "selected" : ""}
-              onClick={() => updateStrategy(alternative.strategy)}
-            >
-              <span>{strategyLabels[alternative.strategy]}</span>
-              <strong>{alternative.sheetCount} chapa(s)</strong>
-              <small>{alternative.operationCount} operações · desperdício {(alternative.wasteAreaMm2 / 1_000_000).toFixed(2)} m²</small>
-              {alternative.selected ? <em>RECOMENDADA</em> : null}
-            </button>
-          ))}
-          <button type="button" className="cutting-strategy-auto" disabled={preferredStrategy === null} onClick={() => updateStrategy(null)}>
-            Usar seleção automática
-          </button>
-        </div>
+      {artifacts.map(artifact => (
+        <section className="cutting-group-strategies" key={`strategy-${artifact.id}`}>
+          <h3>{artifact.materialId} · {artifact.thicknessMm} mm</h3>
+          <div className="cutting-alternatives" aria-label={`Comparação de estratégias para ${artifact.materialId} ${artifact.thicknessMm} mm`}>
+            {artifact.comparison.alternatives.map(alternative => (
+              <button
+                type="button"
+                key={alternative.strategy}
+                className={artifact.plan.strategy === alternative.strategy ? "selected" : ""}
+                onClick={() => updateStrategy(alternative.strategy)}
+              >
+                <span>{strategyLabels[alternative.strategy]}</span>
+                <strong>{alternative.sheetCount} chapa(s)</strong>
+                <small>{alternative.operationCount} operações · desperdício {(alternative.wasteAreaMm2 / 1_000_000).toFixed(2)} m²</small>
+                {alternative.selected ? <em>RECOMENDADA</em> : null}
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
+      {artifacts.length > 0 ? (
+        <button type="button" className="cutting-strategy-auto" disabled={preferredStrategy === null} onClick={() => updateStrategy(null)}>
+          Usar seleção automática por grupo
+        </button>
       ) : null}
 
-      {!plan ? <p className="cutting-plan-warning">A revisão não contém peças calculadas.</p> : null}
-      {plan && !plan.ok ? (
+      {!calculation ? <p className="cutting-plan-warning">A revisão não contém peças calculadas.</p> : null}
+      {calculation && !calculation.grouped.ok ? (
         <div className="cutting-plan-warning" role="alert">
-          {[...plan.errors, ...plan.pending].map(message => <p key={message}>{message}</p>)}
+          {[...calculation.grouped.errors, ...calculation.grouped.pending].map(message => <p key={message}>{message}</p>)}
         </div>
       ) : null}
 
-      {plan?.ok ? (
-        <div className="cutting-sheet-list">
-          {plan.sheets.map(sheet => {
+      {artifacts.map(artifact => (
+        <section className="cutting-material-group" key={`sheets-${artifact.id}`}>
+          <header className="cutting-material-heading">
+            <div>
+              <span className="small-label">MATERIAL / ESPESSURA</span>
+              <h3>{artifact.materialId} · {artifact.thicknessMm} mm</h3>
+            </div>
+            <span>{strategyLabels[artifact.plan.strategy]} · {artifact.plan.sheets.length} chapa(s)</span>
+          </header>
+          <div className="cutting-sheet-list">
+          {artifact.plan.sheets.map(sheet => {
             const utilization = sheet.usableAreaMm2 > 0
               ? (sheet.usedPartAreaMm2 / sheet.usableAreaMm2) * 100
               : 0;
             const dimensionResult = calculation
-              ? createCuttingMapAnnotations(calculation.stock, calculation.settings, sheet)
+              ? createCuttingMapAnnotations(artifact.stock, calculation.settings, sheet)
               : null;
             const annotations = dimensionResult?.ok ? dimensionResult.annotations : null;
             return (
-              <article className="cutting-sheet-card" key={sheet.number}>
+              <article className="cutting-sheet-card" key={`${artifact.id}-${sheet.number}`}>
                 <div>
                   <strong>Chapa {sheet.number}</strong>
                   <span>{sheet.placements.length} peças · {utilization.toFixed(1)}% da área útil em peças</span>
                 </div>
                 {annotations ? (
                   <div className="cutting-map-summary">
-                    <span>Chapa {calculation!.stock.lengthMm} × {calculation!.stock.widthMm} mm</span>
+                    <span>Chapa {artifact.stock.lengthMm} × {artifact.stock.widthMm} mm</span>
                     <span>Área útil {annotations.usableArea.width} × {annotations.usableArea.height} mm</span>
                     <span>Refilos S {calculation!.settings.trim.topMm} · D {calculation!.settings.trim.rightMm} · I {calculation!.settings.trim.bottomMm} · E {calculation!.settings.trim.leftMm} mm</span>
                     <span>Serra {calculation!.settings.kerfMm} mm</span>
@@ -333,7 +362,7 @@ export function CuttingPlanPanel({
                   className="cutting-sheet-map"
                   viewBox="0 0 2750 1850"
                   role="img"
-                  aria-label={`Distribuição preliminar da chapa ${sheet.number}`}
+                  aria-label={`Distribuição preliminar de ${artifact.materialId} ${artifact.thicknessMm} mm, chapa ${sheet.number}`}
                 >
                   <rect className="cutting-sheet-stock" x="0" y="0" width="2750" height="1850" />
                   {annotations ? (
@@ -407,23 +436,24 @@ export function CuttingPlanPanel({
               </article>
             );
           })}
-        </div>
-      ) : null}
+          </div>
 
-      {report ? (
-        <div className="cutting-report-parts">
-          <h3>Peças consideradas</h3>
-          <table>
-            <thead><tr><th>Peça</th><th>Qtd.</th><th>Dimensões</th><th>Material</th><th>Esp.</th></tr></thead>
-            <tbody>{report.parts.map(part => (
-              <tr key={part.id}>
-                <td>{part.id}</td><td>{part.quantity}</td><td>{part.lengthMm} × {part.widthMm} mm</td>
-                <td>{part.materialId}</td><td>{part.thicknessMm} mm</td>
-              </tr>
-            ))}</tbody>
-          </table>
-        </div>
-      ) : null}
+          {artifact.report.ok ? (
+            <div className="cutting-report-parts">
+              <h3>Peças consideradas · {artifact.materialId} · {artifact.thicknessMm} mm</h3>
+              <table>
+                <thead><tr><th>Peça</th><th>Qtd.</th><th>Dimensões</th><th>Material</th><th>Esp.</th></tr></thead>
+                <tbody>{artifact.report.report.parts.map(part => (
+                  <tr key={part.id}>
+                    <td>{part.id}</td><td>{part.quantity}</td><td>{part.lengthMm} × {part.widthMm} mm</td>
+                    <td>{part.materialId}</td><td>{part.thicknessMm} mm</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+            </div>
+          ) : null}
+        </section>
+      ))}
 
       {labels.length > 0 ? (
         <div className="cutting-labels-section">

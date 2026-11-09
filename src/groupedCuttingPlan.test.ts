@@ -42,4 +42,16 @@ describe("grouped cutting plans", () => {
     if (result.ok) return;
     expect(result.pending).toContain("MDF branco 15 mm: Definir sentido do veio da chapa.");
   });
+
+  it("rejects duplicate part IDs even when they belong to different groups", () => {
+    const result = createGroupedCuttingPlans(stockTemplate, settings, [
+      part,
+      { ...part, materialId: "MDF amadeirado" },
+    ]);
+    expect(result).toEqual({
+      ok: false,
+      errors: ["ID de peça repetido entre grupos: side-15."],
+      pending: [],
+    });
+  });
 });
