@@ -1,6 +1,6 @@
 export type ProjectChatCommand =
   | { kind: "set-counter-width"; value: number }
-  | { kind: "draft-constraint"; label: string; x: number; y: number; dimensionLabel: string; dimensionValue: number }
+  | { kind: "draft-constraint"; label: string; x: number; y: number; dimensionLabel: string; dimensionValue?: number }
   | { kind: "unsupported"; message: string };
 
 export function parseProjectChatMessage(input: string): ProjectChatCommand {
@@ -20,7 +20,6 @@ export function parseProjectChatMessage(input: string): ProjectChatCommand {
       x: Number(xMatch[1]) * (xMatch[2].startsWith("m") && !xMatch[2].startsWith("cm") ? 1000 : 1),
       y: Number(yMatch[1]) * (yMatch[2].startsWith("c") ? 10 : 1000),
       dimensionLabel: "diametro",
-      dimensionValue: 40,
     };
   }
   return {

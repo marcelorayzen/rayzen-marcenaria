@@ -437,7 +437,7 @@ export default function App() {
       setConstraintX(String(command.x));
       setConstraintY(String(command.y));
       setConstraintDimensionLabel(command.dimensionLabel);
-      setConstraintDimensionValue(String(command.dimensionValue));
+      setConstraintDimensionValue(command.dimensionValue === undefined ? "" : String(command.dimensionValue));
       setConstraintError(null);
       setChatMessage("Preenchi a interferência com as posições convertidas para mm. Revise, selecione a origem e registre a revisão.");
       setChatInput("");

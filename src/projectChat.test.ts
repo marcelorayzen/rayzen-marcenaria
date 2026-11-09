@@ -20,7 +20,6 @@ describe("project chat", () => {
       x: 2000,
       y: 300,
       dimensionLabel: "diametro",
-      dimensionValue: 40,
     });
   });
 });
