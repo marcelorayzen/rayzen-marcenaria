@@ -39,6 +39,7 @@ describe("preliminary cutting report", () => {
       project: { id: "project-1", title: "Cozinha" },
       revision: 3,
       status: "preliminary-not-released",
+      strategy: "largest-side",
       settings,
     });
     expect(result.report.sheets.flatMap(sheet => sheet.placements)).toHaveLength(2);

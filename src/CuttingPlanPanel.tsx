@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import type { Part } from "./furnitureEngine";
 import {
   comparePreliminaryStripPlans,
+  createPreliminaryStripPlan,
   reportedWorkshopSheet,
+  type CuttingPlanStrategy,
   type CuttingSettings,
   type SheetTrim,
 } from "./cuttingPlan";
@@ -64,8 +66,15 @@ export function CuttingPlanPanel({
     leftMm: initialConfiguration ? trimInputValue(initialConfiguration.trim.leftMm) : "4",
   });
   const [grain, setGrain] = useState<CuttingGrain>(initialConfiguration?.grain ?? "none");
+  const [preferredStrategy, setPreferredStrategy] = useState<CuttingPlanStrategy | null>(
+    initialConfiguration?.preferredStrategy ?? null,
+  );
 
-  function persistConfiguration(nextTrim: Record<TrimSide, string>, nextGrain: CuttingGrain) {
+  function persistConfiguration(
+    nextTrim: Record<TrimSide, string>,
+    nextGrain: CuttingGrain,
+    nextStrategy: CuttingPlanStrategy | null,
+  ) {
     const configuration: LocalCuttingConfiguration = {
       version: 1,
       grain: nextGrain,
@@ -75,6 +84,7 @@ export function CuttingPlanPanel({
         bottomMm: parseTrim(nextTrim.bottomMm),
         leftMm: parseTrim(nextTrim.leftMm),
       },
+      preferredStrategy: nextStrategy,
     };
     const values = Object.values(configuration.trim);
     if (values.every(value => value === null || (Number.isFinite(value) && value >= 0))) {
@@ -85,12 +95,17 @@ export function CuttingPlanPanel({
   function updateTrim(side: TrimSide, value: string) {
     const next = { ...trim, [side]: value };
     setTrim(next);
-    persistConfiguration(next, grain);
+    persistConfiguration(next, grain, preferredStrategy);
   }
 
   function updateGrain(next: CuttingGrain) {
     setGrain(next);
-    persistConfiguration(trim, next);
+    persistConfiguration(trim, next, preferredStrategy);
+  }
+
+  function updateStrategy(next: CuttingPlanStrategy | null) {
+    setPreferredStrategy(next);
+    persistConfiguration(trim, grain, next);
   }
 
   const calculation = useMemo(() => {
@@ -122,7 +137,12 @@ export function CuttingPlanPanel({
         allowRotation: grain === "none",
       }));
     const comparison = comparePreliminaryStripPlans(stock, settings, cutParts);
-    const plan = comparison.ok ? comparison.selectedPlan : comparison.plan;
+    const preferredPlan = comparison.ok && preferredStrategy
+      ? createPreliminaryStripPlan(stock, settings, cutParts, preferredStrategy)
+      : null;
+    const plan = preferredPlan?.ok
+      ? preferredPlan
+      : comparison.ok ? comparison.selectedPlan : comparison.plan;
     return {
       plan,
       comparison,
@@ -143,7 +163,7 @@ export function CuttingPlanPanel({
         plan,
       ),
     };
-  }, [grain, parts, project.id, project.title, revision, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
+  }, [grain, parts, preferredStrategy, project.id, project.title, revision, trim.bottomMm, trim.leftMm, trim.rightMm, trim.topMm]);
   const plan = calculation?.plan ?? null;
   const report = calculation?.report.ok ? calculation.report.report : null;
   const labels = calculation?.labels.ok ? calculation.labels.labels : [];
@@ -231,13 +251,21 @@ export function CuttingPlanPanel({
       {calculation?.comparison.ok ? (
         <div className="cutting-alternatives" aria-label="Comparação de estratégias preliminares">
           {calculation.comparison.alternatives.map(alternative => (
-            <div key={alternative.strategy} className={alternative.selected ? "selected" : ""}>
+            <button
+              type="button"
+              key={alternative.strategy}
+              className={plan?.ok && plan.strategy === alternative.strategy ? "selected" : ""}
+              onClick={() => updateStrategy(alternative.strategy)}
+            >
               <span>{strategyLabels[alternative.strategy]}</span>
               <strong>{alternative.sheetCount} chapa(s)</strong>
               <small>{alternative.operationCount} operações · desperdício {(alternative.wasteAreaMm2 / 1_000_000).toFixed(2)} m²</small>
-              {alternative.selected ? <em>SELECIONADA</em> : null}
-            </div>
+              {alternative.selected ? <em>RECOMENDADA</em> : null}
+            </button>
           ))}
+          <button type="button" className="cutting-strategy-auto" disabled={preferredStrategy === null} onClick={() => updateStrategy(null)}>
+            Usar seleção automática
+          </button>
         </div>
       ) : null}
 

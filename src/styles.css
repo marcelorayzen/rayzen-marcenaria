@@ -1332,18 +1332,35 @@ tr:focus-visible {
   margin-top: 12px;
 }
 
-.cutting-alternatives > div {
+.cutting-alternatives > button {
   position: relative;
   display: grid;
   gap: 4px;
   padding: 10px;
   border: 1px solid var(--line);
   background: #f5f6f2;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
 }
 
-.cutting-alternatives > div.selected {
+.cutting-alternatives > button.selected {
   border-color: var(--ink);
   box-shadow: inset 3px 0 0 var(--accent-dark);
+}
+
+.cutting-alternatives > button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.cutting-alternatives .cutting-strategy-auto {
+  grid-column: 1 / -1;
+  display: block;
+  padding: 7px 10px;
+  font: 600 8px var(--mono);
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .cutting-alternatives span,
@@ -3035,6 +3052,7 @@ tr:focus-visible {
 
   .cutting-settings,
   .cutting-local-status,
+  .cutting-strategy-auto,
   .cutting-plan-actions button {
     display: none;
   }

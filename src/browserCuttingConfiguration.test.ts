@@ -14,9 +14,10 @@ describe("browser cutting configuration", () => {
     const storage = new MemoryStorage();
     const first = new BrowserCuttingConfiguration(storage, "cutting:a");
     const second = new BrowserCuttingConfiguration(storage, "cutting:b");
-    first.save({ version: 1, grain: "length", trim: { topMm: 3, rightMm: 4, bottomMm: 3, leftMm: 4 } });
+    first.save({ version: 1, grain: "length", trim: { topMm: 3, rightMm: 4, bottomMm: 3, leftMm: 4 }, preferredStrategy: "area" });
     second.save({ version: 1, grain: "none", trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } });
     expect(first.load()?.trim).toEqual({ topMm: 3, rightMm: 4, bottomMm: 3, leftMm: 4 });
+    expect(first.load()?.preferredStrategy).toBe("area");
     expect(second.load()?.grain).toBe("none");
   });
 

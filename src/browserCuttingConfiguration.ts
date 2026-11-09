@@ -1,5 +1,5 @@
 import type { KeyValueStorage } from "./browserProjectStorage";
-import type { SheetTrim } from "./cuttingPlan";
+import type { CuttingPlanStrategy, SheetTrim } from "./cuttingPlan";
 
 export type CuttingGrain = "length" | "width" | "none" | "pending";
 
@@ -7,6 +7,7 @@ export interface LocalCuttingConfiguration {
   version: 1;
   grain: CuttingGrain;
   trim: SheetTrim;
+  preferredStrategy?: CuttingPlanStrategy | null;
 }
 
 function validTrim(value: unknown): value is number | null {
@@ -23,7 +24,10 @@ function isConfiguration(value: unknown): value is LocalCuttingConfiguration {
     && validTrim(trim.topMm)
     && validTrim(trim.rightMm)
     && validTrim(trim.bottomMm)
-    && validTrim(trim.leftMm);
+    && validTrim(trim.leftMm)
+    && (item.preferredStrategy === undefined
+      || item.preferredStrategy === null
+      || ["largest-side", "area", "strip-width"].includes(String(item.preferredStrategy)));
 }
 
 export class BrowserCuttingConfiguration {

@@ -43,6 +43,8 @@ O mesmo módulo agora contém uma distribuição determinística preliminar em f
 
 O comparador executa três ordenações determinísticas (`largest-side`, `area` e `strip-width`) e classifica os resultados por quantidade de chapas, desperdício calculado, quantidade de operações e desempate estável. A estratégia selecionada fica registrada no relatório/pacote. Isso compara heurísticas conhecidas do motor atual; não prova ótimo global nem substitui a avaliação de facilidade de execução pelo marceneiro.
 
+O operador pode escolher por clique qualquer alternativa auditada ou voltar à recomendação automática. A preferência é persistida localmente por projeto junto ao veio/refilos; mudar de estratégia recalcula mapa, operações, relatório e exportações. Isso não é ajuste livre de posicionamento e não altera a lista de peças.
+
 Antes de devolver um resultado bem-sucedido, o motor audita limites da área útil, unicidade dos posicionamentos, separação mínima pela largura da serra, soma da área utilizada e numeração contínua das operações. Uma falha nessa auditoria bloqueia relatório e exportações. Essa verificação geométrica automatizada não substitui a conferência da estratégia de corte na esquadrejadeira.
 
 `CuttingPlanPanel.tsx` apresenta essa prévia para as peças da revisão salva. O operador escolhe refilo por lado e estado do veio; os valores iniciais de 4 mm ficam dentro da faixa informada pela oficina e podem ser alterados. `browserCuttingConfiguration.ts` persiste essa configuração somente neste navegador, isolada por projeto, inclusive valores pendentes. Ela ainda não integra a revisão imutável nem a sincronização remota e não deve ser tratada como configuração operacional confirmada em outro dispositivo.
