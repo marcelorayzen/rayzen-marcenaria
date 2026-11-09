@@ -1,7 +1,28 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
 
-export type AuthUser = { email?: string | null };
+export type AuthRole = "representante" | "marceneiro";
+export type AuthUser = {
+  email?: string | null;
+  displayName?: string | null;
+  roles: AuthRole[];
+  profileReady: boolean;
+};
+
+async function loadUserProfile(user: { id: string; email?: string | null }): Promise<AuthUser> {
+  if (!supabase) return { email: user.email, roles: [], profileReady: false };
+  const profileResult = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
+  const rolesResult = await supabase.from("profile_roles").select("role").eq("profile_id", user.id);
+  const roles = (rolesResult.data ?? [])
+    .map((row) => row.role)
+    .filter((role): role is AuthRole => role === "representante" || role === "marceneiro");
+  return {
+    email: user.email,
+    displayName: profileResult.data?.display_name ?? null,
+    roles,
+    profileReady: !profileResult.error && Boolean(profileResult.data),
+  };
+}
 
 export function AuthPanel({ onUserChange }: { onUserChange?: (user: AuthUser | null) => void }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -13,17 +34,23 @@ export function AuthPanel({ onUserChange }: { onUserChange?: (user: AuthUser | n
   useEffect(() => {
     if (!supabase) return undefined;
     let active = true;
-    void supabase.auth.getUser().then(({ data }) => {
+    void supabase.auth.getUser().then(async ({ data }) => {
       if (active) {
-        const nextUser = data.user ? { email: data.user.email } : null;
+        const nextUser = data.user ? await loadUserProfile(data.user) : null;
         setUser(nextUser);
         onUserChange?.(nextUser);
       }
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      const nextUser = session?.user ? { email: session.user.email } : null;
-      setUser(nextUser);
-      onUserChange?.(nextUser);
+      if (!session?.user) {
+        setUser(null);
+        onUserChange?.(null);
+        return;
+      }
+      void loadUserProfile(session.user).then((nextUser) => {
+        setUser(nextUser);
+        onUserChange?.(nextUser);
+      });
     });
     return () => {
       active = false;

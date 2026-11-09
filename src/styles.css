@@ -1005,6 +1005,13 @@ tr:focus-visible {
   font-size: 12px;
 }
 
+.auth-role-summary {
+  color: #3e5c5b;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .auth-muted,
 .auth-message {
   margin: 0;

@@ -292,11 +292,11 @@ export default function App() {
     (constraint) => constraint.id === selectedConstraintId,
   );
 
-  if (isSupabaseConfigured && authUser === null) {
+  if (isSupabaseConfigured && (authUser === null || !authUser.profileReady)) {
     return (
       <main className="auth-locked-page">
         <AuthPanel onUserChange={setAuthUser} />
-        <p>Entre com uma conta da equipe para acessar o espaço de trabalho.</p>
+        <p>{authUser ? "Seu usuário foi autenticado, mas ainda não possui um perfil interno provisionado." : "Entre com uma conta da equipe para acessar o espaço de trabalho."}</p>
       </main>
     );
   }
