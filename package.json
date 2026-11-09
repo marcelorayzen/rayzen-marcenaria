@@ -29,12 +29,12 @@
     "@supabase/supabase-js": "^2.119.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "three": "^0.175.0"
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "@types/three": "^0.174.0",
+    "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^4.3.4",
     "supabase": "^3.0.0",
     "typescript": "^5.8.2",
