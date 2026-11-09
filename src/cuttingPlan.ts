@@ -66,6 +66,59 @@ export interface PreliminaryCutOperation {
   label: string;
 }
 
+export function validatePreliminaryPlanGeometry(
+  sheet: SheetStock,
+  settings: CuttingSettings,
+  sheets: PlannedSheet[],
+): string[] {
+  const trimValues = Object.values(settings.trim);
+  if (trimValues.some(value => value === null)) {
+    return ["Não é possível auditar o plano sem os quatro refilos."];
+  }
+  const issues: string[] = [];
+  const left = settings.trim.leftMm!;
+  const top = settings.trim.topMm!;
+  const right = sheet.lengthMm - settings.trim.rightMm!;
+  const bottom = sheet.widthMm - settings.trim.bottomMm!;
+  const placementIds = new Set<string>();
+
+  for (const plannedSheet of sheets) {
+    for (const placement of plannedSheet.placements) {
+      if (placementIds.has(placement.id)) issues.push(`Posicionamento repetido: ${placement.id}.`);
+      placementIds.add(placement.id);
+      if (placement.xMm < left || placement.yMm < top
+        || placement.xMm + placement.lengthMm > right
+        || placement.yMm + placement.widthMm > bottom) {
+        issues.push(`Peça ${placement.partId} #${placement.instance} está fora da área útil da chapa ${plannedSheet.number}.`);
+      }
+    }
+    for (let firstIndex = 0; firstIndex < plannedSheet.placements.length; firstIndex += 1) {
+      const first = plannedSheet.placements[firstIndex];
+      for (let secondIndex = firstIndex + 1; secondIndex < plannedSheet.placements.length; secondIndex += 1) {
+        const second = plannedSheet.placements[secondIndex];
+        const separatedOnX = first.xMm + first.lengthMm + settings.kerfMm <= second.xMm
+          || second.xMm + second.lengthMm + settings.kerfMm <= first.xMm;
+        const separatedOnY = first.yMm + first.widthMm + settings.kerfMm <= second.yMm
+          || second.yMm + second.widthMm + settings.kerfMm <= first.yMm;
+        if (!separatedOnX && !separatedOnY) {
+          issues.push(`Peças ${first.partId} #${first.instance} e ${second.partId} #${second.instance} se sobrepõem ou não preservam a serra na chapa ${plannedSheet.number}.`);
+        }
+      }
+    }
+    const calculatedArea = plannedSheet.placements.reduce(
+      (sum, placement) => sum + placement.lengthMm * placement.widthMm,
+      0,
+    );
+    if (calculatedArea !== plannedSheet.usedPartAreaMm2) {
+      issues.push(`Área utilizada divergente na chapa ${plannedSheet.number}.`);
+    }
+    if (plannedSheet.operations.some((operation, index) => operation.sequence !== index + 1)) {
+      issues.push(`Sequência de operações inválida na chapa ${plannedSheet.number}.`);
+    }
+  }
+  return issues;
+}
+
 export type PreliminaryCutPlan =
   | { ok: false; errors: string[]; pending: string[] }
   | { ok: true; sheets: PlannedSheet[]; kerfMm: number; note: string };
@@ -300,17 +353,20 @@ export function createPreliminaryStripPlan(
   }
 
   const usableAreaMm2 = check.usableLengthMm * check.usableWidthMm;
-  return {
-    ok: true,
-    kerfMm: settings.kerfMm,
-    note: "Distribuição preliminar em faixas; sequência de cortes e liberação técnica ainda pendentes.",
-    sheets: sheetStates.map((state, index) => ({
+  const plannedSheets = sheetStates.map((state, index) => ({
       number: index + 1,
       placements: state.placements,
       operations: createPreliminaryOperations(sheet, settings, state),
       usedPartAreaMm2: state.placements.reduce((sum, item) => sum + item.lengthMm * item.widthMm, 0),
       usableAreaMm2,
-    })),
+    }));
+  const auditIssues = validatePreliminaryPlanGeometry(sheet, settings, plannedSheets);
+  if (auditIssues.length > 0) return { ok: false, errors: auditIssues, pending: [] };
+  return {
+    ok: true,
+    kerfMm: settings.kerfMm,
+    note: "Distribuição preliminar em faixas; sequência de cortes e liberação técnica ainda pendentes.",
+    sheets: plannedSheets,
   };
 }
 

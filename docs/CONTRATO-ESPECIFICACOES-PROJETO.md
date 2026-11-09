@@ -41,6 +41,8 @@ As peças são separadas por material e espessura, exigem quantidade inteira, di
 
 O mesmo módulo agora contém uma distribuição determinística preliminar em faixas. Ela expande quantidades, mantém afastamento da serra, respeita área útil e abre novas chapas quando necessário. É uma base verificável para a visualização: ainda não otimiza alternativas, não gera sequência operacional de cortes e não pode ser apresentada como plano liberado.
 
+Antes de devolver um resultado bem-sucedido, o motor audita limites da área útil, unicidade dos posicionamentos, separação mínima pela largura da serra, soma da área utilizada e numeração contínua das operações. Uma falha nessa auditoria bloqueia relatório e exportações. Essa verificação geométrica automatizada não substitui a conferência da estratégia de corte na esquadrejadeira.
+
 `CuttingPlanPanel.tsx` apresenta essa prévia para as peças da revisão salva. O operador escolhe refilo por lado e estado do veio; os valores iniciais de 4 mm ficam dentro da faixa informada pela oficina e podem ser alterados. `browserCuttingConfiguration.ts` persiste essa configuração somente neste navegador, isolada por projeto, inclusive valores pendentes. Ela ainda não integra a revisão imutável nem a sincronização remota e não deve ser tratada como configuração operacional confirmada em outro dispositivo.
 
 Cada chapa agora expõe uma lista preliminar: refilos informados, separação das faixas e cortes das peças na ordem determinística do layout. Essa lista descreve o algoritmo atual, não uma sequência validada na máquina; manuseio, rotação física da chapa e convenção operacional da oficina ainda precisam de validação humana.

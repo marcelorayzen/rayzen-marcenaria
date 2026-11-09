@@ -4,6 +4,7 @@ import {
   reportedWorkshopCuttingSettings,
   reportedWorkshopSheet,
   reportedWorkshopTrimRangeMm,
+  validatePreliminaryPlanGeometry,
   validateCuttingConfiguration,
   type RectangularCutPart,
 } from "./cuttingPlan";
@@ -108,5 +109,23 @@ describe("cutting configuration", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.pending.length).toBeGreaterThan(0);
+  });
+
+  it("audits bounds, kerf separation, area and operation sequence", () => {
+    const sheet = { ...reportedWorkshopSheet, materialId: "mdf-15", thicknessMm: 15, grain: "none" as const };
+    const settings = { kerfMm: 3, trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } };
+    const result = createPreliminaryStripPlan(sheet, settings, [part]);
+    if (!result.ok) throw new Error(result.errors.join(" "));
+    expect(validatePreliminaryPlanGeometry(sheet, settings, result.sheets)).toEqual([]);
+
+    const invalid = JSON.parse(JSON.stringify(result.sheets)) as typeof result.sheets;
+    invalid[0].placements[1].xMm = invalid[0].placements[0].xMm + invalid[0].placements[0].lengthMm + 1;
+    invalid[0].usedPartAreaMm2 = 1;
+    invalid[0].operations[0].sequence = 7;
+    expect(validatePreliminaryPlanGeometry(sheet, settings, invalid)).toEqual(expect.arrayContaining([
+      expect.stringContaining("não preservam a serra"),
+      "Área utilizada divergente na chapa 1.",
+      "Sequência de operações inválida na chapa 1.",
+    ]));
   });
 });
