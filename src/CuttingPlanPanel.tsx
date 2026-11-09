@@ -127,11 +127,13 @@ export function CuttingPlanPanel({
   );
   const [supplementalDraft, setSupplementalDraft] = useState<SupplementalPartDraft>(emptySupplementalDraft);
   const [supplementalError, setSupplementalError] = useState<string | null>(null);
+  const [editingSupplementalId, setEditingSupplementalId] = useState<string | null>(null);
 
   useEffect(() => {
     setSupplementalParts(supplementalStore.load());
     setSupplementalDraft(emptySupplementalDraft);
     setSupplementalError(null);
+    setEditingSupplementalId(null);
   }, [supplementalStore]);
 
   function persistConfiguration(
@@ -179,9 +181,9 @@ export function CuttingPlanPanel({
     setSupplementalDraft(current => ({ ...current, [field]: value }));
   }
 
-  function addSupplementalPart() {
+  function saveSupplementalPart() {
     const part: SupplementalCutPart = {
-      id: `supplemental-${crypto.randomUUID()}`,
+      id: editingSupplementalId ?? `supplemental-${crypto.randomUUID()}`,
       code: supplementalDraft.code.trim(),
       name: supplementalDraft.name.trim(),
       material: supplementalDraft.material.trim(),
@@ -194,19 +196,47 @@ export function CuttingPlanPanel({
       sourceReference: supplementalDraft.sourceReference.trim(),
     };
     try {
-      const next = supplementalStore.save([...supplementalParts, part]);
+      const nextParts = editingSupplementalId
+        ? supplementalParts.map(current => current.id === editingSupplementalId ? part : current)
+        : [...supplementalParts, part];
+      const next = supplementalStore.save(nextParts);
       setSupplementalParts(next);
       setSupplementalDraft(emptySupplementalDraft);
       setSupplementalError(null);
+      setEditingSupplementalId(null);
     } catch (error) {
       setSupplementalError(error instanceof Error ? error.message : "Não foi possível salvar a peça complementar.");
     }
+  }
+
+  function editSupplementalPart(part: SupplementalCutPart) {
+    setEditingSupplementalId(part.id);
+    setSupplementalDraft({
+      code: part.code,
+      name: part.name,
+      material: part.material,
+      thickness: String(part.thickness),
+      length: String(part.length),
+      width: String(part.width),
+      quantity: String(part.quantity),
+      edges: part.edges,
+      grain: part.grain,
+      sourceReference: part.sourceReference,
+    });
+    setSupplementalError(null);
+  }
+
+  function cancelSupplementalEdit() {
+    setEditingSupplementalId(null);
+    setSupplementalDraft(emptySupplementalDraft);
+    setSupplementalError(null);
   }
 
   function removeSupplementalPart(id: string) {
     const next = supplementalStore.save(supplementalParts.filter(part => part.id !== id));
     setSupplementalParts(next);
     setSupplementalError(null);
+    if (editingSupplementalId === id) cancelSupplementalEdit();
   }
 
   const calculation = useMemo(() => {
@@ -388,7 +418,8 @@ export function CuttingPlanPanel({
           </select></label>
           <label className="supplemental-wide">Bordas / fita<input value={supplementalDraft.edges} onChange={event => updateSupplementalDraft("edges", event.target.value)} placeholder="Descreva somente o que foi definido" /></label>
           <label className="supplemental-wide">Origem da informação<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder="Ex.: medição da porta PT-01" /></label>
-          <button type="button" onClick={addSupplementalPart}>Adicionar peça</button>
+          <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : "Adicionar peça"}</button>
+          {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
         </div>
         {supplementalError ? <p className="supplemental-parts-error" role="alert">{supplementalError}</p> : null}
         {supplementalParts.length > 0 ? (
@@ -400,7 +431,10 @@ export function CuttingPlanPanel({
                   <span>{part.quantity} × {part.length} × {part.width} mm · {part.material} · {part.thickness} mm</span>
                   <small>{part.edges} · origem: {part.sourceReference}</small>
                 </div>
-                <button type="button" onClick={() => removeSupplementalPart(part.id)}>Remover</button>
+                <div className="supplemental-part-actions">
+                  <button type="button" onClick={() => editSupplementalPart(part)}>Editar</button>
+                  <button type="button" onClick={() => removeSupplementalPart(part.id)}>Remover</button>
+                </div>
               </article>
             ))}
           </div>
