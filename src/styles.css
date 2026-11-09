@@ -159,6 +159,26 @@ tr:focus-visible {
   background: #d7d9d4;
 }
 
+.project-switcher {
+  max-width: 240px;
+  min-height: 30px;
+  padding: 0 26px 0 8px;
+  border: 1px solid #d7d9d4;
+  background: #f6f7f3;
+  color: var(--ink);
+  font: 600 11px var(--mono);
+}
+
+.topbar-project .text-button {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #d7d9d4;
+  background: transparent;
+  color: var(--ink);
+  font: 600 9px var(--mono);
+  cursor: pointer;
+}
+
 .topbar-status {
   display: inline-flex;
   align-items: center;
@@ -1463,6 +1483,10 @@ tr:focus-visible {
     gap: 8px;
     min-width: 0;
     font-size: 10px;
+  }
+
+  .project-switcher {
+    max-width: 150px;
   }
 
   .project-id {

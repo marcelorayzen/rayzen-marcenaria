@@ -19,6 +19,7 @@ import type {
 } from "./projectDomain";
 import { InMemoryProjectRepository } from "./projectRepository";
 import { BrowserProjectStorage } from "./browserProjectStorage";
+import { BrowserProjectCatalog, type LocalProjectSummary } from "./browserProjectCatalog";
 import type { ProjectSpecification, SpecificationSourceKind } from "./projectSpecifications";
 import {
   previewSetCounterDimensionProposal,
@@ -93,9 +94,11 @@ const demoProject = {
   id: "demo-counter-project",
   title: "Balcão de ensaio",
 };
-const demoStorageKey = "rayzen-marcenaria:demo-counter:v1";
-const syncQueueStorageKey = "rayzen-marcenaria:demo-counter:sync-queue:v1";
+const legacyDemoStorageKey = "rayzen-marcenaria:demo-counter:v1";
 const projectMetaStorageKey = "rayzen-marcenaria:active-project:v1";
+const projectCatalogStorageKey = "rayzen-marcenaria:project-catalog:v1";
+const projectStorageKey = (projectId: string) => `rayzen-marcenaria:project:${projectId}:v1`;
+const projectSyncQueueStorageKey = (projectId: string) => `rayzen-marcenaria:project:${projectId}:sync-queue:v1`;
 
 function createDemoSnapshot(
   parameters: CounterParameters,
@@ -216,8 +219,17 @@ function createDemoRepository(): InMemoryProjectRepository {
     ...demoProject,
     createdAt,
   });
-  const storage = new BrowserProjectStorage(window.localStorage, demoStorageKey);
-  const storedSnapshots = storage.load();
+  const storage = new BrowserProjectStorage(window.localStorage, projectStorageKey(demoProject.id));
+  let storedSnapshots = storage.load();
+  if (storedSnapshots.length === 0) {
+    const legacy = new BrowserProjectStorage(window.localStorage, legacyDemoStorageKey)
+      .load()
+      .filter(snapshot => snapshot.project.id === demoProject.id);
+    if (legacy.length > 0) {
+      storage.save(legacy);
+      storedSnapshots = legacy;
+    }
+  }
   try {
     for (const snapshot of storedSnapshots) {
       if (snapshot.project.id === demoProject.id) {
@@ -230,13 +242,29 @@ function createDemoRepository(): InMemoryProjectRepository {
   if (repository.listRevisions(demoProject.id).length === 0) {
     repository.saveRevision(createDemoSnapshot(initialParameters, 1, createdAt));
   }
+  new BrowserProjectCatalog(window.localStorage, projectCatalogStorageKey).upsert({
+    id: demoProject.id,
+    title: demoProject.title,
+    createdAt: storedSnapshots[0]?.revision.createdAt ?? createdAt,
+    updatedAt: repository.listRevisions(demoProject.id).at(-1)?.revision.createdAt ?? createdAt,
+  });
   return repository;
 }
 
 function persistDemoRepository(repository: InMemoryProjectRepository) {
-  new BrowserProjectStorage(window.localStorage, demoStorageKey).save(
-    repository.listRevisions(demoProject.id),
+  const snapshots = repository.listRevisions(demoProject.id);
+  new BrowserProjectStorage(window.localStorage, projectStorageKey(demoProject.id)).save(
+    snapshots,
   );
+  const now = new Date().toISOString();
+  const catalog = new BrowserProjectCatalog(window.localStorage, projectCatalogStorageKey);
+  const existing = catalog.load().find(item => item.id === demoProject.id);
+  catalog.upsert({
+    id: demoProject.id,
+    title: demoProject.title,
+    createdAt: existing?.createdAt ?? snapshots[0]?.revision.createdAt ?? now,
+    updatedAt: now,
+  });
 }
 
 export default function App() {
@@ -245,8 +273,11 @@ export default function App() {
     repositoryRef.current = createDemoRepository();
   }
   const repository = repositoryRef.current;
-  const [parameters, setParameters] =
-    useState<CounterParameters>(initialParameters);
+  const [parameters, setParameters] = useState<CounterParameters>(() => {
+    const snapshots = repository.listRevisions(demoProject.id);
+    const latest = snapshots[snapshots.length - 1];
+    return latest ? revisionFromSnapshot(latest).parameters : initialParameters;
+  });
   const [revisions, setRevisions] = useState<Revision[]>(() =>
     repository.listRevisions(demoProject.id).map(revisionFromSnapshot),
   );
@@ -301,7 +332,10 @@ export default function App() {
   const [restorableBackup, setRestorableBackup] = useState<LocalProjectBackup | null>(null);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [syncQueue, setSyncQueue] = useState<DraftSyncQueueItem[]>(() =>
-    new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).load(),
+    new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(demoProject.id)).load(),
+  );
+  const [localProjects] = useState<LocalProjectSummary[]>(() =>
+    new BrowserProjectCatalog(window.localStorage, projectCatalogStorageKey).load(),
   );
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
@@ -952,7 +986,7 @@ export default function App() {
     if (!window.confirm("Apagar todas as revisões locais deste demonstrador?")) {
       return;
     }
-    new BrowserProjectStorage(window.localStorage, demoStorageKey).clear();
+    new BrowserProjectStorage(window.localStorage, projectStorageKey(demoProject.id)).clear();
     window.location.reload();
   }
 
@@ -986,13 +1020,13 @@ export default function App() {
       return;
     }
     setSyncQueue(syncing.queue);
-    new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).save(syncing.queue);
+    new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(demoProject.id)).save(syncing.queue);
     const result = await syncDraftQueueItem(supabase, syncing.queue.find((candidate) => candidate.id === item.id)!);
     if (result.status === "synced") {
       const completed = markDraftSynced(syncing.queue, item.id, result.remoteProjectId, result.remoteRevisionId);
       if (completed.ok) {
         setSyncQueue(completed.queue);
-        new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).save(completed.queue);
+        new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(demoProject.id)).save(completed.queue);
         setSyncMessage("Revisão sincronizada. O rascunho local foi preservado até uma política de limpeza ser aplicada.");
       }
       return;
@@ -1002,7 +1036,7 @@ export default function App() {
       : markDraftSyncFailed(syncing.queue, item.id, result.message);
     if (failed.ok) {
       setSyncQueue(failed.queue);
-      new BrowserDraftSyncQueue(window.localStorage, syncQueueStorageKey).save(failed.queue);
+      new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(demoProject.id)).save(failed.queue);
       setSyncMessage(result.message);
     }
   }
@@ -1067,9 +1101,29 @@ export default function App() {
     const title = window.prompt("Nome do novo projeto", "Novo projeto de movel");
     if (!title || title.trim().length < 2) return;
     const nextId = `project-${crypto.randomUUID()}`;
-    window.localStorage.removeItem(demoStorageKey);
-    window.localStorage.removeItem(syncQueueStorageKey);
+    const now = new Date().toISOString();
+    new BrowserProjectCatalog(window.localStorage, projectCatalogStorageKey).upsert({
+      id: nextId,
+      title: title.trim(),
+      createdAt: now,
+      updatedAt: now,
+    });
     window.localStorage.setItem(projectMetaStorageKey, JSON.stringify({ id: nextId, title: title.trim() }));
+    window.location.reload();
+  }
+
+  function openLocalProject(projectId: string) {
+    if (projectId === demoProject.id) return;
+    if (isDirty) {
+      setHistoryError("Salve ou descarte as alterações antes de trocar de projeto.");
+      return;
+    }
+    const project = localProjects.find(item => item.id === projectId);
+    if (!project) {
+      setHistoryError("O projeto local selecionado não foi encontrado.");
+      return;
+    }
+    window.localStorage.setItem(projectMetaStorageKey, JSON.stringify({ id: project.id, title: project.title }));
     window.location.reload();
   }
 
@@ -1092,7 +1146,7 @@ export default function App() {
     if (!window.confirm("Restaurar este backup substituirá o rascunho local atual deste demonstrador. Baixe um backup do estado atual antes de continuar. Deseja restaurar?")) {
       return;
     }
-    new BrowserProjectStorage(window.localStorage, demoStorageKey).save(restorableBackup.snapshots);
+    new BrowserProjectStorage(window.localStorage, projectStorageKey(demoProject.id)).save(restorableBackup.snapshots);
     window.location.reload();
   }
 
@@ -1109,7 +1163,14 @@ export default function App() {
         <div className="topbar-project">
           <span className="project-id">PROJETO ATUAL</span>
           <span className="topbar-divider" aria-hidden="true" />
-          <span>{demoProject.title}</span>
+          <select
+            className="project-switcher"
+            value={demoProject.id}
+            aria-label="Projeto local ativo"
+            onChange={event => openLocalProject(event.target.value)}
+          >
+            {localProjects.map(project => <option key={project.id} value={project.id}>{project.title}</option>)}
+          </select>
           <button type="button" className="text-button" onClick={startNewProject}>Novo projeto</button>
         </div>
         <div className="topbar-status">

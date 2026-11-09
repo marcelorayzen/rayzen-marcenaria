@@ -41,6 +41,7 @@ O roteiro de execução em fases, com limites e critérios para delegação a ou
 ### A3 · Persistir projetos e revisões — P0
 
 - **Correção prioritária identificada em 9/11/2026:** criar um projeto não pode remover o rascunho/fila anteriores. Implementar listagem e reabertura, isolamento local por conta/projeto, vínculo remoto por projeto e sincronização idempotente. Aceite adicional: duas revisões no mesmo projeto remoto, retentativa sem duplicação e recuperação em outro dispositivo.
+- **Implementado localmente em 9/11/2026:** catálogo e seletor de projetos no navegador, com revisões e fila de sincronização separadas por projeto. Ainda faltam isolamento por conta, renomear/arquivar, vínculo remoto persistente, idempotência entre revisões e recuperação em outro dispositivo.
 
 - **Tarefa:** substituir o estado efêmero da aba por armazenamento persistente compatível com o escopo decidido; criar, abrir, renomear e arquivar projetos.
 - **Tarefa:** salvar revisões imutáveis e permitir restaurar uma anterior como nova revisão; manter autosave de rascunho claramente distinto de revisão confirmada.
