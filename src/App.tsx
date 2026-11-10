@@ -34,6 +34,7 @@ import {
 } from "./wallElevation";
 import { getProjectChecks } from "./projectChecks";
 import { getManufacturingReadiness } from "./manufacturingReadiness";
+import { syncReadinessChecklist } from "./supabaseReadinessSync";
 import {
   type LocalProjectBackup,
   validateLocalProjectBackup,
@@ -344,6 +345,7 @@ export default function App() {
     new BrowserProjectCatalog(window.localStorage, projectCatalogStorageKey).load(),
   );
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [readinessSyncMessage, setReadinessSyncMessage] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [chatMessage, setChatMessage] = useState<string | null>(null);
 
@@ -1120,6 +1122,16 @@ export default function App() {
     window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
   }
 
+  async function synchronizeReadinessChecklist() {
+    const remoteRevisionId = latestSyncItem?.remoteRevisionId;
+    if (!supabase || !remoteRevisionId) {
+      setReadinessSyncMessage("Sincronização bloqueada: sincronize primeiro a revisão salva com uma conta autorizada.");
+      return;
+    }
+    const result = await syncReadinessChecklist(supabase, remoteRevisionId, manufacturingReadiness);
+    setReadinessSyncMessage(result.status === "synced" ? "Checklist sincronizado para esta revisão." : result.message);
+  }
+
   function downloadTechnicalPackage() {
     if (isDirty || !model) return;
     const technicalPackage = {
@@ -1324,6 +1336,10 @@ export default function App() {
             <span>{manufacturingReadiness.items.filter(item => item.status !== "ok").length} PENDÊNCIA(S)</span>
           </div>
           <p>{manufacturingReadiness.note}</p>
+          <button type="button" onClick={() => void synchronizeReadinessChecklist()} disabled={!isSupabaseConfigured || !latestSyncItem?.remoteRevisionId}>
+            Sincronizar checklist da revisão
+          </button>
+          {readinessSyncMessage ? <p role="status">{readinessSyncMessage}</p> : null}
           <ul>
             {manufacturingReadiness.items.map(item => <li key={item.id}><strong>{item.status === "ok" ? "OK" : item.status === "blocked" ? "BLOQUEADO" : "PENDENTE"}</strong> · {item.label}: {item.detail}</li>)}
           </ul>
