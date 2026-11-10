@@ -9,6 +9,7 @@ export function PhotoAttachmentPanel({ projectId, revisionId }: { projectId: str
   const store = useMemo(() => new BrowserPhotoAttachments(window.localStorage, storageKey(projectId, revisionId)), [projectId, revisionId]);
   const [photos, setPhotos] = useState<PhotoAttachment[]>(() => store.load());
   const [note, setNote] = useState("");
+  const [linkedRecordIds, setLinkedRecordIds] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   function addPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -23,10 +24,11 @@ export function PhotoAttachmentPanel({ projectId, revisionId }: { projectId: str
         id: `photo-${crypto.randomUUID()}`, projectId, revisionId, fileName: file.name,
         mimeType: file.type as PhotoAttachment["mimeType"], byteSize: file.size, dataUrl,
         capturedAt: null, note: note.trim(), createdAt: new Date().toISOString(),
+        linkedRecordIds: linkedRecordIds.split(",").map(id => id.trim()).filter(Boolean),
       });
       if (!result.ok) { setMessage(result.errors.join(" ")); return; }
       const next = store.save([...photos, result.attachment]);
-      setPhotos(next); setNote(""); setMessage("Foto anexada a esta revisao local.");
+      setPhotos(next); setNote(""); setLinkedRecordIds(""); setMessage("Foto anexada a esta revisao local.");
     };
     reader.onerror = () => setMessage("Nao foi possivel ler a foto neste dispositivo.");
     reader.readAsDataURL(file);
@@ -42,11 +44,12 @@ export function PhotoAttachmentPanel({ projectId, revisionId }: { projectId: str
     <header><div><span className="small-label">EVIDENCIA LOCAL</span><h2 id="photo-attachments-title">Fotos do levantamento</h2></div><span>{photos.length} FOTO(S)</span></header>
     <p>As fotos ficam somente neste dispositivo e nesta revisao enquanto a sincronizacao remota nao for validada.</p>
     <label>Observacao da proxima foto<textarea value={note} onChange={event => setNote(event.target.value)} maxLength={1000} placeholder="Ex.: saida de esgoto na parede esquerda" /></label>
+    <label>IDs relacionados (separados por virgula)<input value={linkedRecordIds} onChange={event => setLinkedRecordIds(event.target.value)} placeholder="Ex.: medida-12, constraint-3" /></label>
     <label className="text-button">Adicionar foto<input type="file" accept="image/jpeg,image/png,image/webp" onChange={addPhoto} hidden /></label>
     {message ? <p role="status">{message}</p> : null}
     {photos.length > 0 ? <div>{photos.map(photo => <article key={photo.id}>
       <img src={photo.dataUrl} alt={photo.note || photo.fileName} loading="lazy" />
-      <div><strong>{photo.fileName}</strong><small>{photo.note || "Sem observacao"}</small></div>
+      <div><strong>{photo.fileName}</strong><small>{photo.note || "Sem observacao"}</small><small>{photo.linkedRecordIds.length ? `Vinculos: ${photo.linkedRecordIds.join(", ")}` : "Sem vinculos"}</small></div>
       <button type="button" onClick={() => removePhoto(photo.id)}>Remover</button>
     </article>)}</div> : null}
   </section>;

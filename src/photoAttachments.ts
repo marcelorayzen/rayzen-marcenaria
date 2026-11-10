@@ -14,6 +14,7 @@ export interface PhotoAttachment {
   dataUrl: string;
   capturedAt: string | null;
   note: string;
+  linkedRecordIds: string[];
   createdAt: string;
 }
 
@@ -29,6 +30,7 @@ export function createPhotoAttachment(input: PhotoAttachment): PhotoAttachmentVa
   if (!Number.isSafeInteger(input.byteSize) || input.byteSize <= 0 || input.byteSize > maxPhotoBytes) errors.push("A foto deve ter entre 1 byte e 10 MB.");
   if (!input.dataUrl.startsWith(`data:${input.mimeType};base64,`)) errors.push("O conteudo da foto nao esta em base64 valido para o tipo informado.");
   if (input.note.length > 1000) errors.push("A observacao da foto deve ter no maximo 1.000 caracteres.");
+  if (input.linkedRecordIds.some(id => !id.trim()) || new Set(input.linkedRecordIds).size !== input.linkedRecordIds.length) errors.push("Os vinculos da foto precisam ter IDs unicos e nao vazios.");
   if (Number.isNaN(Date.parse(input.createdAt))) errors.push("Data de registro da foto invalida.");
   if (errors.length > 0) return { ok: false, errors };
   return { ok: true, attachment: JSON.parse(JSON.stringify(input)) as PhotoAttachment };
