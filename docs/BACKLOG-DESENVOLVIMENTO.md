@@ -137,6 +137,7 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 ### E1 · Módulos, equipamentos e interferências — P0
 
 - **Tarefa:** expandir o catálogo para portas, gavetas, ferragens e equipamentos; representar zonas de uso e folgas conforme regras confirmadas pelo marceneiro/fabricante.
+- **Implementado localmente em 10/11/2026:** o catálogo permite fabricante e especificações explícitas por linhas `chave=valor`, com rejeição de formato inválido e chaves repetidas. O plano de corte seleciona itens ativos do catálogo e preserva o ID nos artefatos exportados; regras dimensionais e persistência remota continuam pendentes.
 - **Aceite:** regras têm fonte e testes; interferências são explicadas com medidas; nenhuma regra desconhecida é inventada pelo agente.
 - **Dependências:** C2, D1.
 
