@@ -95,6 +95,7 @@ describe("supplemental cut parts browser storage", () => {
       backMaterialId: "MDF branco 6",
       grain: "none",
       bandedSides: ["top", "left", "right"],
+      handleGrooveProfile: "j-hidden",
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -109,6 +110,9 @@ describe("supplemental cut parts browser storage", () => {
       expect.objectContaining({ kind: "edge-banding", status: "specified" }),
     ]));
     expect(result.parts[1].productionOperations?.some(operation => operation.kind === "handle-groove")).toBe(false);
+    expect(result.parts[0].productionOperations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "handle-groove", description: expect.stringContaining("perfil J") }),
+    ]));
   });
 
   it("ignores malformed stored JSON instead of promoting it to cutting input", () => {

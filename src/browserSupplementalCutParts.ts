@@ -5,6 +5,8 @@ import { createCompositeDoor15x6 } from "./compositeDoor15x6";
 import { createCompositeThickening15x15 } from "./compositeThickening15x15";
 import type { PanelEdge } from "./compositePanel";
 
+export type HandleGrooveProfile = "45-chamfer" | "j-hidden" | "l-square" | "pending";
+
 export interface SupplementalCutPart {
   id: string;
   code: string;
@@ -45,6 +47,7 @@ export interface SupplementalDoor15x6Input {
   backMaterialId: string;
   grain: CuttingGrain;
   bandedSides: PanelEdge["side"][];
+  handleGrooveProfile?: HandleGrooveProfile;
 }
 
 export interface SupplementalThickening15x15Input {
@@ -176,6 +179,17 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
       composite: { id: input.compositeId, kind: "door-15-6", layer: "back-6", bandedSides: [...input.bandedSides] },
     },
   ];
+  const grooveDescriptions: Record<HandleGrooveProfile, string> = {
+    "45-chamfer": "Cava perfil 45 graus chanfrado: confirmar folga superior e dimensoes antes da usinagem.",
+    "j-hidden": "Cava perfil J oculto: confirmar raio, profundidade e posicao antes da usinagem.",
+    "l-square": "Cava perfil L quadrado: confirmar largura, profundidade e posicao antes da usinagem.",
+    pending: "Definir o perfil da cava (45 graus, J oculto ou L quadrado) por projeto antes da usinagem.",
+  };
+  if (input.handleGrooveProfile && input.handleGrooveProfile !== "pending") {
+    parts[0].productionOperations = parts[0].productionOperations?.map(operation => operation.kind === "handle-groove"
+      ? { ...operation, description: grooveDescriptions[input.handleGrooveProfile as HandleGrooveProfile] }
+      : operation);
+  }
   return validateSupplementalCutParts(parts);
 }
 
