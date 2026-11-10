@@ -20,6 +20,7 @@ const parts: RectangularCutPart[] = [{
   quantity: 2,
   grain: "none",
   allowRotation: true,
+  catalogItemId: "catalog-side-1",
 }];
 
 describe("preliminary cutting report", () => {
@@ -43,6 +44,7 @@ describe("preliminary cutting report", () => {
       settings,
     });
     expect(result.report.sheets.flatMap(sheet => sheet.placements)).toHaveLength(2);
+    expect(result.report.parts[0].catalogItemId).toBe("catalog-side-1");
   });
 
   it("refuses reports for incomplete plans or mismatched quantities", () => {
