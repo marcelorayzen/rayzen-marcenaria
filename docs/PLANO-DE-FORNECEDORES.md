@@ -1,5 +1,7 @@
 # Plano de fases e delegação
 
+> Atualização de encerramento (10/11/2026): a fundação Supabase já possui migrations de catálogo/checklist e identidade local aplicadas em produção. O frontend tem sincronização explícita idempotente de catálogo e checklist; permanecem como trabalho futuro os testes de RLS com identidades reais, persistência completa de projetos/revisões e liberação técnica.
+
 **Repriorização em 9/11/2026:** o mapa F0–F7 abaixo é histórico. A sequência vigente do backlog antecipa plano de corte para serra/esquadrejadeira, módulos construtivos e IA contextual; inclui E7 e promove E1–E3 a P0. Antes de delegar, usar esses critérios atualizados. Cadastrar toda a equipe não bloqueia desenvolvimento com as duas contas existentes. Não considerar JSON exportado como plano de corte ou reconhecimento por expressões regulares como IA integrada.
 
 **Estado:** plano de execução derivado do backlog em 8 de novembro de 2026.  

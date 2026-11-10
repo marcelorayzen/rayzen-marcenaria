@@ -42,6 +42,7 @@ O roteiro de execução em fases, com limites e critérios para delegação a ou
 
 - **Correção prioritária identificada em 9/11/2026:** criar um projeto não pode remover o rascunho/fila anteriores. Implementar listagem e reabertura, isolamento local por conta/projeto, vínculo remoto por projeto e sincronização idempotente. Aceite adicional: duas revisões no mesmo projeto remoto, retentativa sem duplicação e recuperação em outro dispositivo.
 - **Implementado localmente em 9/11/2026:** catálogo e seletor de projetos no navegador, com revisões e fila de sincronização separadas por projeto. A fila reserva e persiste o UUID remoto, propaga-o às revisões seguintes e tem teste simulado de retentativa sem duplicar projeto/revisão. Ainda faltam isolamento por conta, renomear/arquivar, teste remoto de RLS/idempotência e recuperação em outro dispositivo.
+- **Implementado parcialmente em 10/11/2026:** migrations remotas de catálogo/checklist, sincronização idempotente por `local_id`, recuperação do catálogo com mesclagem sem perda local e sincronização do checklist por `revision_id` com conflito explícito. Ainda faltam ensaios de RLS com identidades reais e recuperação validada em outro dispositivo.
 - **Implementado localmente em 10/11/2026:** o backup/restauração local inclui opcionalmente o catálogo de itens do projeto e mantém compatibilidade com arquivos anteriores. A recuperação continua limitada ao dispositivo até a persistência remota ser validada.
 
 - **Tarefa:** substituir o estado efêmero da aba por armazenamento persistente compatível com o escopo decidido; criar, abrir, renomear e arquivar projetos.
@@ -139,6 +140,7 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 
 - **Tarefa:** expandir o catálogo para portas, gavetas, ferragens e equipamentos; representar zonas de uso e folgas conforme regras confirmadas pelo marceneiro/fabricante.
 - **Implementado localmente em 10/11/2026:** o catálogo permite fabricante e especificações explícitas por linhas `chave=valor`, com rejeição de formato inválido e chaves repetidas. O plano de corte seleciona itens ativos do catálogo e preserva o ID nos artefatos exportados; regras dimensionais e persistência remota continuam pendentes.
+- **Implementado em 10/11/2026:** além do catálogo local, a interface permite sincronizar e carregar itens remotos por `local_id`; fabricante, especificações, origem e estado ativo/inativo permanecem rastreáveis. A persistência remota não substitui a validação de RLS nem a liberação técnica.
 - **Aceite:** regras têm fonte e testes; interferências são explicadas com medidas; nenhuma regra desconhecida é inventada pelo agente.
 - **Dependências:** C2, D1.
 

@@ -1,6 +1,6 @@
 # Contrato de especificações por projeto
 
-**Estado:** contrato local de domínio; não há catálogo, importador Promob ou conversa com IA implementados.  
+**Estado:** contrato local de domínio; o catálogo de projeto está implementado com origem e especificações explícitas. Importador Promob e conversa com IA continuam não implementados.
 **Versão:** 1.
 
 ## Princípio

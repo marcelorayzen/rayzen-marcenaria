@@ -1,5 +1,7 @@
 # Qualidade e governança de IA
 
+> Fechamento da sessão (10/11/2026): 136 testes locais e build aprovados; migrations remotas de catálogo/checklist aplicadas; sincronização usa sessão/perfil, chaves idempotentes e conflito explícito. Não há evidência de RLS exercitada com todas as identidades, IA externa ligada ou liberação de fabricação.
+
 **Estado:** base operacional para evolução do produto; não é certificação ISO nem prova de conformidade.  
 **Aplicação:** qualquer função que interprete dados, sugira alterações ou prepare ações usando IA.
 

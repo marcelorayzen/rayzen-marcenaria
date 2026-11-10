@@ -8,10 +8,13 @@ Esta pasta prepara a primeira fundação de nuvem do Rayzen Marcenaria. Ela não
 
 **Atualização de 10 de novembro de 2026:** a migration `20261110160000_catalog_and_readiness.sql` foi aplicada ao mesmo projeto remoto. Ela cria catálogo por projeto e snapshots do checklist por revisão, com RLS para membros internos; não cria liberação técnica nem conecta a interface ao banco.
 
+**Atualização adicional de 10 de novembro de 2026:** `20261110162000_catalog_local_identity.sql` foi aplicada e o sincronizador de catálogo usa `project_id + local_id` para upsert e recuperação idempotentes. O checklist usa `revision_id` e não sobrescreve conteúdo remoto diferente; o dry-run posterior confirmou `upToDate: true`.
+
 A migration `20261109090000_profile_multiple_roles.sql` também foi aplicada. Ela permite que um perfil interno tenha mais de uma responsabilidade; a matriz atual é Kevin (marceneiro), Moises (marceneiro e representante), Marcelo (marceneiro) e Tais (representante). Por enquanto, a equipe interna usa e-mail e senha; os perfis só devem ser criados após os usuários existirem no Supabase Auth.
 
 - `migrations/20261108123000_initial_project_governance.sql`: esquema, RLS, funções de aprovação/liberação e bucket privado de arquivos.
 - `migrations/20261110160000_catalog_and_readiness.sql`: catálogo de itens e snapshots de prontidão por revisão, com RLS interna.
+- `migrations/20261110162000_catalog_local_identity.sql`: identidade local preservada para sincronização idempotente.
 - `../.env.example`: somente valores públicos consumidos pelo navegador; a chave `service_role` nunca pertence ao frontend nem a este arquivo.
 
 ## Modelo de acesso

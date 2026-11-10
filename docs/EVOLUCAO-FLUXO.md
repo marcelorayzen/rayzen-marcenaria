@@ -1,8 +1,12 @@
 # Evolução do fluxo de projeto
 
+> Estado em 10/11/2026: o fluxo local já possui catálogo, plano de corte preliminar, checklist de prontidão e sincronização explícita de catálogo/checklist com Supabase. As seções históricas abaixo continuam úteis para decisões ainda não implementadas, como IA externa, importação Fusion e liberação técnica.
+
 Este documento separa as capacidades existentes das propostas para evoluir o protótipo até um fluxo de marcenaria com projetos, conversa assistida e importação de planos de corte. Os itens abaixo não estão implementados até serem construídos, testados e descritos como funcionalidades disponíveis.
 
 ## Situação atual
+
+O parágrafo abaixo descreve o protótipo histórico. O estado vigente inclui persistência local de projetos/revisões, fotos, catálogo, plano de corte preliminar, checklist e sincronização explícita de catálogo/checklist com Supabase. A sincronização remota exige autenticação/perfil e não equivale a liberação de fabricação.
 
 O aplicativo oferece um único balcão demonstrativo com dimensões externas em milímetros, regra determinística de quatro painéis (duas laterais, tampo e base), visualização 3D, validação, revisão em memória e exportação CSV. O cálculo `largura interna = largura externa − 2 × espessura` é coberto pelos casos de 800 mm → 764 mm e 900 mm → 864 mm.
 

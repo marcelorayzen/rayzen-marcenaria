@@ -2,6 +2,10 @@
 
 Editor web local para testar o primeiro fluxo paramétrico de um balcão: medidas externas, geometria 3D, validação, revisão e CSV. Esta é uma demonstração de uma única peça de mobiliário; não é ainda a plataforma completa nem um sistema de liberação para fabricação.
 
+## Estado atual em 10 de novembro de 2026
+
+Além do caso geométrico inicial, a aplicação possui projetos/revisões locais, fotos, catálogo de portas/gavetas/ferragens/equipamentos, especificações `chave=valor`, peças complementares 15+6 e 15+15, plano de corte preliminar para chapa 2750 × 1850 mm com serra de 3 mm, etiquetas/CSV/JSON, checklist de prontidão e sincronização explícita de catálogo/checklist com Supabase. A produção está em `https://marcenaria.rayzen.com.br`.
+
 ## Requisitos
 
 - Node.js 22 ou superior
@@ -39,7 +43,7 @@ O projeto inicia com 800 × 720 × 500 mm, em MDF de 18 mm. As duas laterais rec
 
 Edite as dimensões para conferir a prévia; salve uma nova revisão para habilitar a exportação CSV dessa revisão. Selecione uma linha da lista para destacar a peça correspondente no modelo. As vistas frontal, lateral e superior alteram a câmera do modelo 3D.
 
-## Limites desta versão
+## Limites históricos do caso inicial
 
 - O estado e as revisões existem apenas na memória desta aba e desaparecem ao recarregar ou fechar a página; não há banco de dados, salvamento persistente ou sincronização.
 - O material é fixo em MDF e a convenção das bordas é explicitamente “Sem fita” apenas para este ensaio. Catálogo, fita e descontos ainda não foram implementados.
@@ -62,7 +66,7 @@ A direção validada para a evolução — estação interna de projeto e produ�
 
 Os controles de risco, evidências e gates para funcionalidades assistidas por IA estão em [docs/QUALIDADE-E-GOVERNANCA-IA.md](./docs/QUALIDADE-E-GOVERNANCA-IA.md). A política adapta referências de gestão de IA à operação; não afirma certificação.
 
-A fundação preparada para persistência em nuvem está em [supabase/README.md](./supabase/README.md). Ela contém migrations, regras de acesso, configuração de exemplo e uma pilha local validada. A migration inicial também foi aplicada ao projeto Supabase remoto; a interface continua sem conexão e nenhum dado operacional foi migrado.
+A fundação de persistência em nuvem está em [supabase/README.md](./supabase/README.md). As migrations de catálogo, checklist e identidade local foram aplicadas ao projeto remoto; a sincronização continua explícita e depende de sessão, perfil e vínculo remoto válidos.
 
 Os requisitos e a sequência de publicação em subdomínio estão em [docs/DEPLOY.md](./docs/DEPLOY.md). O projeto Cloudflare Pages está publicado em [marcenaria.rayzen.com.br](https://marcenaria.rayzen.com.br); esta evidência prova a entrega estática atual, não a integração futura de persistência/contas.
 

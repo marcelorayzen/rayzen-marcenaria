@@ -43,6 +43,8 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 7. A produção foi aprovada e publicada em `marcenaria.rayzen.com.br` em 9 de novembro de 2026, deployment `e95bf4a4.rayzen-marcenaria.pages.dev` da branch `main`, a partir do commit `2681324`. O deployment e o domínio responderam HTTPS 200; o bundle público contém a instrução de referência zero sem refilo por peça e o CSS usa tom neutro nas cotas. A sequência agora registra refilos, adoção das bordas limpas como referência e depois faixas/peças com 3 mm de serra. A composição ainda precisa de validação visual, e o comportamento remoto precisa de ensaio com contas/RLS. Não há recuperação em outro dispositivo, sequência validada na máquina ou liberação de fabricação.
 8. A verificação HTTPS retornou `200 OK`. Uma publicação futura ainda deve executar `npm run cloudflare:pages:deploy`, conferir o domínio e registrar versão/data.
 
+9. Estado de encerramento desta sessão: o commit `547b54f` foi publicado após ApprovalGate `06e60fa0-40d9-4991-9987-e729a4e35218` no deployment `06c5f0c0.rayzen-marcenaria.pages.dev`; o preview e `marcenaria.rayzen.com.br` responderam HTTP 200. A versão inclui carregamento remoto do catálogo por `local_id`; isso não prova RLS exercitada com todas as identidades nem liberação de fabricação.
+
 ## Ainda necessário
 
 - regra de acesso à prévia e responsável pela aprovação de publicação;
