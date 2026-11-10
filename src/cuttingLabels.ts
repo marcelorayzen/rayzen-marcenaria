@@ -1,4 +1,5 @@
 import type { PreliminaryCutPlan } from "./cuttingPlan";
+import type { CutPartProductionOperation } from "./cuttingPlan";
 
 export interface CuttingLabelPart {
   id: string;
@@ -8,6 +9,7 @@ export interface CuttingLabelPart {
   thicknessMm: number;
   edges: string;
   sourceReference?: string;
+  productionOperations?: CutPartProductionOperation[];
 }
 
 export interface CuttingPieceLabel {
@@ -26,6 +28,7 @@ export interface CuttingPieceLabel {
   material: string;
   edges: string;
   sourceReference?: string;
+  productionOperations?: CutPartProductionOperation[];
   rotatedInPlan: boolean;
   status: "preliminary-not-released";
 }
@@ -67,6 +70,7 @@ export function createCuttingPieceLabels(
         material: part.material,
         edges: part.edges,
         sourceReference: part.sourceReference,
+        productionOperations: part.productionOperations?.map(operation => ({ ...operation })),
         rotatedInPlan: placement.rotated,
         status: "preliminary-not-released",
       });

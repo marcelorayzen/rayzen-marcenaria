@@ -1,5 +1,6 @@
 import type { KeyValueStorage } from "./browserProjectStorage";
 import type { CuttingGrain } from "./browserCuttingConfiguration";
+import type { CutPartProductionOperation } from "./cuttingPlan";
 import { createCompositeDoor15x6 } from "./compositeDoor15x6";
 import type { PanelEdge } from "./compositePanel";
 
@@ -21,6 +22,7 @@ export interface SupplementalCutPart {
     layer: "front-15" | "back-6";
     bandedSides: Array<"top" | "bottom" | "left" | "right">;
   };
+  productionOperations?: CutPartProductionOperation[];
 }
 
 export type SupplementalCutPartsValidation =
@@ -103,6 +105,20 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
     ? `Fita 22 mm após composição: ${input.bandedSides.map(side => sideLabels[side]).join(", ")}`
     : "Fita da composição ainda não definida";
   const [front, back] = result.panel.layers;
+  const sharedOperations: CutPartProductionOperation[] = [
+    {
+      kind: "bonding",
+      status: "specified",
+      description: "Colar as camadas de 15 mm e 6 mm com Tekbond chapa na chapa.",
+    },
+    {
+      kind: "edge-banding",
+      status: input.bandedSides.length > 0 ? "specified" : "pending",
+      description: input.bandedSides.length > 0
+        ? `Aplicar fita 22 mm após composição: ${input.bandedSides.map(side => sideLabels[side]).join(", ")}.`
+        : "Definir os lados que receberão fita 22 mm após a composição.",
+    },
+  ];
   const parts: SupplementalCutPart[] = [
     {
       id: input.frontId,
@@ -116,6 +132,14 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
       edges,
       grain: front.grain,
       sourceReference: input.sourceReference,
+      productionOperations: [
+        ...sharedOperations.map(operation => ({ ...operation })),
+        {
+          kind: "handle-groove",
+          status: "pending",
+          description: "Cava na camada de 15 mm: geometria e posição ainda não definidas.",
+        },
+      ],
       composite: { id: input.compositeId, kind: "door-15-6", layer: "front-15", bandedSides: [...input.bandedSides] },
     },
     {
@@ -130,6 +154,7 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
       edges,
       grain: back.grain,
       sourceReference: input.sourceReference,
+      productionOperations: sharedOperations.map(operation => ({ ...operation })),
       composite: { id: input.compositeId, kind: "door-15-6", layer: "back-6", bandedSides: [...input.bandedSides] },
     },
   ];
@@ -177,6 +202,16 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
         || new Set(composite.bandedSides).size !== composite.bandedSides.length) {
         errors.push(`Peça complementar ${index + 1}: vínculo de composição inválido.`);
       }
+    }
+    if (part.productionOperations !== undefined) {
+      if (!Array.isArray(part.productionOperations) || part.productionOperations.some(operation => {
+        if (!operation || typeof operation !== "object") return true;
+        const item = operation as Record<string, unknown>;
+        return !["bonding", "handle-groove", "edge-banding"].includes(String(item.kind))
+          || !["specified", "pending"].includes(String(item.status))
+          || typeof item.description !== "string"
+          || !item.description.trim();
+      })) errors.push(`Peça complementar ${index + 1}: operação de produção inválida.`);
     }
   }
   const compositeGroups = new Map<string, Array<Record<string, unknown>>>();

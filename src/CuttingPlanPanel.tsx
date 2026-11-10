@@ -4,6 +4,7 @@ import {
   createPreliminaryStripPlan,
   reportedWorkshopSheet,
   type CuttingPlanStrategy,
+  type CutPartProductionOperation,
   type CuttingSettings,
   type SheetTrim,
 } from "./cuttingPlan";
@@ -33,7 +34,11 @@ type TrimSide = keyof SheetTrim;
 type CuttingPanelPart = Pick<
   Part,
   "id" | "code" | "name" | "material" | "thickness" | "length" | "width" | "quantity" | "edges"
-> & { grain?: CuttingGrain; sourceReference?: string };
+> & {
+  grain?: CuttingGrain;
+  sourceReference?: string;
+  productionOperations?: CutPartProductionOperation[];
+};
 
 interface SupplementalPartDraft {
   composition: "single" | "door-15-6";
@@ -94,6 +99,13 @@ function parseTrim(value: string): number | null {
 
 function trimInputValue(value: number | null): string {
   return value === null ? "" : String(value);
+}
+
+function productionOperationSummary(operations: CutPartProductionOperation[] | undefined): string {
+  if (!operations?.length) return "Nenhuma operação adicional registrada";
+  return operations.map(operation =>
+    `${operation.status === "pending" ? "PENDENTE" : "DEFINIDA"}: ${operation.description}`,
+  ).join(" | ");
 }
 
 export function CuttingPlanPanel({
@@ -443,6 +455,7 @@ export function CuttingPlanPanel({
         grain: part.grain ?? grain,
         allowRotation: (part.grain ?? grain) === "none",
         sourceReference: part.sourceReference ?? "Módulo paramétrico da revisão salva",
+        productionOperations: part.productionOperations?.map(operation => ({ ...operation })),
       }));
     const grouped = createGroupedCuttingPlans(
       {
@@ -462,6 +475,7 @@ export function CuttingPlanPanel({
       thicknessMm: part.thickness,
       edges: part.edges,
       sourceReference: part.sourceReference ?? "Módulo paramétrico da revisão salva",
+      productionOperations: part.productionOperations?.map(operation => ({ ...operation })),
     }));
     const artifacts = grouped.groups.map(group => {
       const groupStrategy = preferredStrategies[group.id] ?? preferredStrategy;
@@ -825,11 +839,12 @@ export function CuttingPlanPanel({
             <div className="cutting-report-parts">
               <h3>Peças consideradas · {artifact.materialId} · {artifact.thicknessMm} mm</h3>
               <table>
-                <thead><tr><th>Peça</th><th>Qtd.</th><th>Dimensões</th><th>Material</th><th>Esp.</th><th>Origem</th></tr></thead>
+                <thead><tr><th>Peça</th><th>Qtd.</th><th>Dimensões</th><th>Material</th><th>Esp.</th><th>Origem</th><th>Operações</th></tr></thead>
                 <tbody>{artifact.report.report.parts.map(part => (
                   <tr key={part.id}>
                     <td>{part.id}</td><td>{part.quantity}</td><td>{part.lengthMm} × {part.widthMm} mm</td>
                     <td>{part.materialId}</td><td>{part.thicknessMm} mm</td><td>{part.sourceReference ?? "Não registrada"}</td>
+                    <td>{productionOperationSummary(part.productionOperations)}</td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -854,6 +869,7 @@ export function CuttingPlanPanel({
                   <div><dt>Material</dt><dd>{label.material}</dd></div>
                   <div><dt>Bordas</dt><dd>{label.edges}</dd></div>
                   <div><dt>Origem</dt><dd>{label.sourceReference ?? "Não registrada"}</dd></div>
+                  <div><dt>Operações</dt><dd>{productionOperationSummary(label.productionOperations)}</dd></div>
                 </dl>
                 <small>PRELIMINAR · NÃO LIBERADO{label.rotatedInPlan ? " · GIRADA NO MAPA" : ""}</small>
               </article>

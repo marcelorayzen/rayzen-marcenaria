@@ -29,6 +29,13 @@ export interface RectangularCutPart {
   grain: "length" | "width" | "none" | "pending";
   allowRotation: boolean;
   sourceReference?: string;
+  productionOperations?: CutPartProductionOperation[];
+}
+
+export interface CutPartProductionOperation {
+  kind: "bonding" | "handle-groove" | "edge-banding";
+  status: "specified" | "pending";
+  description: string;
 }
 
 export interface CuttingConfigurationCheck {

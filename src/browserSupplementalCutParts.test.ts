@@ -102,6 +102,12 @@ describe("supplemental cut parts browser storage", () => {
       ["PT-01-6", 6, 1000, 500],
     ]);
     expect(result.parts.every(part => part.quantity === 2 && part.edges.includes("Fita 22 mm"))).toBe(true);
+    expect(result.parts[0].productionOperations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "bonding", status: "specified" }),
+      expect.objectContaining({ kind: "handle-groove", status: "pending" }),
+      expect.objectContaining({ kind: "edge-banding", status: "specified" }),
+    ]));
+    expect(result.parts[1].productionOperations?.some(operation => operation.kind === "handle-groove")).toBe(false);
   });
 
   it("ignores malformed stored JSON instead of promoting it to cutting input", () => {

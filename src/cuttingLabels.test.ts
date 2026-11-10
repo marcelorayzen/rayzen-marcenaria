@@ -10,6 +10,7 @@ const part = {
   thicknessMm: 15,
   edges: "Sem fita",
   sourceReference: "Módulo paramétrico R2",
+  productionOperations: [{ kind: "bonding" as const, status: "specified" as const, description: "Colar camadas." }],
 };
 const stock = { id: "sheet", materialId: part.material, thicknessMm: 15, lengthMm: 2750, widthMm: 1850, grain: "none" as const };
 const settings = { kerfMm: 3, trim: { topMm: 4, rightMm: 4, bottomMm: 4, leftMm: 4 } };
@@ -30,6 +31,7 @@ describe("cutting piece labels", () => {
       instance: 2,
       status: "preliminary-not-released",
       sourceReference: "Módulo paramétrico R2",
+      productionOperations: [{ kind: "bonding", status: "specified", description: "Colar camadas." }],
     });
   });
 
