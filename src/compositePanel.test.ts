@@ -7,7 +7,7 @@ function door(): CompositePanel {
     id: "door", revisionId: "r1", sourceReference: "synthetic-fixture", quantity: 2,
     layers: [
       { id: "front", materialId: "mdf-15", thicknessMm: 15, cutLengthMm: 700, cutWidthMm: 400, grain: "length" },
-      { id: "back", materialId: "mdf-6", thicknessMm: 6, cutLengthMm: 680, cutWidthMm: 400, grain: "pending" },
+      { id: "back", materialId: "mdf-6", thicknessMm: 6, cutLengthMm: 700, cutWidthMm: 400, grain: "pending" },
     ],
     edges: [{ side: "left", bandWidthMm: 22, bandThicknessMm: null }],
     operations: [{ id: "groove", kind: "handle-groove", layerIds: ["front"], specificationReference: null }],
@@ -23,7 +23,7 @@ describe("composite panel cut blanks", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.nominalThicknessMm).toBe(21);
-    expect(result.blanks.map(p => [p.thicknessMm, p.cutLengthMm])).toEqual([[15, 700], [6, 680], [15, 700], [6, 680]]);
+    expect(result.blanks.map(p => [p.thicknessMm, p.cutLengthMm])).toEqual([[15, 700], [6, 700], [15, 700], [6, 700]]);
     expect(new Set(result.blanks.map(p => p.id)).size).toBe(4);
     expect(result.blanks.every(p => p.revisionId === "r1")).toBe(true);
     expect(result.pending).toHaveLength(3);

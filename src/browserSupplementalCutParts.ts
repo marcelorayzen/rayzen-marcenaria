@@ -1,5 +1,7 @@
 import type { KeyValueStorage } from "./browserProjectStorage";
 import type { CuttingGrain } from "./browserCuttingConfiguration";
+import { createCompositeDoor15x6 } from "./compositeDoor15x6";
+import type { PanelEdge } from "./compositePanel";
 
 export interface SupplementalCutPart {
   id: string;
@@ -13,11 +15,34 @@ export interface SupplementalCutPart {
   edges: string;
   grain: CuttingGrain;
   sourceReference: string;
+  composite?: {
+    id: string;
+    kind: "door-15-6";
+    layer: "front-15" | "back-6";
+    bandedSides: Array<"top" | "bottom" | "left" | "right">;
+  };
 }
 
 export type SupplementalCutPartsValidation =
   | { ok: true; parts: SupplementalCutPart[] }
   | { ok: false; errors: string[] };
+
+export interface SupplementalDoor15x6Input {
+  compositeId: string;
+  frontId: string;
+  backId: string;
+  revisionId: string;
+  sourceReference: string;
+  code: string;
+  name: string;
+  quantity: number;
+  lengthMm: number;
+  widthMm: number;
+  frontMaterialId: string;
+  backMaterialId: string;
+  grain: CuttingGrain;
+  bandedSides: PanelEdge["side"][];
+}
 
 const grains: CuttingGrain[] = ["length", "width", "none", "pending"];
 const fieldLabels = {
@@ -45,6 +70,70 @@ export function manualSupplementalSource(revision: number): string {
 export function calculatedSupplementalSource(code: string, revision: number): string {
   if (!code.trim()) throw new Error("Código da peça calculada é obrigatório para registrar a origem.");
   return `Derivada da peça calculada ${code.trim()} na revisão ${revisionLabel(revision)}`;
+}
+
+const sideLabels: Record<PanelEdge["side"], string> = {
+  top: "Superior",
+  bottom: "Inferior",
+  left: "Esquerda",
+  right: "Direita",
+};
+
+export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): SupplementalCutPartsValidation {
+  if (!input.code.trim() || !input.name.trim()) {
+    return { ok: false, errors: ["Informe o código e o nome da porta composta."] };
+  }
+  if (!input.frontId.trim() || !input.backId.trim() || input.frontId === input.backId) {
+    return { ok: false, errors: ["As duas camadas precisam de IDs técnicos distintos."] };
+  }
+  const result = createCompositeDoor15x6({
+    id: input.compositeId,
+    revisionId: input.revisionId,
+    sourceReference: input.sourceReference,
+    quantity: input.quantity,
+    lengthMm: input.lengthMm,
+    widthMm: input.widthMm,
+    frontMaterialId: input.frontMaterialId,
+    backMaterialId: input.backMaterialId,
+    grain: input.grain,
+    bandedSides: input.bandedSides,
+  });
+  if (!result.ok) return result;
+  const edges = input.bandedSides.length > 0
+    ? `Fita 22 mm após composição: ${input.bandedSides.map(side => sideLabels[side]).join(", ")}`
+    : "Fita da composição ainda não definida";
+  const [front, back] = result.panel.layers;
+  const parts: SupplementalCutPart[] = [
+    {
+      id: input.frontId,
+      code: `${input.code.trim()}-15`,
+      name: `${input.name.trim()} · frente 15 mm`,
+      material: front.materialId,
+      thickness: front.thicknessMm,
+      length: front.cutLengthMm,
+      width: front.cutWidthMm,
+      quantity: result.panel.quantity,
+      edges,
+      grain: front.grain,
+      sourceReference: input.sourceReference,
+      composite: { id: input.compositeId, kind: "door-15-6", layer: "front-15", bandedSides: [...input.bandedSides] },
+    },
+    {
+      id: input.backId,
+      code: `${input.code.trim()}-6`,
+      name: `${input.name.trim()} · costas 6 mm`,
+      material: back.materialId,
+      thickness: back.thicknessMm,
+      length: back.cutLengthMm,
+      width: back.cutWidthMm,
+      quantity: result.panel.quantity,
+      edges,
+      grain: back.grain,
+      sourceReference: input.sourceReference,
+      composite: { id: input.compositeId, kind: "door-15-6", layer: "back-6", bandedSides: [...input.bandedSides] },
+    },
+  ];
+  return validateSupplementalCutParts(parts);
 }
 
 export function validateSupplementalCutParts(value: unknown): SupplementalCutPartsValidation {
@@ -76,6 +165,48 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
     if (!grains.includes(part.grain as CuttingGrain)) {
       errors.push(`Peça complementar ${index + 1}: veio inválido.`);
     }
+    if (part.composite !== undefined) {
+      const composite = part.composite as Record<string, unknown> | null;
+      if (!composite
+        || typeof composite.id !== "string"
+        || !composite.id.trim()
+        || composite.kind !== "door-15-6"
+        || !["front-15", "back-6"].includes(String(composite.layer))
+        || !Array.isArray(composite.bandedSides)
+        || composite.bandedSides.some(side => !["top", "bottom", "left", "right"].includes(String(side)))
+        || new Set(composite.bandedSides).size !== composite.bandedSides.length) {
+        errors.push(`Peça complementar ${index + 1}: vínculo de composição inválido.`);
+      }
+    }
+  }
+  const compositeGroups = new Map<string, Array<Record<string, unknown>>>();
+  for (const candidate of value) {
+    if (!candidate || typeof candidate !== "object") continue;
+    const part = candidate as Record<string, unknown>;
+    const composite = part.composite as Record<string, unknown> | undefined;
+    if (!composite || typeof composite.id !== "string") continue;
+    compositeGroups.set(composite.id, [...(compositeGroups.get(composite.id) ?? []), part]);
+  }
+  for (const [compositeId, group] of compositeGroups) {
+    const byLayer = new Map(group.map(part => [
+      (part.composite as Record<string, unknown>).layer,
+      part,
+    ]));
+    const front = byLayer.get("front-15");
+    const back = byLayer.get("back-6");
+    if (group.length !== 2 || !front || !back) {
+      errors.push(`Composição ${compositeId}: informe exatamente as camadas frontal 15 mm e traseira 6 mm.`);
+      continue;
+    }
+    if (front.thickness !== 15 || back.thickness !== 6) {
+      errors.push(`Composição ${compositeId}: espessuras devem ser 15 mm e 6 mm.`);
+    }
+    if (["length", "width", "quantity", "grain"].some(field => front[field] !== back[field])) {
+      errors.push(`Composição ${compositeId}: as duas camadas devem ter medidas, quantidade e veio iguais.`);
+    }
+    const frontSides = JSON.stringify((front.composite as Record<string, unknown>).bandedSides);
+    const backSides = JSON.stringify((back.composite as Record<string, unknown>).bandedSides);
+    if (frontSides !== backSides) errors.push(`Composição ${compositeId}: as duas camadas devem compartilhar as bordas da composição.`);
   }
   if (errors.length > 0) return { ok: false, errors };
   return { ok: true, parts: JSON.parse(JSON.stringify(value)) as SupplementalCutPart[] };

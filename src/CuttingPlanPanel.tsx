@@ -22,9 +22,11 @@ import { createGroupedCuttingPlanPackage } from "./groupedCuttingPlanExport";
 import {
   BrowserSupplementalCutParts,
   calculatedSupplementalSource,
+  createSupplementalDoor15x6,
   manualSupplementalSource,
   type SupplementalCutPart,
 } from "./browserSupplementalCutParts";
+import type { PanelEdge } from "./compositePanel";
 
 type TrimSide = keyof SheetTrim;
 
@@ -34,6 +36,7 @@ type CuttingPanelPart = Pick<
 > & { grain?: CuttingGrain; sourceReference?: string };
 
 interface SupplementalPartDraft {
+  composition: "single" | "door-15-6";
   code: string;
   name: string;
   material: string;
@@ -44,9 +47,12 @@ interface SupplementalPartDraft {
   edges: string;
   grain: CuttingGrain;
   sourceReference: string;
+  backMaterial: string;
+  bandedSides: PanelEdge["side"][];
 }
 
 const emptySupplementalDraft: SupplementalPartDraft = {
+  composition: "single",
   code: "",
   name: "",
   material: "",
@@ -57,6 +63,15 @@ const emptySupplementalDraft: SupplementalPartDraft = {
   edges: "",
   grain: "pending",
   sourceReference: "",
+  backMaterial: "",
+  bandedSides: [],
+};
+
+const edgeSideLabels: Record<PanelEdge["side"], string> = {
+  top: "Superior",
+  bottom: "Inferior",
+  left: "Esquerda",
+  right: "Direita",
 };
 
 const trimLabels: Array<[TrimSide, string]> = [
@@ -213,6 +228,15 @@ export function CuttingPlanPanel({
     setSupplementalDraft(current => ({ ...current, [field]: value }));
   }
 
+  function toggleBandedSide(side: PanelEdge["side"]) {
+    setSupplementalDraft(current => ({
+      ...current,
+      bandedSides: current.bandedSides.includes(side)
+        ? current.bandedSides.filter(candidate => candidate !== side)
+        : [...current.bandedSides, side],
+    }));
+  }
+
   function useCalculatedPartAsBase(partId: string) {
     setSupplementalBasePartId(partId);
     const part = parts.find(candidate => candidate.id === partId);
@@ -221,6 +245,7 @@ export function CuttingPlanPanel({
       return;
     }
     setSupplementalDraft({
+      composition: "single",
       code: part.code,
       name: part.name,
       material: part.material,
@@ -231,12 +256,18 @@ export function CuttingPlanPanel({
       edges: part.edges,
       grain: part.grain ?? grain,
       sourceReference: calculatedSupplementalSource(part.code, revision),
+      backMaterial: "",
+      bandedSides: [],
     });
     setSupplementalError(null);
     setSupplementalMessage("Dados copiados. Ajuste somente o que muda e salve como peça adicional.");
   }
 
   function saveSupplementalPart() {
+    if (supplementalDraft.composition === "door-15-6") {
+      saveCompositeDoor15x6();
+      return;
+    }
     const part: SupplementalCutPart = {
       id: editingSupplementalId ?? `supplemental-${crypto.randomUUID()}`,
       code: supplementalDraft.code.trim(),
@@ -268,9 +299,90 @@ export function CuttingPlanPanel({
     }
   }
 
+  function saveCompositeDoor15x6() {
+    if (!supplementalDraft.code.trim() || !supplementalDraft.name.trim()) {
+      setSupplementalError("Informe o código e o nome da porta composta.");
+      setSupplementalMessage(null);
+      return;
+    }
+    const editingCompositeId = editingSupplementalId?.startsWith("composite:")
+      ? editingSupplementalId.slice("composite:".length)
+      : null;
+    const compositeId = editingCompositeId ?? `door-15-6-${crypto.randomUUID()}`;
+    const sourceReference = supplementalDraft.sourceReference.trim() || manualSupplementalSource(revision);
+    const currentCompositeParts = supplementalParts.filter(part => part.composite?.id === compositeId);
+    const idByLayer = new Map(currentCompositeParts.map(part => [part.composite?.layer, part.id]));
+    const result = createSupplementalDoor15x6({
+      compositeId,
+      frontId: idByLayer.get("front-15") ?? `supplemental-${crypto.randomUUID()}`,
+      backId: idByLayer.get("back-6") ?? `supplemental-${crypto.randomUUID()}`,
+      revisionId: `R${String(revision).padStart(2, "0")}`,
+      sourceReference,
+      code: supplementalDraft.code,
+      name: supplementalDraft.name,
+      quantity: Number(supplementalDraft.quantity),
+      lengthMm: Number(supplementalDraft.length),
+      widthMm: Number(supplementalDraft.width),
+      frontMaterialId: supplementalDraft.material.trim(),
+      backMaterialId: supplementalDraft.backMaterial.trim(),
+      grain: supplementalDraft.grain,
+      bandedSides: supplementalDraft.bandedSides,
+    });
+    if (!result.ok) {
+      setSupplementalError(result.errors.join(" "));
+      setSupplementalMessage(null);
+      return;
+    }
+    try {
+      const withoutCurrent = supplementalParts.filter(part => part.composite?.id !== compositeId);
+      const next = supplementalStore.save([...withoutCurrent, ...result.parts]);
+      setSupplementalParts(next);
+      setSupplementalDraft(emptySupplementalDraft);
+      setSupplementalError(null);
+      setSupplementalMessage(editingCompositeId
+        ? "Composição 15+6 atualizada. As duas camadas mantiveram seus IDs técnicos."
+        : "Porta 15+6 criada: duas camadas com as mesmas medidas foram enviadas ao plano de corte.");
+      setEditingSupplementalId(null);
+      setSupplementalBasePartId("");
+    } catch (error) {
+      setSupplementalError(error instanceof Error ? error.message : "Não foi possível salvar a composição 15+6.");
+      setSupplementalMessage(null);
+    }
+  }
+
   function editSupplementalPart(part: SupplementalCutPart) {
+    if (part.composite?.kind === "door-15-6") {
+      const group = supplementalParts.filter(candidate => candidate.composite?.id === part.composite?.id);
+      const front = group.find(candidate => candidate.composite?.layer === "front-15");
+      const back = group.find(candidate => candidate.composite?.layer === "back-6");
+      if (!front || !back) {
+        setSupplementalError("A composição 15+6 está incompleta e não pode ser editada.");
+        return;
+      }
+      setEditingSupplementalId(`composite:${part.composite.id}`);
+      setSupplementalDraft({
+        composition: "door-15-6",
+        code: front.code.replace(/-15$/, ""),
+        name: front.name.replace(/ · frente 15 mm$/, ""),
+        material: front.material,
+        thickness: "21",
+        length: String(front.length),
+        width: String(front.width),
+        quantity: String(front.quantity),
+        edges: front.edges,
+        grain: front.grain,
+        sourceReference: front.sourceReference,
+        backMaterial: back.material,
+        bandedSides: [...part.composite.bandedSides],
+      });
+      setSupplementalError(null);
+      setSupplementalMessage("Editando a composição inteira. Salvar atualizará juntas as camadas de 15 mm e 6 mm.");
+      setSupplementalBasePartId("");
+      return;
+    }
     setEditingSupplementalId(part.id);
     setSupplementalDraft({
+      composition: "single",
       code: part.code,
       name: part.name,
       material: part.material,
@@ -281,6 +393,8 @@ export function CuttingPlanPanel({
       edges: part.edges,
       grain: part.grain,
       sourceReference: part.sourceReference,
+      backMaterial: "",
+      bandedSides: [],
     });
     setSupplementalError(null);
     setSupplementalMessage("Editando a peça selecionada. Salve ou cancele a alteração.");
@@ -296,7 +410,11 @@ export function CuttingPlanPanel({
   }
 
   function removeSupplementalPart(id: string) {
-    const next = supplementalStore.save(supplementalParts.filter(part => part.id !== id));
+    const selected = supplementalParts.find(part => part.id === id);
+    const nextParts = selected?.composite
+      ? supplementalParts.filter(part => part.composite?.id !== selected.composite?.id)
+      : supplementalParts.filter(part => part.id !== id);
+    const next = supplementalStore.save(nextParts);
     setSupplementalParts(next);
     setSupplementalError(null);
     setSupplementalMessage("Peça removida desta revisão local.");
@@ -477,10 +595,18 @@ export function CuttingPlanPanel({
           </select>
         </label>
         <div className="supplemental-parts-form">
+          <label className="supplemental-wide">Tipo de peça<select value={supplementalDraft.composition} onChange={event => updateSupplementalDraft("composition", event.target.value as SupplementalPartDraft["composition"])}>
+            <option value="single">Peça retangular simples</option>
+            <option value="door-15-6">Porta composta 15 + 6 mm · medidas iguais</option>
+          </select></label>
           <label>Código<input value={supplementalDraft.code} onChange={event => updateSupplementalDraft("code", event.target.value)} /></label>
           <label>Nome<input value={supplementalDraft.name} onChange={event => updateSupplementalDraft("name", event.target.value)} /></label>
-          <label>Material<input value={supplementalDraft.material} onChange={event => updateSupplementalDraft("material", event.target.value)} /></label>
-          <label>Espessura<span><input type="number" min="0.1" step="0.1" value={supplementalDraft.thickness} onChange={event => updateSupplementalDraft("thickness", event.target.value)} /> mm</span></label>
+          <label>{supplementalDraft.composition === "door-15-6" ? "Material frente 15 mm" : "Material"}<input value={supplementalDraft.material} onChange={event => updateSupplementalDraft("material", event.target.value)} /></label>
+          {supplementalDraft.composition === "door-15-6" ? (
+            <label>Material costas 6 mm<input value={supplementalDraft.backMaterial} onChange={event => updateSupplementalDraft("backMaterial", event.target.value)} /></label>
+          ) : (
+            <label>Espessura<span><input type="number" min="0.1" step="0.1" value={supplementalDraft.thickness} onChange={event => updateSupplementalDraft("thickness", event.target.value)} /> mm</span></label>
+          )}
           <label>Comprimento<span><input type="number" min="1" step="1" value={supplementalDraft.length} onChange={event => updateSupplementalDraft("length", event.target.value)} /> mm</span></label>
           <label>Largura<span><input type="number" min="1" step="1" value={supplementalDraft.width} onChange={event => updateSupplementalDraft("width", event.target.value)} /> mm</span></label>
           <label>Quantidade<input type="number" min="1" step="1" value={supplementalDraft.quantity} onChange={event => updateSupplementalDraft("quantity", event.target.value)} /></label>
@@ -490,9 +616,18 @@ export function CuttingPlanPanel({
             <option value="length">No comprimento</option>
             <option value="width">Na largura</option>
           </select></label>
-          <label className="supplemental-wide">Bordas / fita<input value={supplementalDraft.edges} onChange={event => updateSupplementalDraft("edges", event.target.value)} placeholder="Descreva somente o que foi definido" /></label>
+          {supplementalDraft.composition === "door-15-6" ? (
+            <fieldset className="supplemental-edge-sides">
+              <legend>Lados com fita 22 mm após composição</legend>
+              {(Object.keys(edgeSideLabels) as PanelEdge["side"][]).map(side => (
+                <label key={side}><input type="checkbox" checked={supplementalDraft.bandedSides.includes(side)} onChange={() => toggleBandedSide(side)} />{edgeSideLabels[side]}</label>
+              ))}
+            </fieldset>
+          ) : (
+            <label className="supplemental-wide">Bordas / fita<input value={supplementalDraft.edges} onChange={event => updateSupplementalDraft("edges", event.target.value)} placeholder="Descreva somente o que foi definido" /></label>
+          )}
           <label className="supplemental-wide">Origem da informação · opcional<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder={`Se vazio: entrada manual da revisão R${String(revision).padStart(2, "0")}`} /></label>
-          <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : "Adicionar peça"}</button>
+          <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : supplementalDraft.composition === "door-15-6" ? "Gerar porta 15+6" : "Adicionar peça"}</button>
           {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
         </div>
         {supplementalError ? <p className="supplemental-parts-error" role="alert">{supplementalError}</p> : null}
@@ -504,11 +639,11 @@ export function CuttingPlanPanel({
                 <div>
                   <strong>{part.code} · {part.name}</strong>
                   <span>{part.quantity} × {part.length} × {part.width} mm · {part.material} · {part.thickness} mm</span>
-                  <small>{part.edges} · origem: {part.sourceReference}</small>
+                  <small>{part.edges} · origem: {part.sourceReference}{part.composite ? " · composição 15+6" : ""}</small>
                 </div>
                 <div className="supplemental-part-actions">
                   <button type="button" onClick={() => editSupplementalPart(part)}>Editar</button>
-                  <button type="button" onClick={() => removeSupplementalPart(part.id)}>Remover</button>
+                  <button type="button" onClick={() => removeSupplementalPart(part.id)}>{part.composite ? "Remover composição" : "Remover"}</button>
                 </div>
               </article>
             ))}

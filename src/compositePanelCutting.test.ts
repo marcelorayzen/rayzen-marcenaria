@@ -11,7 +11,7 @@ function compositeDoor(): CompositePanel {
     quantity: 2,
     layers: [
       { id: "front-15", materialId: "mdf-white-15", thicknessMm: 15, cutLengthMm: 700, cutWidthMm: 400, grain: "length" },
-      { id: "back-6", materialId: "mdf-white-6", thicknessMm: 6, cutLengthMm: 680, cutWidthMm: 400, grain: "length" },
+      { id: "back-6", materialId: "mdf-white-6", thicknessMm: 6, cutLengthMm: 700, cutWidthMm: 400, grain: "length" },
     ],
     edges: [{ side: "left", bandWidthMm: 22, bandThicknessMm: 0.45 }],
     operations: [
@@ -48,7 +48,7 @@ describe("composite panel to cutting parts", () => {
   it("does not turn an unspecified groove into cutting geometry", () => {
     const result = createCompositePanelCutParts(compositeDoor());
     expect(result.ok && result.parts.every(part =>
-      part.lengthMm === 700 || part.lengthMm === 680,
+      part.lengthMm === 700,
     )).toBe(true);
     expect(result.ok && result.pending).toContain("Detalhar operação groove.");
   });

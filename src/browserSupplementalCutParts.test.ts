@@ -3,6 +3,7 @@ import type { KeyValueStorage } from "./browserProjectStorage";
 import {
   BrowserSupplementalCutParts,
   calculatedSupplementalSource,
+  createSupplementalDoor15x6,
   manualSupplementalSource,
   validateSupplementalCutParts,
   type SupplementalCutPart,
@@ -54,6 +55,53 @@ describe("supplemental cut parts browser storage", () => {
     expect(result.errors).toContain("Peça complementar 1: informe a origem.");
     expect(result.errors).toContain("Peça complementar 1: a espessura deve ser positiva.");
     expect(result.errors).toContain("Peça complementar 2 precisa de ID único.");
+  });
+
+  it("keeps a 15 + 6 composition paired with equal dimensions", () => {
+    const front: SupplementalCutPart = {
+      ...layer,
+      id: "door-front",
+      thickness: 15,
+      composite: { id: "door-composite", kind: "door-15-6", layer: "front-15", bandedSides: ["top", "left"] },
+    };
+    const back: SupplementalCutPart = {
+      ...layer,
+      id: "door-back",
+      code: "PT-01-6",
+      thickness: 6,
+      composite: { id: "door-composite", kind: "door-15-6", layer: "back-6", bandedSides: ["top", "left"] },
+    };
+    expect(validateSupplementalCutParts([front, back]).ok).toBe(true);
+    const invalid = validateSupplementalCutParts([front, { ...back, width: 399 }]);
+    expect(invalid.ok).toBe(false);
+    if (invalid.ok) return;
+    expect(invalid.errors).toContain("Composição door-composite: as duas camadas devem ter medidas, quantidade e veio iguais.");
+  });
+
+  it("generates both equal-size cutting layers from one door input", () => {
+    const result = createSupplementalDoor15x6({
+      compositeId: "door-composite",
+      frontId: "front-id",
+      backId: "back-id",
+      revisionId: "R03",
+      sourceReference: "Projeto da porta PT-01",
+      code: "PT-01",
+      name: "Porta da pia",
+      quantity: 2,
+      lengthMm: 1000,
+      widthMm: 500,
+      frontMaterialId: "MDF branco 15",
+      backMaterialId: "MDF branco 6",
+      grain: "none",
+      bandedSides: ["top", "left", "right"],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.parts.map(part => [part.code, part.thickness, part.length, part.width])).toEqual([
+      ["PT-01-15", 15, 1000, 500],
+      ["PT-01-6", 6, 1000, 500],
+    ]);
+    expect(result.parts.every(part => part.quantity === 2 && part.edges.includes("Fita 22 mm"))).toBe(true);
   });
 
   it("ignores malformed stored JSON instead of promoting it to cutting input", () => {
