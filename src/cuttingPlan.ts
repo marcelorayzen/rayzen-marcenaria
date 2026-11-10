@@ -29,6 +29,7 @@ export interface RectangularCutPart {
   grain: "length" | "width" | "none" | "pending";
   allowRotation: boolean;
   sourceReference?: string;
+  catalogItemId?: string;
   productionOperations?: CutPartProductionOperation[];
 }
 

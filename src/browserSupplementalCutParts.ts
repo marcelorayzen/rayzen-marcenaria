@@ -19,6 +19,7 @@ export interface SupplementalCutPart {
   edges: string;
   grain: CuttingGrain;
   sourceReference: string;
+  catalogItemId?: string;
   composite?: {
     id: string;
     kind: "door-15-6" | "thickening-15-15";
@@ -48,6 +49,7 @@ export interface SupplementalDoor15x6Input {
   backMaterialId: string;
   grain: CuttingGrain;
   bandedSides: PanelEdge["side"][];
+  catalogItemId?: string;
   handleGrooveProfile?: HandleGrooveProfile;
   handleGrooveNotes?: string;
 }
@@ -67,6 +69,7 @@ export interface SupplementalThickening15x15Input {
   reinforcementMaterialId: string;
   grain: CuttingGrain;
   bandedSides: PanelEdge["side"][];
+  catalogItemId?: string;
 }
 
 const grains: CuttingGrain[] = ["length", "width", "none", "pending"];
@@ -156,6 +159,7 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
       edges,
       grain: front.grain,
       sourceReference: input.sourceReference,
+      catalogItemId: input.catalogItemId?.trim() || undefined,
       productionOperations: [
         ...sharedOperations.map(operation => ({ ...operation })),
         {
@@ -178,6 +182,7 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
       edges,
       grain: back.grain,
       sourceReference: input.sourceReference,
+      catalogItemId: input.catalogItemId?.trim() || undefined,
       productionOperations: sharedOperations.map(operation => ({ ...operation })),
       composite: { id: input.compositeId, kind: "door-15-6", layer: "back-6", bandedSides: [...input.bandedSides], handleGrooveNotes: grooveNotes || undefined },
     },
@@ -225,6 +230,7 @@ export function createSupplementalThickening15x15(input: SupplementalThickening1
       id: input.baseId, code: `${input.code.trim()}-15A`, name: `${input.name.trim()} · base 15 mm`,
       material: base.materialId, thickness: 15, length: base.cutLengthMm, width: base.cutWidthMm,
       quantity: result.panel.quantity, edges, grain: base.grain, sourceReference: input.sourceReference,
+      catalogItemId: input.catalogItemId?.trim() || undefined,
       productionOperations: [operation],
       composite: { id: input.compositeId, kind: "thickening-15-15", layer: "base-15", bandedSides: [...input.bandedSides] },
     },
@@ -232,6 +238,7 @@ export function createSupplementalThickening15x15(input: SupplementalThickening1
       id: input.reinforcementId, code: `${input.code.trim()}-15B`, name: `${input.name.trim()} · reforço 15 mm`,
       material: reinforcement.materialId, thickness: 15, length: reinforcement.cutLengthMm, width: reinforcement.cutWidthMm,
       quantity: result.panel.quantity, edges, grain: reinforcement.grain, sourceReference: input.sourceReference,
+      catalogItemId: input.catalogItemId?.trim() || undefined,
       productionOperations: [{ ...operation }],
       composite: { id: input.compositeId, kind: "thickening-15-15", layer: "reinforcement-15", bandedSides: [...input.bandedSides] },
     },
@@ -255,6 +262,10 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
       if (typeof part[field] !== "string" || !part[field].trim()) {
         errors.push(`Peça complementar ${index + 1}: informe ${fieldLabels[field]}.`);
       }
+    }
+    if (part.catalogItemId !== undefined
+      && (typeof part.catalogItemId !== "string" || !part.catalogItemId.trim() || part.catalogItemId.length > 200)) {
+      errors.push(`Peça complementar ${index + 1}: ID do catálogo inválido.`);
     }
     for (const field of ["thickness", "length", "width"] as const) {
       if (typeof part[field] !== "number" || !Number.isFinite(part[field]) || part[field] <= 0) {

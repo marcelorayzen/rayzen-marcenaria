@@ -9,6 +9,7 @@ export interface CuttingLabelPart {
   thicknessMm: number;
   edges: string;
   sourceReference?: string;
+  catalogItemId?: string;
   productionOperations?: CutPartProductionOperation[];
 }
 
@@ -28,6 +29,7 @@ export interface CuttingPieceLabel {
   material: string;
   edges: string;
   sourceReference?: string;
+  catalogItemId?: string;
   productionOperations?: CutPartProductionOperation[];
   rotatedInPlan: boolean;
   status: "preliminary-not-released";
@@ -70,6 +72,7 @@ export function createCuttingPieceLabels(
         material: part.material,
         edges: part.edges,
         sourceReference: part.sourceReference,
+        catalogItemId: part.catalogItemId,
         productionOperations: part.productionOperations?.map(operation => ({ ...operation })),
         rotatedInPlan: placement.rotated,
         status: "preliminary-not-released",

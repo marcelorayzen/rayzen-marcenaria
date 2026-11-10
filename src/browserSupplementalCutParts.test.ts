@@ -102,6 +102,7 @@ describe("supplemental cut parts browser storage", () => {
       backMaterialId: "MDF branco 6",
       grain: "none",
       bandedSides: ["top", "left", "right"],
+      catalogItemId: "door-standard",
       handleGrooveProfile: "j-hidden",
       handleGrooveNotes: "recuo 20 mm; inicio a 80 mm da lateral direita",
     });
@@ -112,6 +113,7 @@ describe("supplemental cut parts browser storage", () => {
       ["PT-01-6", 6, 1000, 500],
     ]);
     expect(result.parts.every(part => part.quantity === 2 && part.edges.includes("Fita 22 mm"))).toBe(true);
+    expect(result.parts.every(part => part.catalogItemId === "door-standard")).toBe(true);
     expect(result.parts[0].productionOperations).toEqual(expect.arrayContaining([
       expect.objectContaining({ kind: "bonding", status: "specified" }),
       expect.objectContaining({ kind: "handle-groove", status: "specified" }),

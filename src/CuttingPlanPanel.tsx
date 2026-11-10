@@ -39,6 +39,7 @@ type CuttingPanelPart = Pick<
 > & {
   grain?: CuttingGrain;
   sourceReference?: string;
+  catalogItemId?: string;
   productionOperations?: CutPartProductionOperation[];
 };
 
@@ -54,6 +55,7 @@ interface SupplementalPartDraft {
   edges: string;
   grain: CuttingGrain;
   sourceReference: string;
+  catalogItemId: string;
   backMaterial: string;
   bandedSides: PanelEdge["side"][];
   handleGrooveProfile?: HandleGrooveProfile;
@@ -72,6 +74,7 @@ const emptySupplementalDraft: SupplementalPartDraft = {
   edges: "",
   grain: "pending",
   sourceReference: "",
+  catalogItemId: "",
   backMaterial: "",
   bandedSides: [],
   handleGrooveProfile: "pending",
@@ -282,6 +285,7 @@ export function CuttingPlanPanel({
       edges: part.edges,
       grain: part.grain ?? grain,
       sourceReference: calculatedSupplementalSource(part.code, revision),
+      catalogItemId: "",
       backMaterial: "",
       bandedSides: [],
     });
@@ -310,6 +314,7 @@ export function CuttingPlanPanel({
       edges: supplementalDraft.edges.trim(),
       grain: supplementalDraft.grain,
       sourceReference: supplementalDraft.sourceReference.trim() || manualSupplementalSource(revision),
+      catalogItemId: supplementalDraft.catalogItemId.trim() || undefined,
     };
     try {
       const nextParts = editingSupplementalId
@@ -357,6 +362,7 @@ export function CuttingPlanPanel({
       backMaterialId: supplementalDraft.backMaterial.trim(),
       grain: supplementalDraft.grain,
       bandedSides: supplementalDraft.bandedSides,
+      catalogItemId: supplementalDraft.catalogItemId.trim() || undefined,
       handleGrooveProfile: supplementalDraft.handleGrooveProfile,
       handleGrooveNotes: supplementalDraft.handleGrooveNotes,
     });
@@ -409,6 +415,7 @@ export function CuttingPlanPanel({
       reinforcementMaterialId: supplementalDraft.backMaterial.trim(),
       grain: supplementalDraft.grain,
       bandedSides: supplementalDraft.bandedSides,
+      catalogItemId: supplementalDraft.catalogItemId.trim() || undefined,
     });
     if (!result.ok) {
       setSupplementalError(result.errors.join(" "));
@@ -456,6 +463,7 @@ export function CuttingPlanPanel({
         edges: front.edges,
         grain: front.grain,
         sourceReference: front.sourceReference,
+        catalogItemId: front.catalogItemId ?? "",
         backMaterial: back.material,
         bandedSides: [...part.composite.bandedSides],
         handleGrooveProfile: grooveProfileFromOperations(front.productionOperations),
@@ -487,6 +495,7 @@ export function CuttingPlanPanel({
         edges: base.edges,
         grain: base.grain,
         sourceReference: base.sourceReference,
+        catalogItemId: base.catalogItemId ?? "",
         backMaterial: reinforcement.material,
         bandedSides: [...part.composite.bandedSides],
       });
@@ -508,6 +517,7 @@ export function CuttingPlanPanel({
       edges: part.edges,
       grain: part.grain,
       sourceReference: part.sourceReference,
+      catalogItemId: part.catalogItemId ?? "",
       backMaterial: "",
       bandedSides: [],
     });
@@ -558,6 +568,7 @@ export function CuttingPlanPanel({
         grain: part.grain ?? grain,
         allowRotation: (part.grain ?? grain) === "none",
         sourceReference: part.sourceReference ?? "Módulo paramétrico da revisão salva",
+        catalogItemId: part.catalogItemId,
         productionOperations: part.productionOperations?.map(operation => ({ ...operation })),
       }));
     const grouped = createGroupedCuttingPlans(
@@ -578,6 +589,7 @@ export function CuttingPlanPanel({
       thicknessMm: part.thickness,
       edges: part.edges,
       sourceReference: part.sourceReference ?? "Módulo paramétrico da revisão salva",
+      catalogItemId: part.catalogItemId,
       productionOperations: part.productionOperations?.map(operation => ({ ...operation })),
     }));
     const artifacts = grouped.groups.map(group => {
@@ -754,6 +766,7 @@ export function CuttingPlanPanel({
             <label className="supplemental-wide">Detalhes da cava (medidas, posição, folga)<textarea value={supplementalDraft.handleGrooveNotes ?? ""} onChange={event => updateSupplementalDraft("handleGrooveNotes", event.target.value)} maxLength={1000} placeholder="Ex.: recuo 20 mm, início a 80 mm da lateral direita" /></label>
           </>) : null}
           <label className="supplemental-wide">Origem da informação · opcional<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder={`Se vazio: entrada manual da revisão R${String(revision).padStart(2, "0")}`} /></label>
+          <label className="supplemental-wide">ID do item do catálogo · opcional<input value={supplementalDraft.catalogItemId} onChange={event => updateSupplementalDraft("catalogItemId", event.target.value)} placeholder="Vincule ao item cadastrado no catálogo do projeto" /></label>
           <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : supplementalDraft.composition === "door-15-6" ? "Gerar porta 15+6" : supplementalDraft.composition === "thickening-15-15" ? "Gerar engrossamento 15+15" : "Adicionar peça"}</button>
           {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
         </div>
@@ -766,7 +779,7 @@ export function CuttingPlanPanel({
                 <div>
                   <strong>{part.code} · {part.name}</strong>
                   <span>{part.quantity} × {part.length} × {part.width} mm · {part.material} · {part.thickness} mm</span>
-                  <small>{part.edges} · origem: {part.sourceReference}{part.composite ? part.composite.kind === "door-15-6" ? " · composição 15+6" : " · engrossamento 15+15" : ""}</small>
+                  <small>{part.edges} · origem: {part.sourceReference}{part.catalogItemId ? ` · catálogo: ${part.catalogItemId}` : ""}{part.composite ? part.composite.kind === "door-15-6" ? " · composição 15+6" : " · engrossamento 15+15" : ""}</small>
                 </div>
                 <div className="supplemental-part-actions">
                   <button type="button" onClick={() => editSupplementalPart(part)}>Editar</button>
