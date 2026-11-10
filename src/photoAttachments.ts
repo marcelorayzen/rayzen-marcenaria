@@ -27,7 +27,7 @@ export function createPhotoAttachment(input: PhotoAttachment): PhotoAttachmentVa
   if (!input.fileName.trim()) errors.push("Informe o nome do arquivo da foto.");
   if (!(photoMimeTypes as readonly string[]).includes(input.mimeType)) errors.push("Tipo de foto nao suportado.");
   if (!Number.isSafeInteger(input.byteSize) || input.byteSize <= 0 || input.byteSize > maxPhotoBytes) errors.push("A foto deve ter entre 1 byte e 10 MB.");
-  if (!input.dataUrl.startsWith(`${input.mimeType};base64,`)) errors.push("O conteudo da foto nao esta em base64 valido para o tipo informado.");
+  if (!input.dataUrl.startsWith(`data:${input.mimeType};base64,`)) errors.push("O conteudo da foto nao esta em base64 valido para o tipo informado.");
   if (input.note.length > 1000) errors.push("A observacao da foto deve ter no maximo 1.000 caracteres.");
   if (Number.isNaN(Date.parse(input.createdAt))) errors.push("Data de registro da foto invalida.");
   if (errors.length > 0) return { ok: false, errors };

@@ -11,7 +11,7 @@ class MemoryStorage implements KeyValueStorage {
 
 const photo = {
   id: "photo-1", projectId: "project-1", revisionId: "revision-1", fileName: "parede.png",
-  mimeType: "image/png" as const, byteSize: 128, dataUrl: "image/png;base64,AAAA",
+  mimeType: "image/png" as const, byteSize: 128, dataUrl: "data:image/png;base64,AAAA",
   capturedAt: null, note: "Saida de esgoto", createdAt: "2026-11-10T10:00:00.000Z",
 };
 

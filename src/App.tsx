@@ -54,6 +54,7 @@ import {
 import { syncDraftQueueItem } from "./supabaseDraftSync";
 import { parseProjectChatMessage } from "./projectChat";
 import { CuttingPlanPanel } from "./CuttingPlanPanel";
+import { PhotoAttachmentPanel } from "./PhotoAttachmentPanel";
 import "./scene.css";
 
 type ViewMode = "isometric" | "front" | "side" | "top";
@@ -1204,6 +1205,7 @@ export default function App() {
             invalid={issues.length > 0}
           />
         </section>
+        <PhotoAttachmentPanel projectId={demoProject.id} revisionId={savedRevision.id} />
 
         <section className="history-section" aria-labelledby="history-title">
           <div>
