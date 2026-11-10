@@ -19,6 +19,22 @@ describe("local project backup", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("validates the optional project catalog carried by a backup", () => {
+    const result = validateLocalProjectBackup(JSON.stringify({
+      format: "rayzen-marcenaria-local-backup",
+      exportedAt: "2026-11-08T18:01:00.000Z",
+      snapshots: [snapshot],
+      catalogItems: [{ id: "catalog-1", code: "PT-01", name: "Porta", kind: "door", manufacturer: null, specifications: { profile: "J" }, sourceReference: "Oficina", active: true }],
+    }));
+    expect(result.ok).toBe(true);
+    expect(validateLocalProjectBackup(JSON.stringify({
+      format: "rayzen-marcenaria-local-backup",
+      exportedAt: "2026-11-08T18:01:00.000Z",
+      snapshots: [snapshot],
+      catalogItems: [{ id: "catalog-1", code: "PT-01", name: "Porta", kind: "door", manufacturer: null, specifications: { profile: "" }, sourceReference: "Oficina", active: true }],
+    }))).toMatchObject({ ok: false });
+  });
+
   it("rejects invalid JSON and discontinuous revisions", () => {
     expect(validateLocalProjectBackup("no-json")).toMatchObject({ ok: false });
     expect(validateLocalProjectBackup(JSON.stringify({

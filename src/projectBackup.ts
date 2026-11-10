@@ -1,9 +1,11 @@
 import { type ProjectSnapshot, validateProjectSnapshot } from "./projectDomain";
+import { validateProjectCatalog, type ProjectCatalogItem } from "./projectCatalog";
 
 export interface LocalProjectBackup {
   format: "rayzen-marcenaria-local-backup";
   exportedAt: string;
   snapshots: ProjectSnapshot[];
+  catalogItems?: ProjectCatalogItem[];
 }
 
 export type BackupValidation =
@@ -33,6 +35,9 @@ export function validateLocalProjectBackup(raw: string): BackupValidation {
       return { ok: false, message: "O backup contém uma revisão que não atende ao contrato local." };
     }
   }
+  if (value.catalogItems !== undefined && (!Array.isArray(value.catalogItems) || validateProjectCatalog(value.catalogItems).length > 0)) {
+    return { ok: false, message: "O backup contém um catálogo de projeto inválido." };
+  }
   return { ok: true, backup: value };
 }
 
@@ -40,5 +45,6 @@ function isBackup(value: unknown): value is LocalProjectBackup {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value as Partial<LocalProjectBackup>;
   return candidate.format === "rayzen-marcenaria-local-backup" &&
-    typeof candidate.exportedAt === "string" && Array.isArray(candidate.snapshots);
+    typeof candidate.exportedAt === "string" && Array.isArray(candidate.snapshots) &&
+    (candidate.catalogItems === undefined || Array.isArray(candidate.catalogItems));
 }

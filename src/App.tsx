@@ -20,6 +20,7 @@ import type {
 import { InMemoryProjectRepository } from "./projectRepository";
 import { BrowserProjectStorage } from "./browserProjectStorage";
 import { BrowserProjectCatalog, type LocalProjectSummary } from "./browserProjectCatalog";
+import { BrowserProjectCatalogItems } from "./projectCatalog";
 import type { ProjectSpecification, SpecificationSourceKind } from "./projectSpecifications";
 import {
   previewSetCounterDimensionProposal,
@@ -101,6 +102,7 @@ const legacyDemoStorageKey = "rayzen-marcenaria:demo-counter:v1";
 const projectMetaStorageKey = "rayzen-marcenaria:active-project:v1";
 const projectCatalogStorageKey = "rayzen-marcenaria:project-catalog:v1";
 const projectStorageKey = (projectId: string) => `rayzen-marcenaria:project:${projectId}:v1`;
+const projectItemsCatalogStorageKey = (projectId: string) => `rayzen-marcenaria:project:${projectId}:catalog:v1`;
 const projectSyncQueueStorageKey = (projectId: string) => `rayzen-marcenaria:project:${projectId}:sync-queue:v1`;
 
 function createDemoSnapshot(
@@ -1076,6 +1078,7 @@ export default function App() {
       format: "rayzen-marcenaria-local-backup",
       exportedAt: new Date().toISOString(),
       snapshots: repository.listRevisions(demoProject.id),
+    catalogItems: new BrowserProjectCatalogItems(window.localStorage, projectItemsCatalogStorageKey(demoProject.id)).load(),
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }),
@@ -1161,6 +1164,7 @@ export default function App() {
       return;
     }
     new BrowserProjectStorage(window.localStorage, projectStorageKey(demoProject.id)).save(restorableBackup.snapshots);
+    new BrowserProjectCatalogItems(window.localStorage, projectItemsCatalogStorageKey(demoProject.id)).save(restorableBackup.catalogItems ?? []);
     window.location.reload();
   }
 
