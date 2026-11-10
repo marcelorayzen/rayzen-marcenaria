@@ -33,6 +33,7 @@ import {
   projectFurnitureOnWall,
 } from "./wallElevation";
 import { getProjectChecks } from "./projectChecks";
+import { getManufacturingReadiness } from "./manufacturingReadiness";
 import {
   type LocalProjectBackup,
   validateLocalProjectBackup,
@@ -368,6 +369,10 @@ export default function App() {
   const projectChecks = useMemo(() => {
     const snapshots = repository.listRevisions(demoProject.id);
     return getProjectChecks(snapshots[snapshots.length - 1]!);
+  }, [repository, revisions]);
+  const manufacturingReadiness = useMemo(() => {
+    const snapshots = repository.listRevisions(demoProject.id);
+    return getManufacturingReadiness(snapshots[snapshots.length - 1]!);
   }, [repository, revisions]);
   const isDirty =
     JSON.stringify(parameters) !== JSON.stringify(savedRevision.parameters);
@@ -1282,6 +1287,20 @@ export default function App() {
           ) : (
             <p className="checks-clear">Nenhuma lacuna verificada por esta checagem local.</p>
           )}
+        </section>
+
+        <section className="project-checks" aria-labelledby="readiness-title">
+          <div className="constraint-heading">
+            <div>
+              <span className="small-label">PRONTIDÃO PARA FABRICAÇÃO</span>
+              <h2 id="readiness-title">Checklist técnico</h2>
+            </div>
+            <span>{manufacturingReadiness.items.filter(item => item.status !== "ok").length} PENDÊNCIA(S)</span>
+          </div>
+          <p>{manufacturingReadiness.note}</p>
+          <ul>
+            {manufacturingReadiness.items.map(item => <li key={item.id}><strong>{item.status === "ok" ? "OK" : item.status === "blocked" ? "BLOQUEADO" : "PENDENTE"}</strong> · {item.label}: {item.detail}</li>)}
+          </ul>
         </section>
 
         <div className="layout-grid">
