@@ -185,6 +185,7 @@ export function CuttingPlanPanel({
   const [editingSupplementalId, setEditingSupplementalId] = useState<string | null>(null);
   const [supplementalBasePartId, setSupplementalBasePartId] = useState("");
   const [catalogItems, setCatalogItems] = useState<ProjectCatalogItem[]>(() => catalogStore.load());
+  const selectedCatalogItem = catalogItems.find(item => item.id === supplementalDraft.catalogItemId);
 
   useEffect(() => {
     const loaded = configurationStore.load();
@@ -787,6 +788,7 @@ export function CuttingPlanPanel({
             {supplementalDraft.catalogItemId && !catalogItems.some(item => item.id === supplementalDraft.catalogItemId) ? <option value={supplementalDraft.catalogItemId}>ID atual: {supplementalDraft.catalogItemId}</option> : null}
             {catalogItems.filter(item => item.active).map(item => <option value={item.id} key={item.id}>{item.code} · {item.name}</option>)}
           </select></label>
+          {selectedCatalogItem ? <p className="supplemental-catalog-reference" role="status">Referência do catálogo: {selectedCatalogItem.manufacturer ?? "fabricante não informado"}{Object.keys(selectedCatalogItem.specifications).length ? ` · ${Object.entries(selectedCatalogItem.specifications).map(([key, value]) => `${key}=${value}`).join("; ")}` : ""} · origem: {selectedCatalogItem.sourceReference}</p> : null}
           <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : supplementalDraft.composition === "door-15-6" ? "Gerar porta 15+6" : supplementalDraft.composition === "thickening-15-15" ? "Gerar engrossamento 15+15" : "Adicionar peça"}</button>
           {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
         </div>
