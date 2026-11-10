@@ -4,15 +4,23 @@ import { BrowserProjectCatalogItems, parseCatalogSpecifications, type CatalogIte
 export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
   const store = useMemo(() => new BrowserProjectCatalogItems(window.localStorage, `rayzen-marcenaria:project:${projectId}:catalog:v1`), [projectId]);
   const [items, setItems] = useState(() => store.load());
-  const [draft, setDraft] = useState({ code: "", name: "", kind: "door" as CatalogItemKind, manufacturer: "", specificationsText: "", sourceReference: "" });
+  const emptyDraft = { code: "", name: "", kind: "door" as CatalogItemKind, manufacturer: "", specificationsText: "", sourceReference: "" };
+  const [draft, setDraft] = useState(emptyDraft);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   function save() {
     const parsed = parseCatalogSpecifications(draft.specificationsText);
     if (!parsed.ok) { setMessage(parsed.error); return; }
-    const item: ProjectCatalogItem = { id: `catalog-${crypto.randomUUID()}`, code: draft.code, name: draft.name, kind: draft.kind, manufacturer: draft.manufacturer.trim() || null, specifications: parsed.specifications, sourceReference: draft.sourceReference, active: true };
-    try { setItems(store.save([...items, item])); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setDraft({ code: "", name: "", kind: "door", manufacturer: "", specificationsText: "", sourceReference: "" }); setMessage("Item salvo no catalogo deste projeto."); }
+    const item: ProjectCatalogItem = { id: editingId ?? `catalog-${crypto.randomUUID()}`, code: draft.code, name: draft.name, kind: draft.kind, manufacturer: draft.manufacturer.trim() || null, specifications: parsed.specifications, sourceReference: draft.sourceReference, active: editingId ? items.find(current => current.id === editingId)?.active ?? true : true };
+    try { setItems(store.save(editingId ? items.map(current => current.id === editingId ? item : current) : [...items, item])); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setDraft(emptyDraft); setEditingId(null); setMessage(editingId ? "Item atualizado no catalogo deste projeto." : "Item salvo no catalogo deste projeto."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "Nao foi possivel salvar o item."); }
   }
+  function edit(item: ProjectCatalogItem) {
+    setEditingId(item.id);
+    setDraft({ code: item.code, name: item.name, kind: item.kind, manufacturer: item.manufacturer ?? "", specificationsText: Object.entries(item.specifications).map(([key, value]) => `${key}=${value}`).join("\n"), sourceReference: item.sourceReference });
+    setMessage("Editando item; salvar manterá o mesmo ID técnico.");
+  }
+  function cancelEdit() { setEditingId(null); setDraft(emptyDraft); setMessage(null); }
   function remove(id: string) { setItems(store.save(items.filter(item => item.id !== id))); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setMessage("Item removido do catalogo local."); }
   return <section className="catalog-panel" aria-labelledby="catalog-title">
     <header><div><span className="small-label">E1 · CATALOGO LOCAL</span><h2 id="catalog-title">Itens do projeto</h2></div><span>{items.length} ITEM(NS)</span></header>
@@ -24,9 +32,10 @@ export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
       <label>Fabricante (opcional)<input value={draft.manufacturer} onChange={event => setDraft({ ...draft, manufacturer: event.target.value })} /></label>
       <label>Especificacoes (uma chave=valor por linha)<textarea value={draft.specificationsText} onChange={event => setDraft({ ...draft, specificationsText: event.target.value })} placeholder={'modelo=...\nmedida=...'} /></label>
       <label>Origem da especificacao<input value={draft.sourceReference} onChange={event => setDraft({ ...draft, sourceReference: event.target.value })} placeholder="Ex.: fabricante ou regra da oficina" /></label>
-      <button type="button" onClick={save}>Adicionar item</button>
+      <button type="button" onClick={save}>{editingId ? "Salvar alteração" : "Adicionar item"}</button>
+      {editingId ? <button type="button" onClick={cancelEdit}>Cancelar edição</button> : null}
     </div>
     {message ? <p role="status">{message}</p> : null}
-    {items.length ? <ul>{items.map(item => <li key={item.id}><strong>{item.code} · {item.name}</strong><small>{item.kind} · origem: {item.sourceReference}</small><button type="button" onClick={() => remove(item.id)}>Remover</button></li>)}</ul> : null}
+    {items.length ? <ul>{items.map(item => <li key={item.id}><strong>{item.code} · {item.name}</strong><small>{item.kind} · origem: {item.sourceReference}</small><button type="button" onClick={() => edit(item)}>Editar</button><button type="button" onClick={() => remove(item.id)}>Remover</button></li>)}</ul> : null}
   </section>;
 }
