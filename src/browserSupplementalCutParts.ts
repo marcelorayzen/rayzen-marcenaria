@@ -325,6 +325,9 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
     const frontSides = JSON.stringify((front.composite as Record<string, unknown>).bandedSides);
     const backSides = JSON.stringify((back.composite as Record<string, unknown>).bandedSides);
     if (frontSides !== backSides) errors.push(`Composição ${compositeId}: as duas camadas devem compartilhar as bordas da composição.`);
+    const frontNotes = String((front.composite as Record<string, unknown>).handleGrooveNotes ?? "");
+    const backNotes = String((back.composite as Record<string, unknown>).handleGrooveNotes ?? "");
+    if (isDoor && frontNotes !== backNotes) errors.push(`ComposiÃ§Ã£o ${compositeId}: as duas camadas devem compartilhar os detalhes da cava.`);
   }
   if (errors.length > 0) return { ok: false, errors };
   return { ok: true, parts: JSON.parse(JSON.stringify(value)) as SupplementalCutPart[] };
