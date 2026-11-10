@@ -2,6 +2,7 @@ import type { KeyValueStorage } from "./browserProjectStorage";
 import type { CuttingGrain } from "./browserCuttingConfiguration";
 import type { CutPartProductionOperation } from "./cuttingPlan";
 import { createCompositeDoor15x6 } from "./compositeDoor15x6";
+import { createCompositeThickening15x15 } from "./compositeThickening15x15";
 import type { PanelEdge } from "./compositePanel";
 
 export interface SupplementalCutPart {
@@ -18,8 +19,8 @@ export interface SupplementalCutPart {
   sourceReference: string;
   composite?: {
     id: string;
-    kind: "door-15-6";
-    layer: "front-15" | "back-6";
+    kind: "door-15-6" | "thickening-15-15";
+    layer: "front-15" | "back-6" | "base-15" | "reinforcement-15";
     bandedSides: Array<"top" | "bottom" | "left" | "right">;
   };
   productionOperations?: CutPartProductionOperation[];
@@ -42,6 +43,23 @@ export interface SupplementalDoor15x6Input {
   widthMm: number;
   frontMaterialId: string;
   backMaterialId: string;
+  grain: CuttingGrain;
+  bandedSides: PanelEdge["side"][];
+}
+
+export interface SupplementalThickening15x15Input {
+  compositeId: string;
+  baseId: string;
+  reinforcementId: string;
+  revisionId: string;
+  sourceReference: string;
+  code: string;
+  name: string;
+  quantity: number;
+  lengthMm: number;
+  widthMm: number;
+  baseMaterialId: string;
+  reinforcementMaterialId: string;
   grain: CuttingGrain;
   bandedSides: PanelEdge["side"][];
 }
@@ -161,6 +179,48 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
   return validateSupplementalCutParts(parts);
 }
 
+export function createSupplementalThickening15x15(input: SupplementalThickening15x15Input): SupplementalCutPartsValidation {
+  if (!input.code.trim() || !input.name.trim()) return { ok: false, errors: ["Informe o código e o nome do engrossamento."] };
+  const result = createCompositeThickening15x15({
+    id: input.compositeId,
+    revisionId: input.revisionId,
+    sourceReference: input.sourceReference,
+    quantity: input.quantity,
+    lengthMm: input.lengthMm,
+    widthMm: input.widthMm,
+    baseMaterialId: input.baseMaterialId,
+    reinforcementMaterialId: input.reinforcementMaterialId,
+    grain: input.grain,
+    bandedSides: input.bandedSides,
+  });
+  if (!result.ok) return result;
+  const [base, reinforcement] = result.panel.layers;
+  const edges = input.bandedSides.length > 0
+    ? `Fita 35 mm após engrossamento: ${input.bandedSides.map(side => sideLabels[side]).join(", ")}`
+    : "Fita do engrossamento ainda não definida";
+  const operation = {
+    kind: "bonding" as const,
+    status: "specified" as const,
+    description: "Colar as camadas de 15 mm com Tekbond chapa na chapa para formar 30 mm.",
+  };
+  return validateSupplementalCutParts([
+    {
+      id: input.baseId, code: `${input.code.trim()}-15A`, name: `${input.name.trim()} · base 15 mm`,
+      material: base.materialId, thickness: 15, length: base.cutLengthMm, width: base.cutWidthMm,
+      quantity: result.panel.quantity, edges, grain: base.grain, sourceReference: input.sourceReference,
+      productionOperations: [operation],
+      composite: { id: input.compositeId, kind: "thickening-15-15", layer: "base-15", bandedSides: [...input.bandedSides] },
+    },
+    {
+      id: input.reinforcementId, code: `${input.code.trim()}-15B`, name: `${input.name.trim()} · reforço 15 mm`,
+      material: reinforcement.materialId, thickness: 15, length: reinforcement.cutLengthMm, width: reinforcement.cutWidthMm,
+      quantity: result.panel.quantity, edges, grain: reinforcement.grain, sourceReference: input.sourceReference,
+      productionOperations: [{ ...operation }],
+      composite: { id: input.compositeId, kind: "thickening-15-15", layer: "reinforcement-15", bandedSides: [...input.bandedSides] },
+    },
+  ]);
+}
+
 export function validateSupplementalCutParts(value: unknown): SupplementalCutPartsValidation {
   if (!Array.isArray(value)) return { ok: false, errors: ["A lista de peças complementares é inválida."] };
   const errors: string[] = [];
@@ -195,8 +255,8 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
       if (!composite
         || typeof composite.id !== "string"
         || !composite.id.trim()
-        || composite.kind !== "door-15-6"
-        || !["front-15", "back-6"].includes(String(composite.layer))
+        || !["door-15-6", "thickening-15-15"].includes(String(composite.kind))
+        || !["front-15", "back-6", "base-15", "reinforcement-15"].includes(String(composite.layer))
         || !Array.isArray(composite.bandedSides)
         || composite.bandedSides.some(side => !["top", "bottom", "left", "right"].includes(String(side)))
         || new Set(composite.bandedSides).size !== composite.bandedSides.length) {
@@ -227,14 +287,16 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
       (part.composite as Record<string, unknown>).layer,
       part,
     ]));
-    const front = byLayer.get("front-15");
-    const back = byLayer.get("back-6");
+    const first = group[0].composite as Record<string, unknown>;
+    const isDoor = first.kind === "door-15-6";
+    const front = byLayer.get(isDoor ? "front-15" : "base-15");
+    const back = byLayer.get(isDoor ? "back-6" : "reinforcement-15");
     if (group.length !== 2 || !front || !back) {
-      errors.push(`Composição ${compositeId}: informe exatamente as camadas frontal 15 mm e traseira 6 mm.`);
+      errors.push(`Composição ${compositeId}: informe exatamente as duas camadas esperadas.`);
       continue;
     }
-    if (front.thickness !== 15 || back.thickness !== 6) {
-      errors.push(`Composição ${compositeId}: espessuras devem ser 15 mm e 6 mm.`);
+    if (front.thickness !== 15 || back.thickness !== (isDoor ? 6 : 15)) {
+      errors.push(`Composição ${compositeId}: espessuras incompatíveis com o tipo informado.`);
     }
     if (["length", "width", "quantity", "grain"].some(field => front[field] !== back[field])) {
       errors.push(`Composição ${compositeId}: as duas camadas devem ter medidas, quantidade e veio iguais.`);

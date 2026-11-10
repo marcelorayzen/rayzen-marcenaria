@@ -24,6 +24,7 @@ import {
   BrowserSupplementalCutParts,
   calculatedSupplementalSource,
   createSupplementalDoor15x6,
+  createSupplementalThickening15x15,
   manualSupplementalSource,
   type SupplementalCutPart,
 } from "./browserSupplementalCutParts";
@@ -41,7 +42,7 @@ type CuttingPanelPart = Pick<
 };
 
 interface SupplementalPartDraft {
-  composition: "single" | "door-15-6";
+  composition: "single" | "door-15-6" | "thickening-15-15";
   code: string;
   name: string;
   material: string;
@@ -280,6 +281,10 @@ export function CuttingPlanPanel({
       saveCompositeDoor15x6();
       return;
     }
+    if (supplementalDraft.composition === "thickening-15-15") {
+      saveCompositeThickening15x15();
+      return;
+    }
     const part: SupplementalCutPart = {
       id: editingSupplementalId ?? `supplemental-${crypto.randomUUID()}`,
       code: supplementalDraft.code.trim(),
@@ -362,6 +367,58 @@ export function CuttingPlanPanel({
     }
   }
 
+  function saveCompositeThickening15x15() {
+    if (!supplementalDraft.code.trim() || !supplementalDraft.name.trim()) {
+      setSupplementalError("Informe o cÃ³digo e o nome do engrossamento.");
+      setSupplementalMessage(null);
+      return;
+    }
+    const editingCompositeId = editingSupplementalId?.startsWith("composite:")
+      ? editingSupplementalId.slice("composite:".length)
+      : null;
+    const compositeId = editingCompositeId ?? `thickening-15-15-${crypto.randomUUID()}`;
+    const current = supplementalParts.filter(part => part.composite?.id === compositeId);
+    const idByLayer = new Map(current.map(part => [part.composite?.layer, part.id]));
+    const result = createSupplementalThickening15x15({
+      compositeId,
+      baseId: idByLayer.get("base-15") ?? `supplemental-${crypto.randomUUID()}`,
+      reinforcementId: idByLayer.get("reinforcement-15") ?? `supplemental-${crypto.randomUUID()}`,
+      revisionId: `R${String(revision).padStart(2, "0")}`,
+      sourceReference: supplementalDraft.sourceReference.trim() || manualSupplementalSource(revision),
+      code: supplementalDraft.code,
+      name: supplementalDraft.name,
+      quantity: Number(supplementalDraft.quantity),
+      lengthMm: Number(supplementalDraft.length),
+      widthMm: Number(supplementalDraft.width),
+      baseMaterialId: supplementalDraft.material.trim(),
+      reinforcementMaterialId: supplementalDraft.backMaterial.trim(),
+      grain: supplementalDraft.grain,
+      bandedSides: supplementalDraft.bandedSides,
+    });
+    if (!result.ok) {
+      setSupplementalError(result.errors.join(" "));
+      setSupplementalMessage(null);
+      return;
+    }
+    try {
+      const next = supplementalStore.save([
+        ...supplementalParts.filter(part => part.composite?.id !== compositeId),
+        ...result.parts,
+      ]);
+      setSupplementalParts(next);
+      setSupplementalDraft(emptySupplementalDraft);
+      setEditingSupplementalId(null);
+      setSupplementalBasePartId("");
+      setSupplementalError(null);
+      setSupplementalMessage(editingCompositeId
+        ? "Engrossamento 15+15 atualizado. As duas camadas mantiveram seus IDs tÃ©cnicos."
+        : "Engrossamento 15+15 criado: duas camadas com as mesmas medidas foram enviadas ao plano de corte.");
+    } catch (error) {
+      setSupplementalError(error instanceof Error ? error.message : "NÃ£o foi possÃ­vel salvar o engrossamento 15+15.");
+      setSupplementalMessage(null);
+    }
+  }
+
   function editSupplementalPart(part: SupplementalCutPart) {
     if (part.composite?.kind === "door-15-6") {
       const group = supplementalParts.filter(candidate => candidate.composite?.id === part.composite?.id);
@@ -389,6 +446,35 @@ export function CuttingPlanPanel({
       });
       setSupplementalError(null);
       setSupplementalMessage("Editando a composição inteira. Salvar atualizará juntas as camadas de 15 mm e 6 mm.");
+      setSupplementalBasePartId("");
+      return;
+    }
+    if (part.composite?.kind === "thickening-15-15") {
+      const group = supplementalParts.filter(candidate => candidate.composite?.id === part.composite?.id);
+      const base = group.find(candidate => candidate.composite?.layer === "base-15");
+      const reinforcement = group.find(candidate => candidate.composite?.layer === "reinforcement-15");
+      if (!base || !reinforcement) {
+        setSupplementalError("O engrossamento 15+15 estÃ¡ incompleto e nÃ£o pode ser editado.");
+        return;
+      }
+      setEditingSupplementalId(`composite:${part.composite.id}`);
+      setSupplementalDraft({
+        composition: "thickening-15-15",
+        code: base.code.replace(/-15A$/, ""),
+        name: base.name.replace(/ Â· base 15 mm$/, ""),
+        material: base.material,
+        thickness: "30",
+        length: String(base.length),
+        width: String(base.width),
+        quantity: String(base.quantity),
+        edges: base.edges,
+        grain: base.grain,
+        sourceReference: base.sourceReference,
+        backMaterial: reinforcement.material,
+        bandedSides: [...part.composite.bandedSides],
+      });
+      setSupplementalError(null);
+      setSupplementalMessage("Editando o engrossamento inteiro. Salvar atualizarÃ¡ juntas as duas camadas de 15 mm.");
       setSupplementalBasePartId("");
       return;
     }
@@ -612,11 +698,12 @@ export function CuttingPlanPanel({
           <label className="supplemental-wide">Tipo de peça<select value={supplementalDraft.composition} onChange={event => updateSupplementalDraft("composition", event.target.value as SupplementalPartDraft["composition"])}>
             <option value="single">Peça retangular simples</option>
             <option value="door-15-6">Porta composta 15 + 6 mm · medidas iguais</option>
+            <option value="thickening-15-15">Engrossamento 15 + 15 mm · medidas iguais</option>
           </select></label>
           <label>Código<input value={supplementalDraft.code} onChange={event => updateSupplementalDraft("code", event.target.value)} /></label>
           <label>Nome<input value={supplementalDraft.name} onChange={event => updateSupplementalDraft("name", event.target.value)} /></label>
-          <label>{supplementalDraft.composition === "door-15-6" ? "Material frente 15 mm" : "Material"}<input value={supplementalDraft.material} onChange={event => updateSupplementalDraft("material", event.target.value)} /></label>
-          {supplementalDraft.composition === "door-15-6" ? (
+          <label>{supplementalDraft.composition === "door-15-6" ? "Material frente 15 mm" : supplementalDraft.composition === "thickening-15-15" ? "Material base 15 mm" : "Material"}<input value={supplementalDraft.material} onChange={event => updateSupplementalDraft("material", event.target.value)} /></label>
+          {supplementalDraft.composition === "door-15-6" || supplementalDraft.composition === "thickening-15-15" ? (
             <label>Material costas 6 mm<input value={supplementalDraft.backMaterial} onChange={event => updateSupplementalDraft("backMaterial", event.target.value)} /></label>
           ) : (
             <label>Espessura<span><input type="number" min="0.1" step="0.1" value={supplementalDraft.thickness} onChange={event => updateSupplementalDraft("thickness", event.target.value)} /> mm</span></label>
@@ -630,7 +717,7 @@ export function CuttingPlanPanel({
             <option value="length">No comprimento</option>
             <option value="width">Na largura</option>
           </select></label>
-          {supplementalDraft.composition === "door-15-6" ? (
+          {supplementalDraft.composition === "door-15-6" || supplementalDraft.composition === "thickening-15-15" ? (
             <fieldset className="supplemental-edge-sides">
               <legend>Lados com fita 22 mm após composição</legend>
               {(Object.keys(edgeSideLabels) as PanelEdge["side"][]).map(side => (
@@ -641,7 +728,7 @@ export function CuttingPlanPanel({
             <label className="supplemental-wide">Bordas / fita<input value={supplementalDraft.edges} onChange={event => updateSupplementalDraft("edges", event.target.value)} placeholder="Descreva somente o que foi definido" /></label>
           )}
           <label className="supplemental-wide">Origem da informação · opcional<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder={`Se vazio: entrada manual da revisão R${String(revision).padStart(2, "0")}`} /></label>
-          <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : supplementalDraft.composition === "door-15-6" ? "Gerar porta 15+6" : "Adicionar peça"}</button>
+          <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : supplementalDraft.composition === "door-15-6" ? "Gerar porta 15+6" : supplementalDraft.composition === "thickening-15-15" ? "Gerar engrossamento 15+15" : "Adicionar peça"}</button>
           {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
         </div>
         {supplementalError ? <p className="supplemental-parts-error" role="alert">{supplementalError}</p> : null}
@@ -653,7 +740,7 @@ export function CuttingPlanPanel({
                 <div>
                   <strong>{part.code} · {part.name}</strong>
                   <span>{part.quantity} × {part.length} × {part.width} mm · {part.material} · {part.thickness} mm</span>
-                  <small>{part.edges} · origem: {part.sourceReference}{part.composite ? " · composição 15+6" : ""}</small>
+                  <small>{part.edges} · origem: {part.sourceReference}{part.composite ? part.composite.kind === "door-15-6" ? " · composição 15+6" : " · engrossamento 15+15" : ""}</small>
                 </div>
                 <div className="supplemental-part-actions">
                   <button type="button" onClick={() => editSupplementalPart(part)}>Editar</button>

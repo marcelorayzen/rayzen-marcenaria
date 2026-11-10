@@ -4,6 +4,7 @@ import {
   BrowserSupplementalCutParts,
   calculatedSupplementalSource,
   createSupplementalDoor15x6,
+  createSupplementalThickening15x15,
   manualSupplementalSource,
   validateSupplementalCutParts,
   type SupplementalCutPart,
@@ -114,5 +115,32 @@ describe("supplemental cut parts browser storage", () => {
     const storage = new MemoryStorage();
     storage.setItem("parts", "{bad");
     expect(new BrowserSupplementalCutParts(storage, "parts").load()).toEqual([]);
+  });
+
+  it("generates equal-size 15 + 15 thickening layers with bonding operation", () => {
+    const result = createSupplementalThickening15x15({
+      compositeId: "thickening-composite",
+      baseId: "base-id",
+      reinforcementId: "reinforcement-id",
+      revisionId: "R03",
+      sourceReference: "Medida conferida do painel",
+      code: "PA-01",
+      name: "Painel engrossado",
+      quantity: 1,
+      lengthMm: 900,
+      widthMm: 450,
+      baseMaterialId: "MDF branco 15",
+      reinforcementMaterialId: "MDF branco 15",
+      grain: "none",
+      bandedSides: ["top", "right"],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.parts.map(part => [part.thickness, part.length, part.width])).toEqual([
+      [15, 900, 450],
+      [15, 900, 450],
+    ]);
+    expect(result.parts.every(part => part.productionOperations?.some(operation => operation.kind === "bonding"))).toBe(true);
+    expect(result.parts.every(part => part.composite?.kind === "thickening-15-15")).toBe(true);
   });
 });
