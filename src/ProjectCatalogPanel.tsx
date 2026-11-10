@@ -22,6 +22,12 @@ export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
   }
   function cancelEdit() { setEditingId(null); setDraft(emptyDraft); setMessage(null); }
   function remove(id: string) { setItems(store.save(items.filter(item => item.id !== id))); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setMessage("Item removido do catalogo local."); }
+  function toggleActive(id: string) {
+    const next = store.save(items.map(item => item.id === id ? { ...item, active: !item.active } : item));
+    setItems(next);
+    window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } }));
+    setMessage("Status do item atualizado; vínculos existentes foram preservados.");
+  }
   return <section className="catalog-panel" aria-labelledby="catalog-title">
     <header><div><span className="small-label">E1 · CATALOGO LOCAL</span><h2 id="catalog-title">Itens do projeto</h2></div><span>{items.length} ITEM(NS)</span></header>
     <p>Cadastre portas, gavetas, ferragens e equipamentos somente com origem conhecida.</p>
@@ -36,6 +42,6 @@ export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
       {editingId ? <button type="button" onClick={cancelEdit}>Cancelar edição</button> : null}
     </div>
     {message ? <p role="status">{message}</p> : null}
-    {items.length ? <ul>{items.map(item => <li key={item.id}><strong>{item.code} · {item.name}</strong><small>{item.kind} · origem: {item.sourceReference}</small><button type="button" onClick={() => edit(item)}>Editar</button><button type="button" onClick={() => remove(item.id)}>Remover</button></li>)}</ul> : null}
+    {items.length ? <ul>{items.map(item => <li key={item.id}><strong>{item.code} · {item.name}</strong><small>{item.kind} · {item.active ? "ativo" : "inativo"} · origem: {item.sourceReference}</small><button type="button" onClick={() => edit(item)}>Editar</button><button type="button" onClick={() => toggleActive(item.id)}>{item.active ? "Desativar" : "Reativar"}</button><button type="button" onClick={() => remove(item.id)}>Remover</button></li>)}</ul> : null}
   </section>;
 }
