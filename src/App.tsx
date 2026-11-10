@@ -1097,6 +1097,29 @@ export default function App() {
     window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
   }
 
+  function downloadManufacturingReadiness() {
+    if (isDirty) return;
+    const snapshots = repository.listRevisions(demoProject.id);
+    const readiness = getManufacturingReadiness(snapshots[snapshots.length - 1]!);
+    const readinessDocument = {
+      format: "rayzen-manufacturing-readiness-checklist",
+      formatVersion: 1,
+      exportedAt: new Date().toISOString(),
+      project: { ...demoProject },
+      revision: savedRevision.number,
+      status: "preparation-only",
+      readiness,
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(readinessDocument, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `rayzen-checklist-fabricacao-r${String(savedRevision.number).padStart(2, "0")}.json`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+  }
+
   function downloadTechnicalPackage() {
     if (isDirty || !model) return;
     const technicalPackage = {
@@ -1245,6 +1268,9 @@ export default function App() {
           </ol>
           <button type="button" onClick={downloadProjectBackup} disabled={isDirty}>
             Baixar backup local (JSON)
+          </button>
+          <button type="button" onClick={downloadManufacturingReadiness} disabled={isDirty}>
+            Baixar checklist de fabricação (JSON)
           </button>
           <button type="button" onClick={() => void synchronizeCurrentRevision()} disabled={isDirty || latestSyncItem?.status === "syncing"}>
             {latestSyncItem?.status === "synced" ? "Revisão sincronizada" : "Sincronizar revisão salva"}
