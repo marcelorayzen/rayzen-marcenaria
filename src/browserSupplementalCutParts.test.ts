@@ -114,13 +114,14 @@ describe("supplemental cut parts browser storage", () => {
     expect(result.parts.every(part => part.quantity === 2 && part.edges.includes("Fita 22 mm"))).toBe(true);
     expect(result.parts[0].productionOperations).toEqual(expect.arrayContaining([
       expect.objectContaining({ kind: "bonding", status: "specified" }),
-      expect.objectContaining({ kind: "handle-groove", status: "pending" }),
+      expect.objectContaining({ kind: "handle-groove", status: "specified" }),
       expect.objectContaining({ kind: "edge-banding", status: "specified" }),
     ]));
     expect(result.parts[1].productionOperations?.some(operation => operation.kind === "handle-groove")).toBe(false);
     expect(result.parts[0].productionOperations).toEqual(expect.arrayContaining([
       expect.objectContaining({ kind: "handle-groove", description: expect.stringContaining("perfil J") }),
       expect.objectContaining({ kind: "handle-groove", description: expect.stringContaining("recuo 20 mm") }),
+      expect.objectContaining({ kind: "handle-groove", status: "specified" }),
     ]));
   });
 

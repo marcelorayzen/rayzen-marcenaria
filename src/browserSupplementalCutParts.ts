@@ -190,7 +190,7 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
   };
   if (input.handleGrooveProfile && (input.handleGrooveProfile !== "pending" || grooveNotes)) {
     parts[0].productionOperations = parts[0].productionOperations?.map(operation => operation.kind === "handle-groove"
-      ? { ...operation, description: `${grooveDescriptions[input.handleGrooveProfile as HandleGrooveProfile]}${grooveNotes ? ` Detalhes do projeto: ${grooveNotes}` : ""}` }
+      ? { ...operation, status: input.handleGrooveProfile === "pending" ? "pending" : "specified", description: `${grooveDescriptions[input.handleGrooveProfile as HandleGrooveProfile]}${grooveNotes ? ` Detalhes do projeto: ${grooveNotes}` : ""}` }
       : operation);
   }
   return validateSupplementalCutParts(parts);
