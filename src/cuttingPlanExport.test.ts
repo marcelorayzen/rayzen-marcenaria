@@ -23,7 +23,7 @@ const label = {
   lengthMm: 720, widthMm: 500, thicknessMm: 15, material: "MDF", edges: "Frente; fundo",
   rotatedInPlan: false, status: "preliminary-not-released",
   sourceReference: "Medição da visita",
-  productionOperations: [{ kind: "handle-groove", status: "pending", description: "Definir geometria da cava." }],
+  productionOperations: [{ kind: "handle-groove", status: "pending", description: "Perfil J oculto. Detalhes do projeto: recuo 20 mm; inicio a 80 mm da lateral direita." }],
 } satisfies CuttingPieceLabel;
 
 describe("cutting plan portable exports", () => {
@@ -46,7 +46,7 @@ describe("cutting plan portable exports", () => {
     expect(csv).toContain('"Cozinha; cliente"');
     expect(csv).toContain('"Frente; fundo"');
     expect(csv).toContain("Medição da visita");
-    expect(csv).toContain("PENDENTE: Definir geometria da cava.");
+    expect(csv).toContain("PENDENTE: Perfil J oculto. Detalhes do projeto: recuo 20 mm; inicio a 80 mm da lateral direita.");
     expect(csv.split("\r\n")).toHaveLength(2);
   });
 });
