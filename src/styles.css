@@ -951,6 +951,25 @@ tr:focus-visible {
   font-size: 11px;
 }
 
+.remote-project-list {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.remote-project-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #cfd4ce;
+  font-size: 12px;
+}
+
 .auth-panel {
   display: grid;
   gap: 12px;

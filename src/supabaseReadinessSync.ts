@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ManufacturingReadiness } from "./manufacturingReadiness";
+import { sameCanonicalJson } from "./canonicalJson";
 
 export type ReadinessSyncResult =
   | { status: "synced" }
@@ -7,7 +8,7 @@ export type ReadinessSyncResult =
   | { status: "blocked"; reason: "authentication-required" | "profile-required"; message: string }
   | { status: "failed"; message: string };
 
-function sameJson(left: unknown, right: unknown): boolean { return JSON.stringify(left) === JSON.stringify(right); }
+const sameJson = sameCanonicalJson;
 
 export async function syncReadinessChecklist(
   client: SupabaseClient,

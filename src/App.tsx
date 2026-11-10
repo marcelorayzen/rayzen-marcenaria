@@ -55,6 +55,10 @@ import {
   type DraftSyncQueueItem,
 } from "./draftSyncQueue";
 import { syncDraftQueueItem } from "./supabaseDraftSync";
+import { syncRevisionParts } from "./supabasePartsSync";
+import { deriveRevisionParts } from "./revisionParts";
+import { listRemoteProjects, loadRemoteRevisions, type RemoteProjectSummary } from "./supabaseProjectRecovery";
+import { mergeRemoteRevisions, replaceWithRemoteRevisions } from "./remoteRecoveryMerge";
 import { parseProjectChatMessage } from "./projectChat";
 import { CuttingPlanPanel } from "./CuttingPlanPanel";
 import { PhotoAttachmentPanel } from "./PhotoAttachmentPanel";
@@ -346,6 +350,8 @@ export default function App() {
   );
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [readinessSyncMessage, setReadinessSyncMessage] = useState<string | null>(null);
+  const [remoteProjects, setRemoteProjects] = useState<RemoteProjectSummary[]>([]);
+  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [chatMessage, setChatMessage] = useState<string | null>(null);
 
@@ -1016,6 +1022,11 @@ export default function App() {
       setSyncMessage("Não há revisão local para sincronizar.");
       return;
     }
+    const alreadySynced = syncQueue.find(candidate => candidate.revisionId === snapshot.revision.id && candidate.status === "synced");
+    if (alreadySynced?.remoteRevisionId) {
+      setSyncMessage(`Revisão já sincronizada. ${await synchronizeRevisionParts(snapshot, alreadySynced.remoteRevisionId)}`);
+      return;
+    }
     const queued = enqueueDraftSync(syncQueue, snapshot, new Date().toISOString());
     if (!queued.ok) {
       setSyncMessage(queued.message);
@@ -1050,7 +1061,8 @@ export default function App() {
       if (completed.ok) {
         setSyncQueue(completed.queue);
         new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(demoProject.id)).save(completed.queue);
-        setSyncMessage("Revisão sincronizada. O rascunho local foi preservado até uma política de limpeza ser aplicada.");
+        const partsMessage = await synchronizeRevisionParts(snapshot, result.remoteRevisionId);
+        setSyncMessage(`Revisão sincronizada. ${partsMessage} O rascunho local foi preservado até uma política de limpeza ser aplicada.`);
       }
       return;
     }
@@ -1062,6 +1074,85 @@ export default function App() {
       new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(demoProject.id)).save(failed.queue);
       setSyncMessage(result.message);
     }
+  }
+
+  async function synchronizeRevisionParts(snapshot: ProjectSnapshot, remoteRevisionId: string): Promise<string> {
+    if (!supabase) return "Peças não sincronizadas: Supabase não configurado.";
+    const derived = deriveRevisionParts(snapshot);
+    if (!derived.ok) return `Peças não sincronizadas: ${derived.message}`;
+    const result = await syncRevisionParts(supabase, remoteRevisionId, derived.parts);
+    return result.status === "synced"
+      ? `Peças da revisão sincronizadas (${result.count}).`
+      : `Peças não sincronizadas: ${result.message}`;
+  }
+
+  async function loadRemoteProjectList() {
+    if (!supabase || !authUser) {
+      setRecoveryMessage("Entre com uma conta provisionada antes de recuperar projetos remotos.");
+      return;
+    }
+    const result = await listRemoteProjects(supabase);
+    if (result.status !== "loaded") {
+      setRemoteProjects([]);
+      setRecoveryMessage(result.message);
+      return;
+    }
+    setRemoteProjects(result.projects);
+    setRecoveryMessage(result.projects.length === 0
+      ? "Nenhum projeto remoto visível para esta conta."
+      : `${result.projects.length} projeto(s) remoto(s) visível(is) para esta conta.`);
+  }
+
+  async function recoverRemoteProject(remoteProjectId: string) {
+    if (!supabase || !authUser) return;
+    if (isDirty) {
+      setRecoveryMessage("Salve ou descarte as alterações antes de recuperar um projeto remoto.");
+      return;
+    }
+    const loaded = await loadRemoteRevisions(supabase, remoteProjectId);
+    if (loaded.status !== "loaded") {
+      setRecoveryMessage(loaded.message);
+      return;
+    }
+    if (loaded.revisions.some(revision => !revision.snapshot.furniture.some(furniture => furniture.id === "demo-counter"))) {
+      setRecoveryMessage("O projeto remoto contém revisões sem o balcão editável desta demonstração; nada foi alterado.");
+      return;
+    }
+    const localProjectId = loaded.revisions[0]?.snapshot.project.id;
+    if (!localProjectId) {
+      setRecoveryMessage("O projeto remoto ainda não possui revisões para recuperar.");
+      return;
+    }
+    const storage = new BrowserProjectStorage(window.localStorage, projectStorageKey(localProjectId));
+    const queueStorage = new BrowserDraftSyncQueue(window.localStorage, projectSyncQueueStorageKey(localProjectId));
+    const now = new Date().toISOString();
+    let merged = mergeRemoteRevisions(remoteProjectId, loaded.revisions, storage.load(), queueStorage.load(), now);
+    if (merged.status === "conflict") {
+      const replace = window.confirm(
+        `${merged.message}\n\nSubstituir a cópia local deste projeto pelo histórico remoto? As revisões locais divergentes serão perdidas neste dispositivo. Cancele e baixe um backup local se quiser preservá-las.`,
+      );
+      if (!replace) {
+        setRecoveryMessage(`${merged.message} Recuperação cancelada; a cópia local foi mantida.`);
+        return;
+      }
+      merged = replaceWithRemoteRevisions(remoteProjectId, loaded.revisions, now);
+    }
+    if (merged.status !== "merged") {
+      setRecoveryMessage(merged.message);
+      return;
+    }
+    storage.save(merged.snapshots);
+    queueStorage.save(merged.queue);
+    const catalog = new BrowserProjectCatalog(window.localStorage, projectCatalogStorageKey);
+    const existing = catalog.load().find(item => item.id === merged.localProjectId);
+    catalog.upsert({
+      id: merged.localProjectId,
+      title: merged.title,
+      createdAt: existing?.createdAt ?? merged.snapshots[0]!.revision.createdAt,
+      updatedAt: now,
+    });
+    window.localStorage.setItem(projectMetaStorageKey, JSON.stringify({ id: merged.localProjectId, title: merged.title }));
+    window.location.reload();
   }
 
   function downloadCsv() {
@@ -1285,7 +1376,7 @@ export default function App() {
             Baixar checklist de fabricação (JSON)
           </button>
           <button type="button" onClick={() => void synchronizeCurrentRevision()} disabled={isDirty || latestSyncItem?.status === "syncing"}>
-            {latestSyncItem?.status === "synced" ? "Revisão sincronizada" : "Sincronizar revisão salva"}
+            {latestSyncItem?.status === "synced" ? "Revisão sincronizada · conferir peças" : "Sincronizar revisão e peças"}
           </button>
           <button type="button" onClick={downloadTechnicalPackage} disabled={isDirty || !model}>
             Exportar pacote técnico (.skt.json)
@@ -1308,6 +1399,22 @@ export default function App() {
           </p>
           {historyError ? <p className="measurement-error" role="alert">{historyError}</p> : null}
           {syncMessage ? <p className="sync-message" role="status">{syncMessage}</p> : null}
+          <button type="button" onClick={() => void loadRemoteProjectList()} disabled={!supabase || !authUser}>
+            Recuperar projetos remotos
+          </button>
+          {remoteProjects.length > 0 ? (
+            <ul className="remote-project-list" aria-label="Projetos remotos visíveis">
+              {remoteProjects.map(project => (
+                <li key={project.remoteProjectId}>
+                  <span>{project.title}</span>
+                  <button type="button" onClick={() => void recoverRemoteProject(project.remoteProjectId)} disabled={isDirty}>
+                    Abrir neste dispositivo
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {recoveryMessage ? <p className="sync-message" role="status">{recoveryMessage}</p> : null}
         </section>
         <section className="project-checks" aria-labelledby="checks-title">
           <div className="constraint-heading">

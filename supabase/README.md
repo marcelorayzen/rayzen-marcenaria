@@ -44,6 +44,10 @@ O módulo `src/supabaseClient.ts` permanece inativo (`supabase === null`) até q
 
 O cliente do navegador so e criado quando a URL e HTTP(S), nao contem credenciais e ha uma chave publica. A validacao recusa `sb_secret_`, texto `service_role` e JWT legado que declara o papel `service_role`. Ela nao le valores, nao consulta o Supabase e nao prova autenticacao, RLS ou permissao; a interface atual tambem nao usa o cliente para persistir dados.
 
+## Testes de RLS locais
+
+`tests/rls_project_sync.test.sql` (pgTAP) roda somente contra a pilha local: `npx supabase start -x studio,postgres-meta` e depois `npx supabase test db`. Confira na saída que o alvo é `local stack (127.0.0.1:54322)`; nunca usar `--remote` sem aprovação explícita. Em 10/11/2026 passou 33/33. As identidades são sintéticas e simuladas por `request.jwt.claims`; o resultado não substitui o ensaio com contas reais no remoto. Storage e o fluxo de convite do cliente ainda não têm teste. O teste registra a lacuna atual: o dono não consegue adicionar outro membro interno ao projeto.
+
 ## Atalhos locais
 
 | Comando | Finalidade |

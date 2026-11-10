@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { syncDraftQueueItem } from "./supabaseDraftSync";
 import type { DraftSyncQueueItem } from "./draftSyncQueue";
 import { PROJECT_SCHEMA_VERSION } from "./projectDomain";
+import { reverseKeys } from "./testSnapshots";
 
 const item: DraftSyncQueueItem = {
   id: "sync-project-1-revision-1",
@@ -64,7 +65,8 @@ function createRetryableClient() {
       }
       if (this.table === "revisions") {
         const key = `${this.payload.project_id}:${this.payload.number}`;
-        const revision = { id: `remote-revision-${revisionInserts + 1}`, model: this.payload.model };
+        // Postgres jsonb does not keep key order; emulate it to catch false conflicts.
+        const revision = { id: `remote-revision-${revisionInserts + 1}`, model: reverseKeys(this.payload.model) };
         revisions.set(key, revision);
         revisionInserts += 1;
         return { data: { id: revision.id }, error: null };

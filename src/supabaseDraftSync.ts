@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DraftSyncQueueItem } from "./draftSyncQueue";
+import { sameCanonicalJson } from "./canonicalJson";
 
 export type RemoteDraftSyncResult =
   | { status: "synced"; remoteProjectId: string; remoteRevisionId: string }
@@ -10,9 +11,7 @@ export type RemoteDraftSyncResult =
 type RemoteRow = { id: string; model?: unknown };
 type RemoteError = { code?: string };
 
-function sameJson(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
+const sameJson = sameCanonicalJson;
 
 /**
  * Synchronizes one validated local queue item using only the authenticated
