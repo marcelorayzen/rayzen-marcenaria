@@ -77,6 +77,13 @@ describe("supplemental cut parts browser storage", () => {
     expect(invalid.ok).toBe(false);
     if (invalid.ok) return;
     expect(invalid.errors).toContain("Composição door-composite: as duas camadas devem ter medidas, quantidade e veio iguais.");
+    const divergentNotes = validateSupplementalCutParts([
+      { ...front, composite: { ...front.composite, handleGrooveNotes: "lado A" } },
+      { ...back, composite: { ...back.composite, handleGrooveNotes: "lado B" } },
+    ]);
+    expect(divergentNotes.ok).toBe(false);
+    if (divergentNotes.ok) return;
+    expect(divergentNotes.errors.some(error => error.includes("detalhes da cava"))).toBe(true);
   });
 
   it("generates both equal-size cutting layers from one door input", () => {
