@@ -112,6 +112,14 @@ function productionOperationSummary(operations: CutPartProductionOperation[] | u
   ).join(" | ");
 }
 
+function grooveProfileFromOperations(operations: CutPartProductionOperation[] | undefined): HandleGrooveProfile {
+  const description = operations?.find(operation => operation.kind === "handle-groove")?.description ?? "";
+  if (description.includes("perfil J")) return "j-hidden";
+  if (description.includes("perfil L")) return "l-square";
+  if (description.includes("45 graus")) return "45-chamfer";
+  return "pending";
+}
+
 export function CuttingPlanPanel({
   parts,
   project,
@@ -447,6 +455,7 @@ export function CuttingPlanPanel({
         sourceReference: front.sourceReference,
         backMaterial: back.material,
         bandedSides: [...part.composite.bandedSides],
+        handleGrooveProfile: grooveProfileFromOperations(front.productionOperations),
       });
       setSupplementalError(null);
       setSupplementalMessage("Editando a composição inteira. Salvar atualizará juntas as camadas de 15 mm e 6 mm.");
