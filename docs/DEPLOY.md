@@ -45,6 +45,8 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 
 9. Estado de encerramento desta sessão: o commit `547b54f` foi publicado após ApprovalGate `06e60fa0-40d9-4991-9987-e729a4e35218` no deployment `06c5f0c0.rayzen-marcenaria.pages.dev`; o preview e `marcenaria.rayzen.com.br` responderam HTTP 200. A versão inclui carregamento remoto do catálogo por `local_id`; isso não prova RLS exercitada com todas as identidades nem liberação de fabricação.
 
+10. Em 10/11/2026, o commit `ec19f62` (peças por revisão, recuperação de projetos remotos e comparação canônica de `jsonb`) foi publicado após aprovação explícita do usuário na conversa, sem ID de ApprovalGate registrado nesta sessão. Prévia `50822801.rayzen-marcenaria.pages.dev` e produção `bf89eab1.rayzen-marcenaria.pages.dev`; `marcenaria.rayzen.com.br` e uma rota SPA direta responderam HTTP 200 servindo `index-CoFGQOTE.js`, que contém os novos textos de recuperação e de sincronização das peças. Isso não prova recuperação humana em outro dispositivo nem RLS remota com contas reais.
+
 ## Ainda necessário
 
 - regra de acesso à prévia e responsável pela aprovação de publicação;
