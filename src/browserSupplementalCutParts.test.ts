@@ -96,6 +96,7 @@ describe("supplemental cut parts browser storage", () => {
       grain: "none",
       bandedSides: ["top", "left", "right"],
       handleGrooveProfile: "j-hidden",
+      handleGrooveNotes: "recuo 20 mm; inicio a 80 mm da lateral direita",
     });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -112,6 +113,7 @@ describe("supplemental cut parts browser storage", () => {
     expect(result.parts[1].productionOperations?.some(operation => operation.kind === "handle-groove")).toBe(false);
     expect(result.parts[0].productionOperations).toEqual(expect.arrayContaining([
       expect.objectContaining({ kind: "handle-groove", description: expect.stringContaining("perfil J") }),
+      expect.objectContaining({ kind: "handle-groove", description: expect.stringContaining("recuo 20 mm") }),
     ]));
   });
 

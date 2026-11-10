@@ -24,6 +24,7 @@ export interface SupplementalCutPart {
     kind: "door-15-6" | "thickening-15-15";
     layer: "front-15" | "back-6" | "base-15" | "reinforcement-15";
     bandedSides: Array<"top" | "bottom" | "left" | "right">;
+    handleGrooveNotes?: string;
   };
   productionOperations?: CutPartProductionOperation[];
 }
@@ -48,6 +49,7 @@ export interface SupplementalDoor15x6Input {
   grain: CuttingGrain;
   bandedSides: PanelEdge["side"][];
   handleGrooveProfile?: HandleGrooveProfile;
+  handleGrooveNotes?: string;
 }
 
 export interface SupplementalThickening15x15Input {
@@ -126,6 +128,7 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
     ? `Fita 22 mm após composição: ${input.bandedSides.map(side => sideLabels[side]).join(", ")}`
     : "Fita da composição ainda não definida";
   const [front, back] = result.panel.layers;
+  const grooveNotes = input.handleGrooveNotes?.trim() ?? "";
   const sharedOperations: CutPartProductionOperation[] = [
     {
       kind: "bonding",
@@ -161,7 +164,7 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
           description: "Cava na camada de 15 mm: geometria e posição ainda não definidas.",
         },
       ],
-      composite: { id: input.compositeId, kind: "door-15-6", layer: "front-15", bandedSides: [...input.bandedSides] },
+      composite: { id: input.compositeId, kind: "door-15-6", layer: "front-15", bandedSides: [...input.bandedSides], handleGrooveNotes: grooveNotes || undefined },
     },
     {
       id: input.backId,
@@ -176,7 +179,7 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
       grain: back.grain,
       sourceReference: input.sourceReference,
       productionOperations: sharedOperations.map(operation => ({ ...operation })),
-      composite: { id: input.compositeId, kind: "door-15-6", layer: "back-6", bandedSides: [...input.bandedSides] },
+      composite: { id: input.compositeId, kind: "door-15-6", layer: "back-6", bandedSides: [...input.bandedSides], handleGrooveNotes: grooveNotes || undefined },
     },
   ];
   const grooveDescriptions: Record<HandleGrooveProfile, string> = {
@@ -185,9 +188,9 @@ export function createSupplementalDoor15x6(input: SupplementalDoor15x6Input): Su
     "l-square": "Cava perfil L quadrado: confirmar largura, profundidade e posicao antes da usinagem.",
     pending: "Definir o perfil da cava (45 graus, J oculto ou L quadrado) por projeto antes da usinagem.",
   };
-  if (input.handleGrooveProfile && input.handleGrooveProfile !== "pending") {
+  if (input.handleGrooveProfile && (input.handleGrooveProfile !== "pending" || grooveNotes)) {
     parts[0].productionOperations = parts[0].productionOperations?.map(operation => operation.kind === "handle-groove"
-      ? { ...operation, description: grooveDescriptions[input.handleGrooveProfile as HandleGrooveProfile] }
+      ? { ...operation, description: `${grooveDescriptions[input.handleGrooveProfile as HandleGrooveProfile]}${grooveNotes ? ` Detalhes do projeto: ${grooveNotes}` : ""}` }
       : operation);
   }
   return validateSupplementalCutParts(parts);
@@ -275,6 +278,10 @@ export function validateSupplementalCutParts(value: unknown): SupplementalCutPar
         || composite.bandedSides.some(side => !["top", "bottom", "left", "right"].includes(String(side)))
         || new Set(composite.bandedSides).size !== composite.bandedSides.length) {
         errors.push(`Peça complementar ${index + 1}: vínculo de composição inválido.`);
+      }
+      if (composite && composite.handleGrooveNotes !== undefined
+        && (typeof composite.handleGrooveNotes !== "string" || composite.handleGrooveNotes.length > 1000)) {
+        errors.push(`PeÃ§a complementar ${index + 1}: detalhes da cava invÃ¡lidos.`);
       }
     }
     if (part.productionOperations !== undefined) {

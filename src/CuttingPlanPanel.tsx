@@ -57,6 +57,7 @@ interface SupplementalPartDraft {
   backMaterial: string;
   bandedSides: PanelEdge["side"][];
   handleGrooveProfile?: HandleGrooveProfile;
+  handleGrooveNotes?: string;
 }
 
 const emptySupplementalDraft: SupplementalPartDraft = {
@@ -74,6 +75,7 @@ const emptySupplementalDraft: SupplementalPartDraft = {
   backMaterial: "",
   bandedSides: [],
   handleGrooveProfile: "pending",
+  handleGrooveNotes: "",
 };
 
 const edgeSideLabels: Record<PanelEdge["side"], string> = {
@@ -356,6 +358,7 @@ export function CuttingPlanPanel({
       grain: supplementalDraft.grain,
       bandedSides: supplementalDraft.bandedSides,
       handleGrooveProfile: supplementalDraft.handleGrooveProfile,
+      handleGrooveNotes: supplementalDraft.handleGrooveNotes,
     });
     if (!result.ok) {
       setSupplementalError(result.errors.join(" "));
@@ -456,6 +459,7 @@ export function CuttingPlanPanel({
         backMaterial: back.material,
         bandedSides: [...part.composite.bandedSides],
         handleGrooveProfile: grooveProfileFromOperations(front.productionOperations),
+        handleGrooveNotes: part.composite.handleGrooveNotes ?? "",
       });
       setSupplementalError(null);
       setSupplementalMessage("Editando a composição inteira. Salvar atualizará juntas as camadas de 15 mm e 6 mm.");
@@ -740,14 +744,15 @@ export function CuttingPlanPanel({
           ) : (
             <label className="supplemental-wide">Bordas / fita<input value={supplementalDraft.edges} onChange={event => updateSupplementalDraft("edges", event.target.value)} placeholder="Descreva somente o que foi definido" /></label>
           )}
-          {supplementalDraft.composition === "door-15-6" ? (
-            <label className="supplemental-wide">Perfil da cava nesta porta<select value={supplementalDraft.handleGrooveProfile ?? "pending"} onChange={event => updateSupplementalDraft("handleGrooveProfile", event.target.value as HandleGrooveProfile)}>
+          {supplementalDraft.composition === "door-15-6" ? (<>
+          <label className="supplemental-wide">Perfil da cava nesta porta<select value={supplementalDraft.handleGrooveProfile ?? "pending"} onChange={event => updateSupplementalDraft("handleGrooveProfile", event.target.value as HandleGrooveProfile)}>
               <option value="pending">Definir depois</option>
               <option value="45-chamfer">45 graus chanfrado</option>
               <option value="j-hidden">J oculto / côncavo</option>
               <option value="l-square">L quadrado</option>
             </select></label>
-          ) : null}
+            <label className="supplemental-wide">Detalhes da cava (medidas, posição, folga)<textarea value={supplementalDraft.handleGrooveNotes ?? ""} onChange={event => updateSupplementalDraft("handleGrooveNotes", event.target.value)} maxLength={1000} placeholder="Ex.: recuo 20 mm, início a 80 mm da lateral direita" /></label>
+          </>) : null}
           <label className="supplemental-wide">Origem da informação · opcional<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder={`Se vazio: entrada manual da revisão R${String(revision).padStart(2, "0")}`} /></label>
           <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : supplementalDraft.composition === "door-15-6" ? "Gerar porta 15+6" : supplementalDraft.composition === "thickening-15-15" ? "Gerar engrossamento 15+15" : "Adicionar peça"}</button>
           {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
