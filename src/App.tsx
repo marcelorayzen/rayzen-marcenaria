@@ -1239,7 +1239,7 @@ export default function App() {
           />
         </section>
         <PhotoAttachmentPanel projectId={demoProject.id} revisionId={savedRevision.id} />
-        <ProjectCatalogPanel projectId={demoProject.id} />
+        <ProjectCatalogPanel projectId={demoProject.id} remoteProjectId={latestSyncItem?.remoteProjectId ?? null} />
 
         <section className="history-section" aria-labelledby="history-title">
           <div>

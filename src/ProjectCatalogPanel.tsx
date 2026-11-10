@@ -1,13 +1,16 @@
 import { useMemo, useState } from "react";
 import { BrowserProjectCatalogItems, parseCatalogSpecifications, type CatalogItemKind, type ProjectCatalogItem } from "./projectCatalog";
+import { isSupabaseConfigured, supabase } from "./supabaseClient";
+import { syncProjectCatalog } from "./supabaseCatalogSync";
 
-export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
+export function ProjectCatalogPanel({ projectId, remoteProjectId }: { projectId: string; remoteProjectId?: string | null }) {
   const store = useMemo(() => new BrowserProjectCatalogItems(window.localStorage, `rayzen-marcenaria:project:${projectId}:catalog:v1`), [projectId]);
   const [items, setItems] = useState(() => store.load());
   const emptyDraft = { code: "", name: "", kind: "door" as CatalogItemKind, manufacturer: "", specificationsText: "", sourceReference: "" };
   const [draft, setDraft] = useState(emptyDraft);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   function save() {
     const parsed = parseCatalogSpecifications(draft.specificationsText);
     if (!parsed.ok) { setMessage(parsed.error); return; }
@@ -21,6 +24,16 @@ export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
     setMessage("Editando item; salvar manterá o mesmo ID técnico.");
   }
   function cancelEdit() { setEditingId(null); setDraft(emptyDraft); setMessage(null); }
+  async function synchronizeCatalog() {
+    if (!supabase || !remoteProjectId) {
+      setMessage("Sincronização bloqueada: sincronize primeiro uma revisão salva com uma conta autorizada.");
+      return;
+    }
+    setSyncing(true);
+    const result = await syncProjectCatalog(supabase, remoteProjectId, items);
+    setSyncing(false);
+    setMessage(result.status === "synced" ? `${result.count} item(ns) do catálogo sincronizado(s).` : result.message);
+  }
   function remove(id: string) { setItems(store.save(items.filter(item => item.id !== id))); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setMessage("Item removido do catalogo local."); }
   function toggleActive(id: string) {
     const next = store.save(items.map(item => item.id === id ? { ...item, active: !item.active } : item));
@@ -40,6 +53,7 @@ export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
       <label>Origem da especificacao<input value={draft.sourceReference} onChange={event => setDraft({ ...draft, sourceReference: event.target.value })} placeholder="Ex.: fabricante ou regra da oficina" /></label>
       <button type="button" onClick={save}>{editingId ? "Salvar alteração" : "Adicionar item"}</button>
       {editingId ? <button type="button" onClick={cancelEdit}>Cancelar edição</button> : null}
+      <button type="button" onClick={() => void synchronizeCatalog()} disabled={syncing || !isSupabaseConfigured || !remoteProjectId}>{syncing ? "Sincronizando..." : "Sincronizar catálogo"}</button>
     </div>
     {message ? <p role="status">{message}</p> : null}
     {items.length ? <ul>{items.map(item => <li key={item.id}><strong>{item.code} · {item.name}</strong><small>{item.kind} · {item.active ? "ativo" : "inativo"} · origem: {item.sourceReference}</small><button type="button" onClick={() => edit(item)}>Editar</button><button type="button" onClick={() => toggleActive(item.id)}>{item.active ? "Desativar" : "Reativar"}</button><button type="button" onClick={() => remove(item.id)}>Remover</button></li>)}</ul> : null}
