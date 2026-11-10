@@ -34,3 +34,23 @@ export function validateProjectCatalog(items: ProjectCatalogItem[]): string[] {
   });
   return errors;
 }
+import type { KeyValueStorage } from "./browserProjectStorage";
+
+
+export class BrowserProjectCatalogItems {
+  constructor(private readonly storage: KeyValueStorage, private readonly key: string) {}
+  load(): ProjectCatalogItem[] {
+    const raw = this.storage.getItem(this.key);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed) && validateProjectCatalog(parsed as ProjectCatalogItem[]).length === 0 ? parsed as ProjectCatalogItem[] : [];
+    } catch { return []; }
+  }
+  save(items: ProjectCatalogItem[]): ProjectCatalogItem[] {
+    const errors = validateProjectCatalog(items);
+    if (errors.length) throw new Error(errors.join(" "));
+    this.storage.setItem(this.key, JSON.stringify(items));
+    return items;
+  }
+}
