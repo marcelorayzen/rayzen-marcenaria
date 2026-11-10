@@ -11,6 +11,29 @@ export interface ProjectCatalogItem {
   active: boolean;
 }
 
+export type CatalogSpecificationsParseResult =
+  | { ok: true; specifications: Record<string, string> }
+  | { ok: false; error: string };
+
+export function parseCatalogSpecifications(input: string): CatalogSpecificationsParseResult {
+  const specifications: Record<string, string> = {};
+  for (const [index, rawLine] of input.split(/\r?\n/).entries()) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const separator = line.indexOf("=");
+    if (separator <= 0 || separator === line.length - 1) {
+      return { ok: false, error: `Especificação ${index + 1}: use o formato chave=valor.` };
+    }
+    const key = line.slice(0, separator).trim();
+    const value = line.slice(separator + 1).trim();
+    if (!key || !value || specifications[key] !== undefined) {
+      return { ok: false, error: `Especificação ${index + 1}: chave vazia ou repetida.` };
+    }
+    specifications[key] = value;
+  }
+  return { ok: true, specifications };
+}
+
 export function validateProjectCatalogItem(item: ProjectCatalogItem): string[] {
   const errors: string[] = [];
   if (!item.id.trim() || !item.code.trim() || !item.name.trim()) errors.push("Identifique item, codigo e nome do catalogo.");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateProjectCatalog, validateProjectCatalogItem, type ProjectCatalogItem } from "./projectCatalog";
+import { parseCatalogSpecifications, validateProjectCatalog, validateProjectCatalogItem, type ProjectCatalogItem } from "./projectCatalog";
 
 const item: ProjectCatalogItem = {
   id: "catalog-door-1", code: "PORTA-CAVA-J", name: "Porta com cava J", kind: "door",
@@ -7,6 +7,11 @@ const item: ProjectCatalogItem = {
 };
 
 describe("project catalog contract", () => {
+  it("parses explicit key-value specifications without guessing", () => {
+    expect(parseCatalogSpecifications("fabricante=FGV\nmodelo=Soft close")).toEqual({ ok: true, specifications: { fabricante: "FGV", modelo: "Soft close" } });
+    expect(parseCatalogSpecifications("fabricante").ok).toBe(false);
+    expect(parseCatalogSpecifications("modelo=A\nmodelo=B").ok).toBe(false);
+  });
   it("accepts an explicitly sourced catalog item without inventing dimensions", () => {
     expect(validateProjectCatalogItem(item)).toEqual([]);
   });
