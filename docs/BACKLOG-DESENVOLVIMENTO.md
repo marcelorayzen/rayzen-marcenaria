@@ -42,6 +42,7 @@ O roteiro de execução em fases, com limites e critérios para delegação a ou
 
 - **Correção prioritária identificada em 9/11/2026:** criar um projeto não pode remover o rascunho/fila anteriores. Implementar listagem e reabertura, isolamento local por conta/projeto, vínculo remoto por projeto e sincronização idempotente. Aceite adicional: duas revisões no mesmo projeto remoto, retentativa sem duplicação e recuperação em outro dispositivo.
 - **Implementado localmente em 9/11/2026:** catálogo e seletor de projetos no navegador, com revisões e fila de sincronização separadas por projeto. A fila reserva e persiste o UUID remoto, propaga-o às revisões seguintes e tem teste simulado de retentativa sem duplicar projeto/revisão. Ainda faltam isolamento por conta, renomear/arquivar, teste remoto de RLS/idempotência e recuperação em outro dispositivo.
+- **Implementado localmente em 10/11/2026:** o backup/restauração local inclui opcionalmente o catálogo de itens do projeto e mantém compatibilidade com arquivos anteriores. A recuperação continua limitada ao dispositivo até a persistência remota ser validada.
 
 - **Tarefa:** substituir o estado efêmero da aba por armazenamento persistente compatível com o escopo decidido; criar, abrir, renomear e arquivar projetos.
 - **Tarefa:** salvar revisões imutáveis e permitir restaurar uma anterior como nova revisão; manter autosave de rascunho claramente distinto de revisão confirmada.
