@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { syncProjectCatalog } from "./supabaseCatalogSync";
+import { loadProjectCatalog, syncProjectCatalog } from "./supabaseCatalogSync";
 
 const item = { id: "catalog-door-1", code: "PT-01", name: "Porta", kind: "door" as const, manufacturer: null, specifications: { profile: "J" }, sourceReference: "Oficina", active: true };
 
@@ -23,5 +23,20 @@ describe("Supabase catalog synchronization", () => {
     await expect(syncProjectCatalog(client, "project-1", [item])).resolves.toEqual({ status: "synced", count: 1 });
     expect(calls[0]).toMatchObject({ table: "catalog_items", options: { onConflict: "project_id,local_id" } });
     expect(calls[0].rows?.[0]).toMatchObject({ project_id: "project-1", local_id: "catalog-door-1", created_by: "user-1" });
+  });
+
+  it("loads remote rows using local_id as the browser identity", async () => {
+    const client = {
+      auth: { getUser: async () => ({ data: { user: { id: "user-1" } }, error: null }) },
+      from: (table: string) => {
+        const query = {
+          eq: () => query,
+          maybeSingle: async () => table === "profiles" ? { data: { id: "user-1" }, error: null } : null,
+          then: (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) => Promise.resolve({ data: [{ local_id: "catalog-door-1", code: "PT-01", name: "Porta", kind: "door", manufacturer: null, specifications: { profile: "J" }, source_reference: "Oficina", active: true }], error: null }).then(resolve, reject),
+        };
+        return { select: () => query };
+      },
+    } as never;
+    await expect(loadProjectCatalog(client, "project-1")).resolves.toMatchObject({ status: "loaded", items: [item] });
   });
 });

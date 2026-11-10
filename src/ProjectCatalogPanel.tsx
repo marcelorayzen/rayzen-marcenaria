@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { BrowserProjectCatalogItems, parseCatalogSpecifications, type CatalogItemKind, type ProjectCatalogItem } from "./projectCatalog";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
-import { syncProjectCatalog } from "./supabaseCatalogSync";
+import { loadProjectCatalog, syncProjectCatalog } from "./supabaseCatalogSync";
 
 export function ProjectCatalogPanel({ projectId, remoteProjectId }: { projectId: string; remoteProjectId?: string | null }) {
   const store = useMemo(() => new BrowserProjectCatalogItems(window.localStorage, `rayzen-marcenaria:project:${projectId}:catalog:v1`), [projectId]);
@@ -34,6 +34,15 @@ export function ProjectCatalogPanel({ projectId, remoteProjectId }: { projectId:
     setSyncing(false);
     setMessage(result.status === "synced" ? `${result.count} item(ns) do catálogo sincronizado(s).` : result.message);
   }
+  async function loadCatalog() {
+    if (!supabase || !remoteProjectId) { setMessage("Carregamento bloqueado: sincronize primeiro uma revisão salva com uma conta autorizada."); return; }
+    const result = await loadProjectCatalog(supabase, remoteProjectId);
+    if (result.status !== "loaded") { setMessage(result.message); return; }
+    const byId = new Map(items.map(item => [item.id, item]));
+    for (const item of result.items) byId.set(item.id, item);
+    setItems(store.save([...byId.values()]));
+    setMessage(`${result.items.length} item(ns) carregado(s) do catálogo remoto; itens locais não sincronizados foram preservados.`);
+  }
   function remove(id: string) { setItems(store.save(items.filter(item => item.id !== id))); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setMessage("Item removido do catalogo local."); }
   function toggleActive(id: string) {
     const next = store.save(items.map(item => item.id === id ? { ...item, active: !item.active } : item));
@@ -54,6 +63,7 @@ export function ProjectCatalogPanel({ projectId, remoteProjectId }: { projectId:
       <button type="button" onClick={save}>{editingId ? "Salvar alteração" : "Adicionar item"}</button>
       {editingId ? <button type="button" onClick={cancelEdit}>Cancelar edição</button> : null}
       <button type="button" onClick={() => void synchronizeCatalog()} disabled={syncing || !isSupabaseConfigured || !remoteProjectId}>{syncing ? "Sincronizando..." : "Sincronizar catálogo"}</button>
+      <button type="button" onClick={() => void loadCatalog()} disabled={!isSupabaseConfigured || !remoteProjectId}>Carregar catálogo remoto</button>
     </div>
     {message ? <p role="status">{message}</p> : null}
     {items.length ? <ul>{items.map(item => <li key={item.id}><strong>{item.code} · {item.name}</strong><small>{item.kind} · {item.active ? "ativo" : "inativo"} · origem: {item.sourceReference}</small><button type="button" onClick={() => edit(item)}>Editar</button><button type="button" onClick={() => toggleActive(item.id)}>{item.active ? "Desativar" : "Reativar"}</button><button type="button" onClick={() => remove(item.id)}>Remover</button></li>)}</ul> : null}
