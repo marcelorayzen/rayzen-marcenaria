@@ -8,10 +8,10 @@ export function ProjectCatalogPanel({ projectId }: { projectId: string }) {
   const [message, setMessage] = useState<string | null>(null);
   function save() {
     const item: ProjectCatalogItem = { id: `catalog-${crypto.randomUUID()}`, ...draft, manufacturer: null, specifications: {}, active: true };
-    try { setItems(store.save([...items, item])); setDraft({ code: "", name: "", kind: "door", sourceReference: "" }); setMessage("Item salvo no catalogo deste projeto."); }
+    try { setItems(store.save([...items, item])); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setDraft({ code: "", name: "", kind: "door", sourceReference: "" }); setMessage("Item salvo no catalogo deste projeto."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "Nao foi possivel salvar o item."); }
   }
-  function remove(id: string) { setItems(store.save(items.filter(item => item.id !== id))); setMessage("Item removido do catalogo local."); }
+  function remove(id: string) { setItems(store.save(items.filter(item => item.id !== id))); window.dispatchEvent(new CustomEvent("rayzen:catalog-updated", { detail: { projectId } })); setMessage("Item removido do catalogo local."); }
   return <section className="catalog-panel" aria-labelledby="catalog-title">
     <header><div><span className="small-label">E1 · CATALOGO LOCAL</span><h2 id="catalog-title">Itens do projeto</h2></div><span>{items.length} ITEM(NS)</span></header>
     <p>Cadastre portas, gavetas, ferragens e equipamentos somente com origem conhecida.</p>

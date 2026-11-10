@@ -30,6 +30,7 @@ import {
   type SupplementalCutPart,
 } from "./browserSupplementalCutParts";
 import type { PanelEdge } from "./compositePanel";
+import { BrowserProjectCatalogItems, type ProjectCatalogItem } from "./projectCatalog";
 
 type TrimSide = keyof SheetTrim;
 
@@ -156,6 +157,10 @@ export function CuttingPlanPanel({
     ),
     [project.id, revision],
   );
+  const catalogStore = useMemo(
+    () => new BrowserProjectCatalogItems(window.localStorage, `rayzen-marcenaria:project:${project.id}:catalog:v1`),
+    [project.id],
+  );
   const [archivedPlans, setArchivedPlans] = useState(() => archiveStore.load());
   const [archiveMessage, setArchiveMessage] = useState<string | null>(null);
   const [trim, setTrim] = useState<Record<TrimSide, string>>({
@@ -179,6 +184,7 @@ export function CuttingPlanPanel({
   const [supplementalMessage, setSupplementalMessage] = useState<string | null>(null);
   const [editingSupplementalId, setEditingSupplementalId] = useState<string | null>(null);
   const [supplementalBasePartId, setSupplementalBasePartId] = useState("");
+  const [catalogItems, setCatalogItems] = useState<ProjectCatalogItem[]>(() => catalogStore.load());
 
   useEffect(() => {
     const loaded = configurationStore.load();
@@ -201,6 +207,16 @@ export function CuttingPlanPanel({
     setEditingSupplementalId(null);
     setSupplementalBasePartId("");
   }, [supplementalStore]);
+
+  useEffect(() => {
+    setCatalogItems(catalogStore.load());
+    const refresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ projectId?: string }>).detail;
+      if (detail?.projectId === project.id) setCatalogItems(catalogStore.load());
+    };
+    window.addEventListener("rayzen:catalog-updated", refresh);
+    return () => window.removeEventListener("rayzen:catalog-updated", refresh);
+  }, [catalogStore, project.id]);
 
   function persistConfiguration(
     nextTrim: Record<TrimSide, string>,
@@ -766,7 +782,11 @@ export function CuttingPlanPanel({
             <label className="supplemental-wide">Detalhes da cava (medidas, posição, folga)<textarea value={supplementalDraft.handleGrooveNotes ?? ""} onChange={event => updateSupplementalDraft("handleGrooveNotes", event.target.value)} maxLength={1000} placeholder="Ex.: recuo 20 mm, início a 80 mm da lateral direita" /></label>
           </>) : null}
           <label className="supplemental-wide">Origem da informação · opcional<input value={supplementalDraft.sourceReference} onChange={event => updateSupplementalDraft("sourceReference", event.target.value)} placeholder={`Se vazio: entrada manual da revisão R${String(revision).padStart(2, "0")}`} /></label>
-          <label className="supplemental-wide">ID do item do catálogo · opcional<input value={supplementalDraft.catalogItemId} onChange={event => updateSupplementalDraft("catalogItemId", event.target.value)} placeholder="Vincule ao item cadastrado no catálogo do projeto" /></label>
+          <label className="supplemental-wide">Item do catálogo · opcional<select value={supplementalDraft.catalogItemId} onChange={event => updateSupplementalDraft("catalogItemId", event.target.value)}>
+            <option value="">Nenhum vínculo selecionado</option>
+            {supplementalDraft.catalogItemId && !catalogItems.some(item => item.id === supplementalDraft.catalogItemId) ? <option value={supplementalDraft.catalogItemId}>ID atual: {supplementalDraft.catalogItemId}</option> : null}
+            {catalogItems.filter(item => item.active).map(item => <option value={item.id} key={item.id}>{item.code} · {item.name}</option>)}
+          </select></label>
           <button type="button" onClick={saveSupplementalPart}>{editingSupplementalId ? "Salvar alteração" : supplementalDraft.composition === "door-15-6" ? "Gerar porta 15+6" : supplementalDraft.composition === "thickening-15-15" ? "Gerar engrossamento 15+15" : "Adicionar peça"}</button>
           {editingSupplementalId ? <button type="button" className="supplemental-secondary" onClick={cancelSupplementalEdit}>Cancelar edição</button> : null}
         </div>
