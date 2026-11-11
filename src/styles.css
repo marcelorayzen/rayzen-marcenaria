@@ -951,6 +951,22 @@ tr:focus-visible {
   font-size: 11px;
 }
 
+.gate-form {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.gate-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.gate-form textarea {
+  min-height: 72px;
+}
+
 .remote-project-list {
   display: grid;
   gap: 6px;

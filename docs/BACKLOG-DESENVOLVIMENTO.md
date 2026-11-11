@@ -113,6 +113,7 @@ O roteiro de execução em fases, com limites e critérios para delegação a ou
 ### D2 · Aprovar arquitetura e política do agente — P0, bloqueio para IA externa
 
 - **Tarefa:** decidir provedor (incluindo opção de não usar provedor externo), quais dados/contexto podem ser enviados, consentimento, retenção, custo e comportamento em indisponibilidade.
+- **Decisão parcial em 11/11/2026:** provedor Claude (Anthropic), chamado por função no servidor (a chave nunca vai ao navegador); pode receber texto, parâmetros do projeto **e fotos da visita**. A IA só propõe operações tipadas; humano confirma e o motor determinístico calcula. Ficha exigida por `CONTRATO-USO-DE-DADOS.md` ainda incompleta: retenção de conversas/fotos enviadas, consentimento do cliente específico para envio de fotos à IA, remoção de dados identificáveis (nome, telefone, endereço) antes do envio, limite de custo e comportamento em indisponibilidade. Configurar a chave e publicar a função exige ação e aprovação humanas.
 - **Aceite:** a decisão está documentada; anexos e dados identificáveis não são enviados por padrão; usuário pode continuar edição manual se o agente falhar.
 - **Dependências:** A2, D1.
 
@@ -157,6 +158,7 @@ O marco só está entregue quando o fluxo ponta a ponta for demonstrado em um pr
 
 - **Tarefa:** definir checklist de medidas confirmadas, materiais, bordas, ferragens, folgas, revisão e responsável técnico. Somente o marceneiro pode executar a liberação; definir também o substituto autorizado.
 - **Tarefa:** gerar relatório de pendências e documentos preliminares apenas para revisões válidas; gerar materiais, acessórios, informações de corte, etiquetas e montagem para uso somente a partir de revisão tecnicamente liberada.
+- **Implementado em 11/11/2026 (local; remoto pendente de aprovação):** seção "Aprovação comercial e liberação técnica" para a revisão sincronizada exata. Representante membro registra a aprovação com canal e evidência; qualquer marceneiro membro libera. Regra confirmada: itens pendentes/bloqueados exigem justificativa escrita, gravada no snapshot da liberação. A migration `20261111090000_release_requires_justification.sql` impõe a regra no servidor, confere o número da revisão e grava `audit_events`; pgTAP local 16/16. Limite conhecido: as peças ficam congeladas após a aprovação, então uma revisão aprovada sem peças sincronizadas não as recebe depois. Plano de corte e etiquetas ainda não são bloqueados para revisões não liberadas (seguem marcados como preliminares).
 - **Aceite:** “preparar para fabricar” não significa liberar; bloqueios são rastreáveis; liberação exige ação explícita do marceneiro e registra identidade/data/revisão. A confirmação do comercial/cliente não a substitui.
 - **Dependências:** A3, E1, E2.
 

@@ -60,6 +60,14 @@ import { deriveRevisionParts } from "./revisionParts";
 import { listRemoteProjects, loadRemoteRevisions, type RemoteProjectSummary } from "./supabaseProjectRecovery";
 import { mergeRemoteRevisions, replaceWithRemoteRevisions } from "./remoteRecoveryMerge";
 import { addProjectMember, loadProjectTeam, type InternalTeamMember } from "./supabaseProjectMembers";
+import {
+  loadRevisionApprovalState,
+  recordCommercialApproval,
+  releaseRevision,
+  type ApprovalChannel,
+  type RevisionApprovalState,
+} from "./supabaseRelease";
+import { buildReleaseChecklist, openReadinessItems } from "./technicalRelease";
 import { parseProjectChatMessage } from "./projectChat";
 import { CuttingPlanPanel } from "./CuttingPlanPanel";
 import { PhotoAttachmentPanel } from "./PhotoAttachmentPanel";
@@ -353,6 +361,11 @@ export default function App() {
   const [readinessSyncMessage, setReadinessSyncMessage] = useState<string | null>(null);
   const [remoteProjects, setRemoteProjects] = useState<RemoteProjectSummary[]>([]);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
+  const [approvalState, setApprovalState] = useState<RevisionApprovalState | null>(null);
+  const [approvalChannel, setApprovalChannel] = useState<ApprovalChannel>("whatsapp");
+  const [approvalEvidence, setApprovalEvidence] = useState("");
+  const [releaseJustification, setReleaseJustification] = useState("");
+  const [gateMessage, setGateMessage] = useState<string | null>(null);
   const [projectTeam, setProjectTeam] = useState<InternalTeamMember[]>([]);
   const [teamMessage, setTeamMessage] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
@@ -391,6 +404,14 @@ export default function App() {
     (constraint) => constraint.id === selectedConstraintId,
   );
   const roleCapabilities = getRoleCapabilities(authUser?.roles ?? []);
+  const remoteRevisionIdForGates = latestSyncItem?.remoteRevisionId;
+  useEffect(() => {
+    setGateMessage(null);
+    void refreshApprovalState(remoteRevisionIdForGates);
+    // refreshApprovalState only reads the arguments and module-level client.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remoteRevisionIdForGates, authUser?.id]);
+  const openReleaseItems = openReadinessItems(manufacturingReadiness);
 
   const pendingPreview = useMemo(
     () =>
@@ -1089,6 +1110,48 @@ export default function App() {
       : `Peças não sincronizadas: ${result.message}`;
   }
 
+  async function refreshApprovalState(remoteRevisionId = latestSyncItem?.remoteRevisionId) {
+    if (!supabase || !authUser || !remoteRevisionId) {
+      setApprovalState(null);
+      return;
+    }
+    const result = await loadRevisionApprovalState(supabase, remoteRevisionId);
+    if (result.status === "loaded") setApprovalState(result.state);
+    else setGateMessage(result.message);
+  }
+
+  async function submitCommercialApproval() {
+    const remoteRevisionId = latestSyncItem?.remoteRevisionId;
+    if (!supabase || !remoteRevisionId) return;
+    const result = await recordCommercialApproval(supabase, remoteRevisionId, approvalChannel, approvalEvidence);
+    if (result.status !== "recorded") {
+      setGateMessage(result.message);
+      return;
+    }
+    setApprovalEvidence("");
+    setGateMessage(`Aprovação comercial registrada para R${String(savedRevision.number).padStart(2, "0")}.`);
+    await refreshApprovalState(remoteRevisionId);
+  }
+
+  async function submitTechnicalRelease() {
+    const remoteRevisionId = latestSyncItem?.remoteRevisionId;
+    if (!supabase || !remoteRevisionId) return;
+    const checklist = buildReleaseChecklist(manufacturingReadiness, savedRevision.number, releaseJustification);
+    if (!checklist.ok) {
+      setGateMessage(checklist.message);
+      return;
+    }
+    if (!window.confirm(`Liberar R${String(savedRevision.number).padStart(2, "0")} para produção? A liberação fica registrada com seu nome e não pode ser desfeita; alterações exigirão nova revisão.`)) return;
+    const result = await releaseRevision(supabase, remoteRevisionId, checklist.snapshot);
+    if (result.status !== "recorded") {
+      setGateMessage(result.message);
+      return;
+    }
+    setReleaseJustification("");
+    setGateMessage(`R${String(savedRevision.number).padStart(2, "0")} liberada para produção.`);
+    await refreshApprovalState(remoteRevisionId);
+  }
+
   async function refreshProjectTeam() {
     const remoteProjectId = latestSyncItem?.remoteProjectId;
     if (!supabase || !authUser || !remoteProjectId) {
@@ -1503,6 +1566,66 @@ export default function App() {
           <ul>
             {manufacturingReadiness.items.map(item => <li key={item.id}><strong>{item.status === "ok" ? "OK" : item.status === "blocked" ? "BLOQUEADO" : "PENDENTE"}</strong> · {item.label}: {item.detail}</li>)}
           </ul>
+        </section>
+
+        <section className="project-checks release-gates" aria-labelledby="gates-title">
+          <div className="constraint-heading">
+            <div>
+              <span className="small-label">APROVAÇÃO E LIBERAÇÃO · R{String(savedRevision.number).padStart(2, "0")}</span>
+              <h2 id="gates-title">Aprovação comercial e liberação técnica</h2>
+            </div>
+            <span>{approvalState?.release ? "LIBERADA" : approvalState?.approval ? "APROVADA" : "AGUARDANDO"}</span>
+          </div>
+          {!remoteRevisionIdForGates || !authUser ? (
+            <p>Sincronize a revisão salva com uma conta autorizada. Aprovação e liberação valem somente para a revisão exata sincronizada; uma nova revisão começa sem elas.</p>
+          ) : (
+            <>
+              <p>
+                <strong>Aprovação comercial:</strong>{" "}
+                {approvalState?.approval
+                  ? `registrada via ${approvalState.approval.channel === "whatsapp" ? "WhatsApp" : "sistema comercial"} em ${new Date(approvalState.approval.recordedAt).toLocaleString("pt-BR")} — ${approvalState.approval.evidence}`
+                  : "ainda não registrada."}
+              </p>
+              {!approvalState?.approval && roleCapabilities.canValidateCommercial ? (
+                <div className="gate-form">
+                  <label>
+                    Canal
+                    <select value={approvalChannel} onChange={event => setApprovalChannel(event.target.value as ApprovalChannel)}>
+                      <option value="whatsapp">WhatsApp</option>
+                      <option value="sistema_comercial">Sistema comercial</option>
+                    </select>
+                  </label>
+                  <label>
+                    Evidência da confirmação do cliente
+                    <input value={approvalEvidence} maxLength={500} onChange={event => setApprovalEvidence(event.target.value)} placeholder="Ex.: mensagem de 11/11 confirmando o ilustrativo R02" />
+                  </label>
+                  <button type="button" onClick={() => void submitCommercialApproval()} disabled={isDirty || approvalEvidence.trim().length === 0}>
+                    Registrar aprovação comercial
+                  </button>
+                </div>
+              ) : null}
+              <p>
+                <strong>Liberação técnica:</strong>{" "}
+                {approvalState?.release
+                  ? `liberada em ${new Date(approvalState.release.releasedAt).toLocaleString("pt-BR")}${approvalState.release.justification ? ` com justificativa: ${approvalState.release.justification}` : "."}`
+                  : approvalState?.approval ? "aguardando um marceneiro do projeto." : "depende da aprovação comercial."}
+              </p>
+              {approvalState?.approval && !approvalState.release && roleCapabilities.canReleaseProduction ? (
+                <div className="gate-form">
+                  {openReleaseItems.length > 0 ? (
+                    <label>
+                      Justificativa obrigatória ({openReleaseItems.map(item => item.label).join(", ")})
+                      <textarea value={releaseJustification} maxLength={2000} onChange={event => setReleaseJustification(event.target.value)} />
+                    </label>
+                  ) : null}
+                  <button type="button" onClick={() => void submitTechnicalRelease()} disabled={isDirty || (openReleaseItems.length > 0 && releaseJustification.trim().length === 0)}>
+                    Liberar para produção
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
+          {gateMessage ? <p role="status">{gateMessage}</p> : null}
         </section>
 
         <div className="layout-grid">

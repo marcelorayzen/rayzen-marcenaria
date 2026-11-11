@@ -28,7 +28,7 @@ export function getManufacturingReadiness(snapshot: ProjectSnapshot): Manufactur
     { id: "placements", label: "Móveis posicionados", status: hasUnpositioned ? "pending" : "ok", detail: hasUnpositioned ? "Há móvel sem posição conferida." : "As posições registradas estão preenchidas." },
     { id: "pending", label: "Pendências resolvidas", status: openPending > 0 ? "pending" : "ok", detail: openPending > 0 ? `${openPending} pendência(s) ainda aberta(s).` : "Não há pendências abertas." },
     { id: "interferences", label: "Interferências conferidas", status: hasInterferenceAlert ? "blocked" : "ok", detail: hasInterferenceAlert ? "Há interferência ou ponto fora dos limites registrados." : "Nenhum alerta geométrico registrado." },
-    { id: "technical-release", label: "Liberação técnica", status: "blocked", detail: "Ainda não disponível neste demonstrador; exige ação explícita do marceneiro." },
+    { id: "technical-release", label: "Liberação técnica", status: "blocked", detail: "Exige aprovação comercial e ação explícita de um marceneiro do projeto em “Aprovação e liberação”." },
   ];
   return { ready: false, items, note: "Checklist de preparação. Não é uma liberação de fabricação." };
 }
