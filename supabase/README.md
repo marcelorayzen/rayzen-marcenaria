@@ -4,6 +4,8 @@ Esta pasta prepara a primeira fundação de nuvem do Rayzen Marcenaria. Ela não
 
 ## Conteúdo
 
+**Atualização de 11 de novembro de 2026:** `20261110230000_marceneiro_reads_all_and_representative_members.sql` foi aplicada ao remoto com aprovação explícita; o dry-run posterior confirmou `upToDate: true`. Todo marceneiro lê todos os projetos; representante membro adiciona membros internos.
+
 **Atualização de 9 de novembro de 2026:** a migration `20261108160000_client_access_and_consent.sql` foi aplicada ao projeto remoto `frbtknggquivbjofknhk` e o dry-run confirmou `upToDate: true`. Ainda não há provisionamento de perfis nem teste de RLS com usuários reais.
 
 **Atualização de 10 de novembro de 2026:** a migration `20261110160000_catalog_and_readiness.sql` foi aplicada ao mesmo projeto remoto. Ela cria catálogo por projeto e snapshots do checklist por revisão, com RLS para membros internos; não cria liberação técnica nem conecta a interface ao banco.

@@ -47,6 +47,8 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 
 10. Em 10/11/2026, o commit `ec19f62` (peças por revisão, recuperação de projetos remotos e comparação canônica de `jsonb`) foi publicado após aprovação explícita do usuário na conversa, sem ID de ApprovalGate registrado nesta sessão. Prévia `50822801.rayzen-marcenaria.pages.dev` e produção `bf89eab1.rayzen-marcenaria.pages.dev`; `marcenaria.rayzen.com.br` e uma rota SPA direta responderam HTTP 200 servindo `index-CoFGQOTE.js`, que contém os novos textos de recuperação e de sincronização das peças. Isso não prova recuperação humana em outro dispositivo nem RLS remota com contas reais.
 
+11. Em 11/11/2026, com aprovação explícita do usuário na conversa, a migration `20261110230000_marceneiro_reads_all_and_representative_members.sql` foi aplicada ao Supabase remoto (dry-run antes listou só ela; depois `upToDate: true`). Em seguida o commit `cd9520e` (equipe do projeto e códigos de peça por móvel) foi publicado: prévia `d3fe2ce0.rayzen-marcenaria.pages.dev`, produção `a21a4610.rayzen-marcenaria.pages.dev`. `marcenaria.rayzen.com.br` e uma rota SPA direta responderam HTTP 200 com `index-w7RjR_ci.js`, que contém "Equipe do projeto". As permissões com contas reais ainda não foram ensaiadas (ver `.local/TESTES-PENDENTES.md`, T4).
+
 ## Ainda necessário
 
 - regra de acesso à prévia e responsável pela aprovação de publicação;
