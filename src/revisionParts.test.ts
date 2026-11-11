@@ -14,12 +14,17 @@ describe("revision parts derived for remote storage", () => {
     });
   });
 
-  it("refuses repeated piece codes across furniture instead of inventing a prefix", () => {
+  it("prefixes codes by furniture position when the revision has several items", () => {
     const snapshot = fixtureSnapshot(1);
     snapshot.furniture.push({ ...snapshot.furniture[0]!, id: "counter-2", label: "Balcão 2" });
     const result = deriveRevisionParts(snapshot);
-    expect(result).toMatchObject({ ok: false });
-    if (!result.ok) expect(result.message).toContain("BC-01");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.parts.map(part => part.piece_code)).toEqual([
+      "M1-BC-01", "M1-BC-02", "M1-BC-03", "M2-BC-01", "M2-BC-02", "M2-BC-03",
+    ]);
+    // Two identical 800 mm counters keep the same dimensions but distinct codes.
+    expect(result.parts.find(part => part.piece_code === "M2-BC-02")?.length_mm).toBe(764);
   });
 
   it("refuses measurements that numeric(10,2) would round silently", () => {

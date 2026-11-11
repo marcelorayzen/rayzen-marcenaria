@@ -26,13 +26,15 @@ function fitsNumeric10x2(value: number): boolean {
 
 /**
  * Derives the parts of one saved revision from its furniture parameters.
- * The remote table is keyed by `(revision_id, piece_code)`, so a code shared
- * by two furniture instances is rejected: no prefixing rule has been approved.
+ * Rule confirmed on 10/11/2026: with more than one furniture item, each code
+ * is prefixed by the item position in the revision (`M1-BC-01`, `M2-BC-01`).
+ * A single item keeps the engine code (`BC-01`), matching labels and plans.
  */
 export function deriveRevisionParts(snapshot: ProjectSnapshot): RevisionPartsResult {
   const parts: RevisionPartRow[] = [];
   const seen = new Set<string>();
-  for (const furniture of snapshot.furniture) {
+  const prefixed = snapshot.furniture.length > 1;
+  for (const [index, furniture] of snapshot.furniture.entries()) {
     if (furniture.kind !== "counter") {
       return { ok: false, message: `O móvel ${furniture.id} não tem motor de peças definido.` };
     }
@@ -41,23 +43,21 @@ export function deriveRevisionParts(snapshot: ProjectSnapshot): RevisionPartsRes
       return { ok: false, message: `O móvel ${furniture.label} tem parâmetros inválidos: ${issues[0]!.message}` };
     }
     for (const part of createCounterModel(furniture.parameters).parts) {
-      if (!PIECE_CODE.test(part.code)) {
-        return { ok: false, message: `O código de peça ${part.code} não é aceito pelo cadastro remoto.` };
+      const code = prefixed ? `M${index + 1}-${part.code}` : part.code;
+      if (!PIECE_CODE.test(code)) {
+        return { ok: false, message: `O código de peça ${code} não é aceito pelo cadastro remoto.` };
       }
-      if (seen.has(part.code)) {
-        return {
-          ok: false,
-          message: `O código ${part.code} se repete entre móveis da revisão; a regra de codificação para vários móveis ainda não foi definida.`,
-        };
+      if (seen.has(code)) {
+        return { ok: false, message: `O código ${code} se repete na revisão.` };
       }
       for (const value of [part.length, part.width, part.thickness]) {
         if (!fitsNumeric10x2(value)) {
           return { ok: false, message: `A peça ${part.code} tem medida ${value} fora da precisão de 0,01 mm aceita remotamente.` };
         }
       }
-      seen.add(part.code);
+      seen.add(code);
       parts.push({
-        piece_code: part.code,
+        piece_code: code,
         name: part.name,
         quantity: part.quantity,
         length_mm: part.length,

@@ -59,6 +59,7 @@ import { syncRevisionParts } from "./supabasePartsSync";
 import { deriveRevisionParts } from "./revisionParts";
 import { listRemoteProjects, loadRemoteRevisions, type RemoteProjectSummary } from "./supabaseProjectRecovery";
 import { mergeRemoteRevisions, replaceWithRemoteRevisions } from "./remoteRecoveryMerge";
+import { addProjectMember, loadProjectTeam, type InternalTeamMember } from "./supabaseProjectMembers";
 import { parseProjectChatMessage } from "./projectChat";
 import { CuttingPlanPanel } from "./CuttingPlanPanel";
 import { PhotoAttachmentPanel } from "./PhotoAttachmentPanel";
@@ -352,6 +353,8 @@ export default function App() {
   const [readinessSyncMessage, setReadinessSyncMessage] = useState<string | null>(null);
   const [remoteProjects, setRemoteProjects] = useState<RemoteProjectSummary[]>([]);
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
+  const [projectTeam, setProjectTeam] = useState<InternalTeamMember[]>([]);
+  const [teamMessage, setTeamMessage] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState("");
   const [chatMessage, setChatMessage] = useState<string | null>(null);
 
@@ -1086,6 +1089,33 @@ export default function App() {
       : `Peças não sincronizadas: ${result.message}`;
   }
 
+  async function refreshProjectTeam() {
+    const remoteProjectId = latestSyncItem?.remoteProjectId;
+    if (!supabase || !authUser || !remoteProjectId) {
+      setTeamMessage("Sincronize o projeto com uma conta autorizada antes de gerenciar a equipe.");
+      return;
+    }
+    const result = await loadProjectTeam(supabase, remoteProjectId);
+    if (result.status !== "loaded") {
+      setTeamMessage(result.message);
+      return;
+    }
+    setProjectTeam(result.members);
+    setTeamMessage(null);
+  }
+
+  async function addTeamMember(userId: string) {
+    const remoteProjectId = latestSyncItem?.remoteProjectId;
+    if (!supabase || !remoteProjectId) return;
+    const result = await addProjectMember(supabase, remoteProjectId, userId);
+    if (result.status === "added" || result.status === "already-member") {
+      await refreshProjectTeam();
+      setTeamMessage(result.status === "added" ? "Membro adicionado ao projeto." : "Esta pessoa já participa do projeto.");
+      return;
+    }
+    setTeamMessage(result.message);
+  }
+
   async function loadRemoteProjectList() {
     if (!supabase || !authUser) {
       setRecoveryMessage("Entre com uma conta provisionada antes de recuperar projetos remotos.");
@@ -1415,6 +1445,29 @@ export default function App() {
             </ul>
           ) : null}
           {recoveryMessage ? <p className="sync-message" role="status">{recoveryMessage}</p> : null}
+          {latestSyncItem?.remoteProjectId && authUser ? (
+            <>
+              <button type="button" onClick={() => void refreshProjectTeam()}>
+                Equipe do projeto
+              </button>
+              {projectTeam.length > 0 ? (
+                <ul className="remote-project-list" aria-label="Equipe interna do projeto">
+                  {projectTeam.map(member => (
+                    <li key={member.id}>
+                      <span>{member.displayName}</span>
+                      {member.isMember ? <em>participa</em> : (
+                        <button type="button" onClick={() => void addTeamMember(member.id)}>
+                          Adicionar ao projeto
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <p className="synchronization-note">Representantes do projeto adicionam membros. Marceneiros consultam todos os projetos, mas só gravam revisões nos projetos de que participam.</p>
+              {teamMessage ? <p className="sync-message" role="status">{teamMessage}</p> : null}
+            </>
+          ) : null}
         </section>
         <section className="project-checks" aria-labelledby="checks-title">
           <div className="constraint-heading">

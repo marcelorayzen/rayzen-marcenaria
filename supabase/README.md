@@ -46,7 +46,7 @@ O cliente do navegador so e criado quando a URL e HTTP(S), nao contem credenciai
 
 ## Testes de RLS locais
 
-`tests/rls_project_sync.test.sql` (pgTAP) roda somente contra a pilha local: `npx supabase start -x studio,postgres-meta` e depois `npx supabase test db`. Confira na saída que o alvo é `local stack (127.0.0.1:54322)`; nunca usar `--remote` sem aprovação explícita. Em 10/11/2026 passou 33/33. As identidades são sintéticas e simuladas por `request.jwt.claims`; o resultado não substitui o ensaio com contas reais no remoto. Storage e o fluxo de convite do cliente ainda não têm teste. O teste registra a lacuna atual: o dono não consegue adicionar outro membro interno ao projeto.
+`tests/rls_project_sync.test.sql` (pgTAP) roda somente contra a pilha local: `npx supabase start -x studio,postgres-meta` e depois `npx supabase test db`. Confira na saída que o alvo é `local stack (127.0.0.1:54322)`; nunca usar `--remote` sem aprovação explícita. Em 10/11/2026 passou 41/41, incluindo a migration `20261110230000_marceneiro_reads_all_and_representative_members.sql` (marceneiro lê todos os projetos; representante membro adiciona membros). Depois de criar uma migration, rodar `npx supabase db reset --local` antes do teste, pois `supabase start` reaproveita o banco local existente. As identidades são sintéticas e simuladas por `request.jwt.claims`; o resultado não substitui o ensaio com contas reais no remoto. Storage e o fluxo de convite do cliente ainda não têm teste.
 
 ## Atalhos locais
 
