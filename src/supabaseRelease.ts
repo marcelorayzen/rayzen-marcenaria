@@ -1,7 +1,19 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ReleaseChecklistSnapshot } from "./technicalRelease";
 
-export type ApprovalChannel = "whatsapp" | "sistema_comercial";
+export type ApprovalChannel = "contrato" | "whatsapp" | "email" | "sistema_comercial";
+
+/** How the client confirmed the project with the representative (decided 11/11/2026). */
+export const APPROVAL_CHANNEL_LABELS: Record<ApprovalChannel, string> = {
+  contrato: "Contrato",
+  whatsapp: "WhatsApp",
+  email: "E-mail",
+  sistema_comercial: "Sistema comercial",
+};
+
+export function approvalChannelLabel(channel: string): string {
+  return channel in APPROVAL_CHANNEL_LABELS ? APPROVAL_CHANNEL_LABELS[channel as ApprovalChannel] : channel;
+}
 
 export interface RevisionApprovalState {
   approval: { channel: ApprovalChannel; evidence: string; recordedAt: string } | null;

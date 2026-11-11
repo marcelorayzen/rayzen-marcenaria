@@ -49,6 +49,8 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 
 11. Em 11/11/2026, com aprovação explícita do usuário na conversa, a migration `20261110230000_marceneiro_reads_all_and_representative_members.sql` foi aplicada ao Supabase remoto (dry-run antes listou só ela; depois `upToDate: true`). Em seguida o commit `cd9520e` (equipe do projeto e códigos de peça por móvel) foi publicado: prévia `d3fe2ce0.rayzen-marcenaria.pages.dev`, produção `a21a4610.rayzen-marcenaria.pages.dev`. `marcenaria.rayzen.com.br` e uma rota SPA direta responderam HTTP 200 com `index-w7RjR_ci.js`, que contém "Equipe do projeto". As permissões com contas reais ainda não foram ensaiadas (ver `.local/TESTES-PENDENTES.md`, T4).
 
+12. Em 11/11/2026, com aprovação explícita do usuário na conversa, a migration `20261111090000_release_requires_justification.sql` foi aplicada ao Supabase remoto (dry-run antes listou só ela; depois `upToDate: true`). Em seguida o commit `e28b4a8` (aprovação comercial e liberação técnica com justificativa) foi publicado: prévia `a142617c.rayzen-marcenaria.pages.dev`, produção `fe954221.rayzen-marcenaria.pages.dev`. `marcenaria.rayzen.com.br` respondeu HTTP 200 com `index-BwyXsMNw.js`, que contém `rayzen-technical-release` e a chamada `release_production`. A aprovação e a liberação com contas reais ainda não foram ensaiadas (`.local/TESTES-PENDENTES.md`, T6).
+
 ## Ainda necessário
 
 - regra de acesso à prévia e responsável pela aprovação de publicação;

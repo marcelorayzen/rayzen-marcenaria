@@ -4,6 +4,8 @@ Esta pasta prepara a primeira fundação de nuvem do Rayzen Marcenaria. Ela não
 
 ## Conteúdo
 
+**Atualização posterior de 11 de novembro de 2026:** `20261111090000_release_requires_justification.sql` foi aplicada ao remoto com aprovação explícita; o dry-run posterior confirmou `upToDate: true`. A liberação exige marceneiro membro, aprovação comercial, checklist no formato `rayzen-technical-release` e justificativa quando houver itens abertos; cada liberação gera `production.released` na auditoria.
+
 **Atualização de 11 de novembro de 2026:** `20261110230000_marceneiro_reads_all_and_representative_members.sql` foi aplicada ao remoto com aprovação explícita; o dry-run posterior confirmou `upToDate: true`. Todo marceneiro lê todos os projetos; representante membro adiciona membros internos.
 
 **Atualização de 9 de novembro de 2026:** a migration `20261108160000_client_access_and_consent.sql` foi aplicada ao projeto remoto `frbtknggquivbjofknhk` e o dry-run confirmou `upToDate: true`. Ainda não há provisionamento de perfis nem teste de RLS com usuários reais.
@@ -48,7 +50,7 @@ O cliente do navegador so e criado quando a URL e HTTP(S), nao contem credenciai
 
 ## Testes de RLS locais
 
-`tests/technical_release.test.sql` cobre aprovação comercial e liberação técnica (16 asserções): papel, participação no projeto, formato do checklist, número da revisão, justificativa para itens abertos, liberação única e auditoria.
+`tests/technical_release.test.sql` cobre aprovação comercial e liberação técnica (19 asserções): papel, participação no projeto, formato do checklist, número da revisão, justificativa para itens abertos, liberação única, auditoria e os canais `contrato`/`email` da migration `20261111140000_approval_channels_contract_email.sql` (passou localmente em 11/11/2026; **ainda não aplicada no remoto**).
 
 `tests/rls_project_sync.test.sql` (pgTAP) roda somente contra a pilha local: `npx supabase start -x studio,postgres-meta` e depois `npx supabase test db`. Confira na saída que o alvo é `local stack (127.0.0.1:54322)`; nunca usar `--remote` sem aprovação explícita. Em 10/11/2026 passou 41/41, incluindo a migration `20261110230000_marceneiro_reads_all_and_representative_members.sql` (marceneiro lê todos os projetos; representante membro adiciona membros). Depois de criar uma migration, rodar `npx supabase db reset --local` antes do teste, pois `supabase start` reaproveita o banco local existente. As identidades são sintéticas e simuladas por `request.jwt.claims`; o resultado não substitui o ensaio com contas reais no remoto. Storage e o fluxo de convite do cliente ainda não têm teste.
 

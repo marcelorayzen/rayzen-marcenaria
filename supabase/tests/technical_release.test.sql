@@ -4,7 +4,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(16);
+select plan(19);
 
 -- A: marceneiro member; B: representante member; C: marceneiro + representante
 -- outside the project.
@@ -88,6 +88,14 @@ select throws_ok($$ select release_production('44444444-4444-4444-8444-444444444
 select throws_ok($$ select release_production('44444444-4444-4444-8444-444444444442',
   '{"format":"rayzen-technical-release","revisionNumber":2,"items":[{"id":"x","status":"ok"}],"justification":null}') $$,
   'P0001', 'Aprovação comercial ausente', 'R2 needs its own commercial approval');
+
+-- Client confirmation by contract or e-mail (decided 11/11/2026).
+select pg_temp.act_as('bbbbbbbb-0000-4000-8000-0000000000b2');
+select lives_ok($$ select record_commercial_approval('44444444-4444-4444-8444-444444444442', 'contrato', 'Contrato assinado') $$,
+  'representante records approval by contract');
+select is((select channel::text from commercial_approvals where revision_id = '44444444-4444-4444-8444-444444444442'),
+  'contrato', 'contract channel is stored');
+select is('email'::approval_channel::text, 'email', 'e-mail is a valid approval channel');
 
 reset role;
 select * from finish();

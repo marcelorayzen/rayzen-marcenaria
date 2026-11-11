@@ -61,6 +61,8 @@ import { listRemoteProjects, loadRemoteRevisions, type RemoteProjectSummary } fr
 import { mergeRemoteRevisions, replaceWithRemoteRevisions } from "./remoteRecoveryMerge";
 import { addProjectMember, loadProjectTeam, type InternalTeamMember } from "./supabaseProjectMembers";
 import {
+  APPROVAL_CHANNEL_LABELS,
+  approvalChannelLabel,
   loadRevisionApprovalState,
   recordCommercialApproval,
   releaseRevision,
@@ -1583,7 +1585,7 @@ export default function App() {
               <p>
                 <strong>Aprovação comercial:</strong>{" "}
                 {approvalState?.approval
-                  ? `registrada via ${approvalState.approval.channel === "whatsapp" ? "WhatsApp" : "sistema comercial"} em ${new Date(approvalState.approval.recordedAt).toLocaleString("pt-BR")} — ${approvalState.approval.evidence}`
+                  ? `registrada via ${approvalChannelLabel(approvalState.approval.channel)} em ${new Date(approvalState.approval.recordedAt).toLocaleString("pt-BR")} — ${approvalState.approval.evidence}`
                   : "ainda não registrada."}
               </p>
               {!approvalState?.approval && roleCapabilities.canValidateCommercial ? (
@@ -1591,8 +1593,9 @@ export default function App() {
                   <label>
                     Canal
                     <select value={approvalChannel} onChange={event => setApprovalChannel(event.target.value as ApprovalChannel)}>
-                      <option value="whatsapp">WhatsApp</option>
-                      <option value="sistema_comercial">Sistema comercial</option>
+                      {(Object.keys(APPROVAL_CHANNEL_LABELS) as ApprovalChannel[]).map(channel => (
+                        <option key={channel} value={channel}>{APPROVAL_CHANNEL_LABELS[channel]}</option>
+                      ))}
                     </select>
                   </label>
                   <label>

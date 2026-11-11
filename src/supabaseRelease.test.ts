@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { loadRevisionApprovalState, recordCommercialApproval, releaseRevision } from "./supabaseRelease";
+import {
+  APPROVAL_CHANNEL_LABELS,
+  approvalChannelLabel,
+  loadRevisionApprovalState,
+  recordCommercialApproval,
+  releaseRevision,
+} from "./supabaseRelease";
 import type { ReleaseChecklistSnapshot } from "./technicalRelease";
 
 const snapshot: ReleaseChecklistSnapshot = {
@@ -74,5 +80,14 @@ describe("commercial approval and technical release adapter", () => {
     const fake = createClient({ session: false });
     await expect(releaseRevision(fake.client, "rev-1", snapshot)).resolves.toMatchObject({ status: "blocked" });
     expect(fake.rpcCalls).toEqual([]);
+  });
+});
+
+describe("approval channels", () => {
+  it("offers contract, WhatsApp and e-mail, keeping the legacy channel readable", () => {
+    expect(Object.keys(APPROVAL_CHANNEL_LABELS)).toEqual(["contrato", "whatsapp", "email", "sistema_comercial"]);
+    expect(approvalChannelLabel("contrato")).toBe("Contrato");
+    expect(approvalChannelLabel("email")).toBe("E-mail");
+    expect(approvalChannelLabel("desconhecido")).toBe("desconhecido");
   });
 });
