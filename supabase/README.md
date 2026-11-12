@@ -50,7 +50,7 @@ O cliente do navegador so e criado quando a URL e HTTP(S), nao contem credenciai
 
 ## Testes de RLS locais
 
-`tests/technical_release.test.sql` cobre aprovação comercial e liberação técnica (19 asserções): papel, participação no projeto, formato do checklist, número da revisão, justificativa para itens abertos, liberação única, auditoria e os canais `contrato`/`email` da migration `20261111140000_approval_channels_contract_email.sql` (passou localmente em 11/11/2026; **ainda não aplicada no remoto**).
+`tests/technical_release.test.sql` cobre aprovação comercial e liberação técnica (19 asserções): papel, participação no projeto, formato do checklist, número da revisão, justificativa para itens abertos, liberação única, auditoria e os canais `contrato`/`email` da migration `20261111140000_approval_channels_contract_email.sql` (passou localmente e foi aplicada ao remoto com aprovação explícita em 11/11/2026; dry-run posterior `upToDate: true`).
 
 `tests/rls_project_sync.test.sql` (pgTAP) roda somente contra a pilha local: `npx supabase start -x studio,postgres-meta` e depois `npx supabase test db`. Confira na saída que o alvo é `local stack (127.0.0.1:54322)`; nunca usar `--remote` sem aprovação explícita. Em 10/11/2026 passou 41/41, incluindo a migration `20261110230000_marceneiro_reads_all_and_representative_members.sql` (marceneiro lê todos os projetos; representante membro adiciona membros). Depois de criar uma migration, rodar `npx supabase db reset --local` antes do teste, pois `supabase start` reaproveita o banco local existente. As identidades são sintéticas e simuladas por `request.jwt.claims`; o resultado não substitui o ensaio com contas reais no remoto. Storage e o fluxo de convite do cliente ainda não têm teste.
 

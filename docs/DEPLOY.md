@@ -51,6 +51,8 @@ A chave publishable pode estar no bundle do navegador; Row Level Security é que
 
 12. Em 11/11/2026, com aprovação explícita do usuário na conversa, a migration `20261111090000_release_requires_justification.sql` foi aplicada ao Supabase remoto (dry-run antes listou só ela; depois `upToDate: true`). Em seguida o commit `e28b4a8` (aprovação comercial e liberação técnica com justificativa) foi publicado: prévia `a142617c.rayzen-marcenaria.pages.dev`, produção `fe954221.rayzen-marcenaria.pages.dev`. `marcenaria.rayzen.com.br` respondeu HTTP 200 com `index-BwyXsMNw.js`, que contém `rayzen-technical-release` e a chamada `release_production`. A aprovação e a liberação com contas reais ainda não foram ensaiadas (`.local/TESTES-PENDENTES.md`, T6).
 
+13. Em 11/11/2026, com aprovação explícita do usuário na conversa, a migration `20261111140000_approval_channels_contract_email.sql` foi aplicada ao remoto (dry-run antes listou só ela; depois `upToDate: true`) e o commit `a904b1b` (canais "Contrato" e "E-mail" na aprovação comercial) foi publicado: prévia `b9f2117d.rayzen-marcenaria.pages.dev`, produção `3e46a478.rayzen-marcenaria.pages.dev`. `marcenaria.rayzen.com.br` respondeu HTTP 200 com `index-CqtBj2nB.js`, que contém os novos canais.
+
 ## Ainda necessário
 
 - regra de acesso à prévia e responsável pela aprovação de publicação;

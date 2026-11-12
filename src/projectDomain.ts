@@ -48,6 +48,8 @@ export interface RecordAttribution {
   recordedBy: string;
   recordedAt: string;
   confidence: MeasurementConfidence;
+  /** Present when a person accepted this record from an assistant proposal. */
+  proposedBy?: { kind: "assistant"; provider: string; model: string };
 }
 
 export interface Evidence {
