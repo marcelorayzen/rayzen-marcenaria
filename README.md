@@ -74,6 +74,76 @@ O estado verificável, as lacunas conhecidas e a ordem segura de retomada estão
 
 Ordem proposta para o primeiro protótipo: definir rastreabilidade e armazenamento, persistir projetos, anexar fotos e medidas, modelar a parede em 2D conectada ao balcão 3D e validar propostas conversacionais antes de ligar um agente real. O backlog detalha tarefas e dependências. Importar a cutlist Fusion, outros CSV, DXF, DWG, planilhas e layouts de nesting fica para etapas posteriores e depende de amostras e análise específicas.
 
+## Como contribuir
+
+### Pré-requisitos
+
+- Node.js 22 ou superior (`engines` em `package.json`) e npm.
+- Para os testes de banco, opcionais: Docker em execução e o CLI do Supabase, chamado via `npx`.
+
+### Preparação
+
+```bash
+npm install
+```
+
+Use `npm ci` para reproduzir exatamente o `package-lock.json`, como faz o CI.
+
+### Testes unitários
+
+```bash
+npm test
+```
+
+Executa `vitest run` sobre os arquivos `src/*.test.ts`. Para rodar um arquivo específico:
+
+```bash
+npx vitest run src/cuttingPlan.test.ts
+```
+
+### Verificação completa
+
+```bash
+npm run check
+```
+
+É a mesma verificação que o CI executa e equivale a `npm test && npm run build`. O build é `tsc -b && vite build`; portanto, uma falha de tipo quebra o check.
+
+### Higiene de diff
+
+```bash
+git diff --check
+```
+
+O workflow `.github/workflows/quality.yml` também roda esse comando e recusa arquivos `.env` versionados, exceto `.env.example`.
+
+### Testes de banco (opcionais, somente pilha local)
+
+```bash
+npx supabase start -x studio,postgres-meta
+npx supabase test db
+```
+
+- Rodam apenas contra o alvo local (`127.0.0.1:54322`) e exigem o Docker ativo.
+- Depois de criar uma migration, rode `npx supabase db reset --local` para aplicá-la ao banco local.
+- Nunca use `--remote` nem `npm run supabase:push` sem aprovação humana explícita para aquele alvo.
+
+### Regras de contribuição
+
+- Leia o [AGENTS.md](./AGENTS.md) antes de alterar.
+- Uma mudança de domínio começa por um contrato tipado e um teste determinístico, antes da tela.
+- Não invente regras de marcenaria, medidas, materiais ou dados de cliente; registre a lacuna e peça a definição.
+- Nunca versione `.env.local`, tokens ou chaves.
+- A documentação pública separa fato verificado de plano.
+
+### Fluxo de entrega
+
+1. Crie uma branch.
+2. Faça o commit.
+3. Abra um PR para `main`. O job "Quality" do GitHub Actions é o gate.
+
+Teste e build comprovam apenas o código local. Navegador, banco, permissões e deploy são validados separadamente.
+
 ## Estrutura
 
 - `src/furnitureEngine.ts`: regras geométricas e CSV, sem dependência de interface.
