@@ -35,7 +35,7 @@ O fluxo do protótipo foi conferido no navegador:
 4. A largura de 36 mm é rejeitada porque não comporta duas laterais de 18 mm.
 5. Os controles frontal, lateral, superior e isométrico mudam a vista 3D; selecionar uma linha da lista destaca a peça no modelo.
 
-Os quatro testes automatizados exercitam o motor geométrico, dimensões inválidas e conteúdo do CSV. O download CSV foi acionado durante a conferência no navegador, e o usuário confirmou que o arquivo foi gravado.
+A última execução local de `npm test` aprovou 181 testes automatizados em 47 arquivos de teste. Eles exercitam o motor geométrico, o plano de corte e suas exportações, a persistência e o catálogo locais no navegador, as regras de domínio (papéis, liberação técnica, prontidão de fabricação, propostas) e os contratos e a sincronização com o Supabase, em testes automatizados locais; não comprovam operação remota, permissões no banco nem liberação de fabricação. O download CSV foi acionado durante a conferência no navegador, e o usuário confirmou que o arquivo foi gravado.
 
 ## Primeiro caso de ensaio
 
