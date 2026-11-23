@@ -25,6 +25,17 @@ npm test
 npm run build
 ```
 
+## Como rodar localmente
+
+Resumo do caminho principal; os pré-requisitos estão em [Requisitos](#requisitos) e a verificação completa em [Como contribuir](#como-contribuir).
+
+1. Tenha Node.js 22 ou superior (`engines` em `package.json`) e npm.
+2. `npm install` instala as dependências.
+3. `npm run dev` inicia o servidor de desenvolvimento; abra o endereço que o Vite imprimir no terminal (o projeto não fixa porta).
+4. `npm run build` gera o build de produção (`tsc -b && vite build`) e `npm run preview` serve esse build localmente para conferência.
+
+A configuração do Supabase é opcional para rodar a demonstração; ela está descrita em [supabase/README.md](./supabase/README.md) e em `.env.example`. Não versione `.env.local` nem credenciais.
+
 ## Estado funcional
 
 O fluxo do protótipo foi conferido no navegador:
