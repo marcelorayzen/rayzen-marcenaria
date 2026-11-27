@@ -71,6 +71,7 @@ import {
 } from "./supabaseRelease";
 import { buildReleaseChecklist, openReadinessItems } from "./technicalRelease";
 import { parseProjectChatMessage } from "./projectChat";
+import { APP_VERSION, formatAppVersion } from "./appVersion";
 import { CuttingPlanPanel } from "./CuttingPlanPanel";
 import { PhotoAttachmentPanel } from "./PhotoAttachmentPanel";
 import { ProjectCatalogPanel } from "./ProjectCatalogPanel";
@@ -2500,6 +2501,7 @@ export default function App() {
         <footer className="page-footer">
           <span>RAYZEN · CADERNO DE PROJETO</span>
           <span>MEDIDAS EM MILÍMETROS · CONFERIR ANTES DA FABRICAÇÃO</span>
+          <span data-testid="app-version">{formatAppVersion(APP_VERSION)}</span>
         </footer>
       </div>
     </main>
